@@ -11,8 +11,8 @@ import (
 )
 
 func TestAccFederatedGraphResource(t *testing.T) {
-	rName := acctest.RandomWithPrefix("test-federated-graph")
-	namespace := "default"
+	name := acctest.RandomWithPrefix("test-federated-graph")
+	namespace := acctest.RandomWithPrefix("test-namespace")
 
 	routingURL := "https://example.com"
 	updatedRoutingURL := "https://updated-example.com"
@@ -20,27 +20,27 @@ func TestAccFederatedGraphResource(t *testing.T) {
 	readme := "Initial readme content"
 	newReadme := "Updated readme content"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedGraphResourceConfig(rName, namespace, routingURL, readme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, readme),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "name", rName),
+					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "routing_url", routingURL),
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "readme", readme),
 				),
 			},
 			{
-				Config: testAccFederatedGraphResourceConfig(rName, namespace, routingURL, newReadme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, newReadme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "readme", newReadme),
 				),
 			},
 			{
-				Config: testAccFederatedGraphResourceConfig(rName, namespace, updatedRoutingURL, newReadme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, updatedRoutingURL, newReadme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "routing_url", updatedRoutingURL),
 				),
@@ -50,28 +50,32 @@ func TestAccFederatedGraphResource(t *testing.T) {
 }
 
 func TestAccFederatedGraphResourceInvalidConfig(t *testing.T) {
-	rName := acctest.RandomWithPrefix("test-federated-graph")
-	namespace := "default"
+	name := acctest.RandomWithPrefix("test-federated-graph")
+	namespace := acctest.RandomWithPrefix("test-namespace")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFederatedGraphResourceConfig(rName, namespace, "invalid-url", ""),
+				Config:      testAccFederatedGraphResourceConfig(name, namespace, "invalid-url", ""),
 				ExpectError: regexp.MustCompile(`.*Could not create.*`),
 			},
 		},
 	})
 }
 
-func testAccFederatedGraphResourceConfig(name, namespace, routingURL, readme string) string {
+func testAccFederatedGraphResourceConfig(namespace, name, routingURL, readme string) string {
 	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
 resource "cosmo_federated_graph" "test" {
   name      	= "%s"
-  namespace 	= "%s"
+  namespace 	= cosmo_namespace.test.name
   routing_url 	= "%s"
   readme    	= "%s"
 }
-`, name, namespace, routingURL, readme)
+`, namespace, name, routingURL, readme)
 }

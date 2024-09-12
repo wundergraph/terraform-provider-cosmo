@@ -10,9 +10,11 @@ import (
 )
 
 func TestAccSubgraphResource(t *testing.T) {
-	rName := acctest.RandomWithPrefix("test-subgraph")
-	rNamespace := "default"
-	rBaseSubgraphName := "base-subgraph"
+	federatedGraphName := acctest.RandomWithPrefix("test-subgraph")
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	federatedGraphRoutingURL := "https://example.com"
+
 	routingURL := "https://example.com"
 	updatedRoutingURL := "https://updated-example.com"
 
@@ -21,17 +23,16 @@ func TestAccSubgraphResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubgraphResourceConfig(rName, rNamespace, rBaseSubgraphName, routingURL),
+				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", rName),
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", rNamespace),
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "base_subgraph_name", rBaseSubgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", routingURL),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.#", "2"),
 				),
 			},
 			{
-				Config: testAccSubgraphResourceConfig(rName, rNamespace, rBaseSubgraphName, updatedRoutingURL),
+				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, updatedRoutingURL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", updatedRoutingURL),
 				),
@@ -44,14 +45,23 @@ func TestAccSubgraphResource(t *testing.T) {
 	})
 }
 
-func testAccSubgraphResourceConfig(name, namespace, baseSubgraphName, routingURL string) string {
+func testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL string) string {
 	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_federated_graph" "test" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test.name
+  routing_url 	= "%s"
+}
+
 resource "cosmo_subgraph" "test" {
   name                = "%s"
-  namespace           = "%s"
-  base_subgraph_name  = "%s"
+  namespace           = cosmo_namespace.test.name
   routing_url         = "%s"
   labels              = ["team=backend", "stage=dev"]
 }
-`, name, namespace, baseSubgraphName, routingURL)
+`, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL)
 }

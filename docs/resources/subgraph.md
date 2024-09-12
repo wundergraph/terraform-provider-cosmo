@@ -35,7 +35,6 @@ resource "cosmo_subgraph" "test" {
 
 ### Required
 
-- `base_subgraph_name` (String) The base subgraph name.
 - `name` (String) The name of the subgraph.
 - `namespace` (String) The namespace in which the subgraph is located.
 - `routing_url` (String) The routing URL of the subgraph.

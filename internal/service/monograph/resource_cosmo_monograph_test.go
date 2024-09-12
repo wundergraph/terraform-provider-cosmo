@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 )
 
 func TestAccMonographResource(t *testing.T) {
-	rName := "test-monograph"
-	rNamespace := "default"
-	rGraphUrl := "http://example.com/graphql"
+	name := acctest.RandomWithPrefix("test-monograph")
+	namespace := acctest.RandomWithPrefix("test-namespace")
+
+	graphUrl := "http://example.com/graphql"
 	rRoutingURL := "http://example.com/routing"
 	updatedRoutingURL := "http://example.com/updated-routing"
 
@@ -20,17 +22,17 @@ func TestAccMonographResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonographResourceConfig(rName, rNamespace, rGraphUrl, rRoutingURL),
+				Config: testAccMonographResourceConfig(namespace, name, graphUrl, rRoutingURL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("cosmo_monograph.test", "name", rName),
-					resource.TestCheckResourceAttr("cosmo_monograph.test", "namespace", rNamespace),
-					resource.TestCheckResourceAttr("cosmo_monograph.test", "graph_url", rGraphUrl),
+					resource.TestCheckResourceAttr("cosmo_monograph.test", "name", name),
+					resource.TestCheckResourceAttr("cosmo_monograph.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_monograph.test", "graph_url", graphUrl),
 					resource.TestCheckResourceAttr("cosmo_monograph.test", "routing_url", rRoutingURL),
 					resource.TestCheckResourceAttrSet("cosmo_monograph.test", "id"),
 				),
 			},
 			{
-				Config: testAccMonographResourceConfig(rName, rNamespace, rGraphUrl, updatedRoutingURL),
+				Config: testAccMonographResourceConfig(namespace, name, graphUrl, updatedRoutingURL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_monograph.test", "routing_url", updatedRoutingURL),
 				),
@@ -43,13 +45,17 @@ func TestAccMonographResource(t *testing.T) {
 	})
 }
 
-func testAccMonographResourceConfig(name, namespace, graphUrl, routingURL string) string {
+func testAccMonographResourceConfig(namespace, name, graphUrl, routingURL string) string {
 	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
 resource "cosmo_monograph" "test" {
 	name       = "%s"
-	namespace  = "%s"
+	namespace  = cosmo_namespace.test.name
 	graph_url  = "%s"
 	routing_url = "%s"
 }
-`, name, namespace, graphUrl, routingURL)
+`, namespace, name, graphUrl, routingURL)
 }

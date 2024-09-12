@@ -22,11 +22,12 @@ type SubgraphResource struct {
 }
 
 type SubgraphResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Name                 types.String `tfsdk:"name"`
-	Namespace            types.String `tfsdk:"namespace"`
-	RoutingURL           types.String `tfsdk:"routing_url"`
-	BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
+	Id         types.String `tfsdk:"id"`
+	Name       types.String `tfsdk:"name"`
+	Namespace  types.String `tfsdk:"namespace"`
+	RoutingURL types.String `tfsdk:"routing_url"`
+	// TODO: re-enable this once Graph Feature Flags are implementd
+	// BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
 	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
@@ -80,10 +81,6 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 				MarkdownDescription: "The routing URL of the subgraph.",
 			},
-			"base_subgraph_name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The base subgraph name.",
-			},
 			"subscription_url": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "The subscription URL for the subgraph.",
@@ -128,6 +125,11 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
 			},
+			// TODO: re-enable this once Graph Feature Flags are implementd
+			// "base_subgraph_name": schema.StringAttribute{
+			// 	Optional:            true,
+			// 	MarkdownDescription: "The base subgraph name.",
+			// },
 		},
 	}
 }
@@ -154,7 +156,9 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 		})
 	}
 
-	err = api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	// TODO: re-enable this once Graph Feature Flags are implementd
+	// err = api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	err = api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
 		return

@@ -10,34 +10,50 @@ import (
 )
 
 func TestAccSubgraphDataSource(t *testing.T) {
-	rName := acctest.RandomWithPrefix("test-subgraph")
-	rBaseSubgraphName := "base-subgraph"
+	namespace := acctest.RandomWithPrefix("test-namespace")
+
+	federatedGraphName := acctest.RandomWithPrefix("test-federated-graph")
+	federatedGraphRoutingURL := "https://example.com"
+
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	subgraphRoutingURL := "https://example.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubgraphDataSourceConfig(rName, rBaseSubgraphName),
+				Config: testAccSubgraphDataSourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, subgraphRoutingURL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "name", rName),
+					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "name", subgraphName),
 				),
 			},
 		},
 	})
 }
 
-func testAccSubgraphDataSourceConfig(name, baseSubgraphName string) string {
+func testAccSubgraphDataSourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL string) string {
 	return fmt.Sprintf(`
-resource "cosmo_subgraph" "test" {
-  name      = "%s"
-  namespace = "default"
-  base_subgraph_name  = "%s"
-  routing_url = "https://example.com"
+resource "cosmo_namespace" "test" {
+  name = "%s"
 }
+
+resource "cosmo_federated_graph" "test" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test.name
+  routing_url 	= "%s"
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  routing_url         = "%s"
+  labels              = ["team=backend", "stage=dev"]
+}
+
 data "cosmo_subgraph" "test" {
   name      = cosmo_subgraph.test.name
   namespace = cosmo_subgraph.test.namespace
 }
-`, name, baseSubgraphName)
+`, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL)
 }
