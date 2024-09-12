@@ -10,7 +10,6 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/wundergraph/cosmo/connect-go v0.0.0-20240912174639-638540986b46
-	google.golang.org/protobuf v1.34.0
 )
 
 require (
@@ -25,6 +24,7 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/appengine v1.6.8 // indirect
+	google.golang.org/protobuf v1.34.0 // indirect
 )
 
 require (
