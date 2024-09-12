@@ -17,6 +17,7 @@ The Cosmo Terraform provider includes the following resources and data sources:
 - [cosmo_monograph](docs/resources/monograph.md): Manages monographs in Cosmo.
 - [cosmo_federated_graph](docs/resources/federated_graph.md): Manages federated graphs in Cosmo.
 - [cosmo_subgraph](docs/resources/subgraph.md): Manages subgraphs in Cosmo.
+- [cosmo_router_token](docs/resources/cosmo_router_token.md): Retrieves information about subgraphs in Cosmo.
 
 ### Data Sources
 
