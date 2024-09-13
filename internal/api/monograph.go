@@ -27,6 +27,10 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 		return err
 	}
 
+	if response.Msg == nil {
+		return fmt.Errorf("failed to create monograph: %s, the server response is nil", name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return fmt.Errorf("failed to create monograph: %s", response.Msg)
 	}
@@ -52,6 +56,10 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 		return err
 	}
 
+	if response.Msg == nil {
+		return fmt.Errorf("failed to update monograph: %s, the server response is nil", name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return fmt.Errorf("failed to update monograph: %s", response.Msg)
 	}
@@ -69,6 +77,10 @@ func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namesp
 		return err
 	}
 
+	if response.Msg == nil {
+		return fmt.Errorf("failed to delete monograph: %s, the server response is nil", name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return fmt.Errorf("failed to delete monograph: %s", response.Msg)
 	}
@@ -84,6 +96,10 @@ func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace
 	response, err := p.Client.GetFederatedGraphByName(ctx, request)
 	if err != nil {
 		return nil, err
+	}
+
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to get monograph: %s, the server response is nil", name)
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {

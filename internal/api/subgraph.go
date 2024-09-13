@@ -28,6 +28,10 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 		return err
 	}
 
+	if response.Msg == nil {
+		return fmt.Errorf("failed to create subgraph: %s, the server response is nil", name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return fmt.Errorf("failed to create subgraph: %s", response.Msg)
 	}
@@ -49,9 +53,13 @@ func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, rou
 		SubscriptionProtocol: resolveSubscriptionProtocol(subscriptionProtocol),
 	})
 
-	_, err := p.Client.UpdateSubgraph(ctx, request)
+	response, err := p.Client.UpdateSubgraph(ctx, request)
 	if err != nil {
 		return err
+	}
+
+	if response.Msg == nil {
+		return fmt.Errorf("failed to update subgraph: %s, the server response is nil", name)
 	}
 
 	return nil
@@ -65,6 +73,10 @@ func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace stri
 	response, err := p.Client.DeleteFederatedSubgraph(ctx, request)
 	if err != nil {
 		return err
+	}
+
+	if response.Msg == nil {
+		return fmt.Errorf("failed to delete subgraph: %s, the server response is nil", name)
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
@@ -82,6 +94,10 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 	response, err := p.Client.GetSubgraphByName(ctx, request)
 	if err != nil {
 		return nil, err
+	}
+
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to get subgraph: %s, the server response is nil", name)
 	}
 
 	subgraph := &platformv1.Subgraph{

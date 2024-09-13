@@ -32,6 +32,10 @@ func (p *PlatformClient) CreateFederatedGraph(ctx context.Context, admissionWebh
 		return nil, err
 	}
 
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to create federated graph: %s, the server response is nil", graph.Name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return nil, fmt.Errorf("failed to create federated graph: %s", response.Msg.GetResponse().GetDetails())
 	}
@@ -59,6 +63,10 @@ func (p *PlatformClient) UpdateFederatedGraph(ctx context.Context, admissionWebh
 		return nil, err
 	}
 
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to create federated graph: %s, the server response is nil", graph.Name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return nil, fmt.Errorf("failed to update federated graph: %s", response.Msg)
 	}
@@ -77,6 +85,10 @@ func (p *PlatformClient) DeleteFederatedGraph(ctx context.Context, name, namespa
 		return err
 	}
 
+	if response.Msg == nil {
+		return fmt.Errorf("failed to delete federated graph: %s, the server response is nil", name)
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return fmt.Errorf("failed to delete federated graph: %s", response.Msg)
 	}
@@ -93,6 +105,10 @@ func (p *PlatformClient) GetFederatedGraph(ctx context.Context, name, namespace 
 	response, err := p.Client.GetFederatedGraphByName(ctx, request)
 	if err != nil {
 		return nil, err
+	}
+
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to get federated graph: %s, the server response is nil", name)
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {

@@ -20,6 +20,10 @@ func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namesp
 		return "", err
 	}
 
+	if response.Msg == nil {
+		return "", fmt.Errorf("failed to create token, the server response is nil")
+	}
+
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
 		return "", fmt.Errorf("failed to create token: %s", response.Msg.GetResponse().GetDetails())
 	}
@@ -36,6 +40,10 @@ func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, n
 	response, err := p.Client.DeleteRouterToken(ctx, request)
 	if err != nil {
 		return fmt.Errorf("failed to delete token: %w", err)
+	}
+
+	if response.Msg == nil {
+		return fmt.Errorf("failed to delete token, the server response is nil")
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
