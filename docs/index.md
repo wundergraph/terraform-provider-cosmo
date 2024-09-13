@@ -23,8 +23,8 @@ terraform {
 }
 
 provider "cosmo" {
-  cosmo_api_url = "cosmo_669b576aaadc10ee1ae81d9193425705"
-  cosmo_api_key = "http://localhost:3001"
+  api_url = "http://localhost:3001"
+  api_key = "cosmo_669b576aaadc10ee1ae81d9193425705"
 }
 ```
 
@@ -33,5 +33,5 @@ provider "cosmo" {
 
 ### Optional
 
-- `cosmo_api_key` (String) The Api Key to be used: COSMO_API_KEY
-- `cosmo_api_url` (String) The Api Url to be used: COSMO_API_URL
+- `api_key` (String) The Api Key to be used: COSMO_API_KEY
+- `api_url` (String) The Api Url to be used: COSMO_API_URL

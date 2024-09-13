@@ -38,8 +38,8 @@ type Provider struct {
 
 // CosmoProviderModel describes the provider data model.
 type CosmoProviderModel struct {
-	CosmoApiUrl types.String `tfsdk:"cosmo_api_url"`
-	CosmoApiKey types.String `tfsdk:"cosmo_api_key"`
+	ApiUrl types.String `tfsdk:"api_url"`
+	ApiKey types.String `tfsdk:"api_key"`
 }
 
 func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -50,11 +50,11 @@ func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataReque
 func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cosmo_api_url": schema.StringAttribute{
+			"api_url": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),
 				Optional:            true,
 			},
-			"cosmo_api_key": schema.StringAttribute{
+			"api_key": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Key to be used: %s", utils.EnvCosmoApiKey),
 				Optional:            true,
 			},
@@ -71,8 +71,8 @@ func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	cosmoApiKey := data.CosmoApiKey.ValueString()
-	cosmoApiUrl := data.CosmoApiUrl.ValueString()
+	cosmoApiKey := data.ApiKey.ValueString()
+	cosmoApiUrl := data.ApiUrl.ValueString()
 
 	platformClient, err := api.NewClient(cosmoApiKey, cosmoApiUrl)
 
