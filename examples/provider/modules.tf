@@ -1,26 +1,34 @@
+resource "random_string" "module_prefix" {
+  length  = 6
+  special = false
+}
+
+locals {
+  prefix = lower(random_string.module_prefix.result)
+}
+
 module "cosmo-federated-graph" {
   source = "../../modules/cosmo-federated-graph"
 
-  // add your stage
-  stage     = "dev"
-  namespace = "dev-cosmo-module"
+  namespace = "${local.prefix}-cosmo-module"
 
   federated_graph = {
-    name        = "dev-federated-graph"
+    name        = "${local.prefix}-federated-graph"
     routing_url = "http://localhost:3000"
+    label_matchers = [
+      "team=backend",
+      "stage=dev"
+    ]
   }
   subgraphs = {
     "subgraph-1" = {
-      name        = "subgraph-1"
+      name        = "${local.prefix}-subgraph-1"
       routing_url = "http://example.com/routing"
+      labels = {
+        "team"  = "backend"
+        "stage" = "dev"
+      }
     }
   }
-
-  // this will attach the subgraphs to an existing federated graph
-  // set this to false to create a new federated graph 
-  attach_subgraphs = false
-  // will create a new namespace
-  // set this to false to add the resources to an existing namespace
-  create_namespace = true
 }
 
