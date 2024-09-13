@@ -19,9 +19,9 @@ module "resource_cosmo_subgraph" {
 module "resource_cosmo_federated_graph" {
   source = "../resources/cosmo_federated_graph"
 
-  name        = "terraform-federated-graph-demo"
-  routing_url = "http://localhost:3000"
-  namespace   = module.resource_cosmo_namespace.name
+  name           = "terraform-federated-graph-demo"
+  routing_url    = "http://localhost:3000"
+  namespace      = module.resource_cosmo_namespace.name
   label_matchers = ["team=backend"]
 
   depends_on = [module.resource_cosmo_subgraph]

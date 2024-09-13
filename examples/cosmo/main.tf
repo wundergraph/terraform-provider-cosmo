@@ -59,8 +59,8 @@ resource "cosmo_federated_graph" "federated_graph" {
 resource "cosmo_subgraph" "subgraph" {
   for_each = local.stage_subgrahs
 
-  name               = "${each.key}-subgraph"
-  namespace          = cosmo_namespace.namespace[each.value.stage].name
+  name      = "${each.key}-subgraph"
+  namespace = cosmo_namespace.namespace[each.value.stage].name
 
   routing_url = each.value.routing_url
 

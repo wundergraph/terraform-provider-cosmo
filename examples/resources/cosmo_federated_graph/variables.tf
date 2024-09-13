@@ -8,7 +8,7 @@ variable "routing_url" {
 
 variable "namespace" {
   type = string
-}   
+}
 
 variable "label_matchers" {
   type = list(string)
