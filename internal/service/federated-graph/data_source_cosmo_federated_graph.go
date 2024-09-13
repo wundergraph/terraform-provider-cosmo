@@ -33,7 +33,7 @@ type FederatedGraphDataSourceModel struct {
 	RoutingURL             types.String `tfsdk:"routing_url"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
-	LabelMatchers          types.Map	   `tfsdk:"label_matchers"`
+	LabelMatchers          types.Map    `tfsdk:"label_matchers"`
 }
 
 func (d *FederatedGraphDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -137,4 +137,3 @@ func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.Read
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
-

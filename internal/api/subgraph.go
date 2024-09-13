@@ -35,7 +35,7 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 	return nil
 }
 
-func (p PlatformClient) UpdateSubgraph(ctx context.Context,  name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) error {
+func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) error {
 	request := connect.NewRequest(&platformv1.UpdateSubgraphRequest{
 		Name:                 name,
 		RoutingUrl:           &routingUrl,
@@ -57,7 +57,7 @@ func (p PlatformClient) UpdateSubgraph(ctx context.Context,  name, namespace, ro
 	return nil
 }
 
-func (p PlatformClient) DeleteSubgraph(ctx context.Context,  name, namespace string) error {
+func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace string) error {
 	request := connect.NewRequest(&platformv1.DeleteFederatedSubgraphRequest{
 		SubgraphName: name,
 		Namespace:    namespace,

@@ -53,4 +53,3 @@ func (t *transportWithAuth) RoundTrip(req *http.Request) (*http.Response, error)
 	req.Header.Set("Authorization", "Bearer "+t.ApiKey)
 	return t.Transport.RoundTrip(req)
 }
-
