@@ -26,3 +26,8 @@ variable "subgraphs" {
   }))
   description = "The subgraphs to be added to the federated graph"
 }
+
+variable "router_token_name" {
+  type        = string
+  description = "The name of the router token to be created"
+}

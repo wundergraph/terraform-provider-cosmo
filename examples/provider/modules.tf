@@ -9,8 +9,8 @@ locals {
 
 module "cosmo-federated-graph" {
   source = "../../modules/cosmo-federated-graph"
-
   namespace = "${local.prefix}-cosmo-module"
+  router_token_name = "${local.prefix}-router-token"
 
   federated_graph = {
     name        = "${local.prefix}-federated-graph"

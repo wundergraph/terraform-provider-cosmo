@@ -17,3 +17,9 @@ resource "cosmo_subgraph" "subgraph" {
   namespace   = cosmo_namespace.namespace.name
   routing_url = each.value.routing_url
 }
+
+resource "cosmo_router_token" "router_token" {
+  name = var.router_token_name
+  namespace = cosmo_namespace.namespace.name
+  graph_name = cosmo_federated_graph.federated_graph.name
+}
