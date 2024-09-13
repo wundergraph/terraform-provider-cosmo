@@ -1,7 +1,3 @@
-variable "base_subgraph_name" {
-  type = string
-}
-
 variable "name" {
   type = string
 }
@@ -12,4 +8,8 @@ variable "namespace" {
 
 variable "routing_url" {
   type = string
+}
+
+variable "labels" {
+  type = map(string)
 }

@@ -23,10 +23,10 @@ terraform {
 }
 
 resource "cosmo_subgraph" "test" {
-  base_subgraph_name = var.base_subgraph_name
-  name               = var.name
-  namespace          = var.namespace
-  routing_url        = var.routing_url
+  name        = var.name
+  namespace   = var.namespace
+  routing_url = var.routing_url
+  labels      = var.labels
 }
 ```
 
@@ -44,7 +44,7 @@ resource "cosmo_subgraph" "test" {
 - `headers` (List of String) Headers for the subgraph.
 - `is_event_driven_graph` (Boolean) Indicates if the subgraph is event-driven.
 - `is_feature_subgraph` (Boolean) Indicates if the subgraph is a feature subgraph.
-- `labels` (List of String) Labels for the subgraph.
+- `labels` (Map of String) Labels for the subgraph.
 - `readme` (String) The readme for the subgraph.
 - `subscription_protocol` (String) The subscription protocol for the subgraph.
 - `subscription_url` (String) The subscription URL for the subgraph.

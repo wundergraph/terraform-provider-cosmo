@@ -24,10 +24,9 @@ data "cosmo_federated_graph" "federated_graph" {
 resource "cosmo_subgraph" "subgraph" {
   for_each = var.subgraphs
 
-  name               = each.value.name
-  base_subgraph_name = var.attach_subgraphs ? data.cosmo_federated_graph.federated_graph["enabled"].name : cosmo_federated_graph.federated_graph["enabled"].name
-  namespace          = var.create_namespace ? cosmo_namespace.namespace["enabled"].name : data.cosmo_namespace.namespace["enabled"].name
-  routing_url        = each.value.routing_url
+  name        = each.value.name
+  namespace   = var.create_namespace ? cosmo_namespace.namespace["enabled"].name : data.cosmo_namespace.namespace["enabled"].name
+  routing_url = each.value.routing_url
 }
 
 

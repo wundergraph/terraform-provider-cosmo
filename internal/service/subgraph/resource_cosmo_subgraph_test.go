@@ -28,7 +28,8 @@ func TestAccSubgraphResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", routingURL),
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.#", "2"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.team", "backend"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.stage", "dev"),
 				),
 			},
 			{
@@ -61,7 +62,10 @@ resource "cosmo_subgraph" "test" {
   name                = "%s"
   namespace           = cosmo_namespace.test.name
   routing_url         = "%s"
-  labels              = ["team=backend", "stage=dev"]
+  labels              = { 
+  	"team"	= "backend", 
+	"stage" = "dev" 
+  }
 }
 `, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL)
 }

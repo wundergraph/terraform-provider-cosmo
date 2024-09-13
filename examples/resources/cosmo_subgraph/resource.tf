@@ -8,8 +8,8 @@ terraform {
 }
 
 resource "cosmo_subgraph" "test" {
-  base_subgraph_name = var.base_subgraph_name
-  name               = var.name
-  namespace          = var.namespace
-  routing_url        = var.routing_url
+  name        = var.name
+  namespace   = var.namespace
+  routing_url = var.routing_url
+  labels      = var.labels
 }

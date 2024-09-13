@@ -15,10 +15,13 @@ module "resource_cosmo_federated_graph" {
 module "resource_cosmo_subgraph" {
   source = "../resources/cosmo_subgraph"
 
-  name               = "subgraph-1"
-  base_subgraph_name = module.resource_cosmo_federated_graph.name
-  namespace          = module.resource_cosmo_namespace.name
-  routing_url        = "http://example.com/routing"
+  name        = "subgraph-1"
+  namespace   = module.resource_cosmo_namespace.name
+  routing_url = "http://example.com/routing"
+  labels = {
+    "team"  = "backend"
+    "stage" = "dev"
+  }
 }
 
 module "data_cosmo_federated_graph" {

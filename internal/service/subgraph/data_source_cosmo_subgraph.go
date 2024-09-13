@@ -30,7 +30,7 @@ type SubgraphDataSourceModel struct {
 	Namespace            types.String `tfsdk:"namespace"`
 	RoutingUrl           types.String `tfsdk:"routing_url"`
 	BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
-	Labels               types.List   `tfsdk:"labels"`
+	Labels               types.Map    `tfsdk:"labels"`
 	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	Readme               types.String `tfsdk:"readme"`
@@ -97,7 +97,7 @@ func (d *SubgraphDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				MarkdownDescription: "Headers for the subgraph.",
 				ElementType:         types.StringType,
 			},
-			"labels": schema.ListAttribute{
+			"labels": schema.MapAttribute{
 				Computed:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
@@ -149,12 +149,15 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data.RoutingUrl = types.StringValue(subgraph.GetRoutingURL())
 	data.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
-	var labels []attr.Value
+	var labels map[string]attr.Value
 	for _, matcher := range subgraph.GetLabels() {
-		labels = append(labels, types.StringValue(fmt.Sprintf("%s=%s", matcher.GetKey(), matcher.GetValue())))
+		if labels == nil {
+			labels = make(map[string]attr.Value)
+		}
+		labels[matcher.GetKey()] = types.StringValue(matcher.GetValue())
 	}
 
-	data.Labels = types.ListValueMust(types.StringType, labels)
+	data.Labels = types.MapValueMust(types.StringType, labels)
 	data.Readme = types.StringValue(subgraph.GetReadme())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
 	data.IsFeatureSubgraph = types.BoolValue(subgraph.GetIsFeatureSubgraph())

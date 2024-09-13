@@ -3,7 +3,6 @@ package subgraph
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -36,7 +35,7 @@ type SubgraphResourceModel struct {
 	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
 	Headers              types.List   `tfsdk:"headers"`
-	Labels               types.List   `tfsdk:"labels"`
+	Labels               types.Map    `tfsdk:"labels"`
 }
 
 func NewSubgraphResource() resource.Resource {
@@ -120,7 +119,7 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:            true,
 				MarkdownDescription: "Unset labels for the subgraph.",
 			},
-			"labels": schema.ListAttribute{
+			"labels": schema.MapAttribute{
 				Optional:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
@@ -141,24 +140,17 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	stringLabels, err := utils.ConvertAndValidateLabelMatchers(data.Labels, resp)
-	if err != nil {
-		return
-	}
-
 	var labels []*platformv1.Label
-	for _, label := range stringLabels {
-		labelParts := strings.Split(label, "=")
+	for key, value := range data.Labels.Elements() {
 		labels = append(labels, &platformv1.Label{
-			Key:   labelParts[0],
-			Value: labelParts[1],
+			Key:   key,
+			Value: value.(types.String).ValueString(),
 		})
 	}
 
 	// TODO: re-enable this once Graph Feature Flags are implementd
-	// err = api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
-	err = api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	// err := api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	err := api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
 		return
@@ -212,17 +204,11 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	stringLabels, err := utils.ConvertAndValidateLabelMatchers(data.Labels, resp)
-	if err != nil {
-		return
-	}
-
 	var labels []*platformv1.Label
-	for _, label := range stringLabels {
-		labelParts := strings.Split(label, "=")
+	for key, value := range data.Labels.Elements() {
 		labels = append(labels, &platformv1.Label{
-			Key:   labelParts[0],
-			Value: labelParts[1],
+			Key:   key,
+			Value: value.(types.String).ValueString(),
 		})
 	}
 
@@ -232,7 +218,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	headers := utils.ConvertHeadersToStringList(data.Headers)
-	err = api.UpdateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, headers, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	err := api.UpdateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, headers, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
 		return

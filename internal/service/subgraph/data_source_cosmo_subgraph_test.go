@@ -48,7 +48,7 @@ resource "cosmo_subgraph" "test" {
   name                = "%s"
   namespace           = cosmo_namespace.test.name
   routing_url         = "%s"
-  labels              = ["team=backend", "stage=dev"]
+  labels              = { "team" = "backend", "stage" = "dev" }
 }
 
 data "cosmo_subgraph" "test" {

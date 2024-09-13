@@ -43,7 +43,7 @@ data "cosmo_subgraph" "test" {
 - `id` (String) The unique identifier of the subgraph resource.
 - `is_event_driven_graph` (Boolean) Indicates if the subgraph is event-driven.
 - `is_feature_subgraph` (Boolean) Indicates if the subgraph is a feature subgraph.
-- `labels` (List of String) Labels for the subgraph.
+- `labels` (Map of String) Labels for the subgraph.
 - `readme` (String) The readme for the subgraph.
 - `routing_url` (String) The routing URL of the subgraph.
 - `subscription_protocol` (String) The subscription protocol for the subgraph.
