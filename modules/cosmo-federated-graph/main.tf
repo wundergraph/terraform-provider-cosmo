@@ -16,6 +16,7 @@ resource "cosmo_subgraph" "subgraph" {
   name        = each.value.name
   namespace   = cosmo_namespace.namespace.name
   routing_url = each.value.routing_url
+  schema      = each.value.schema
 }
 
 resource "cosmo_router_token" "router_token" {

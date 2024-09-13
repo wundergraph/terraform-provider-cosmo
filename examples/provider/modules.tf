@@ -24,6 +24,7 @@ module "cosmo-federated-graph" {
     "subgraph-1" = {
       name        = "${local.prefix}-subgraph-1"
       routing_url = "http://example.com/routing"
+      schema      = "type Query { hello: String }"
       labels = {
         "team"  = "backend"
         "stage" = "dev"
