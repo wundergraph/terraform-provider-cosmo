@@ -76,9 +76,13 @@ func DeleteFederatedGraph(ctx context.Context, client platformv1connect.Platform
 	})
 
 	request.Header().Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
-	_, err := client.DeleteFederatedGraph(ctx, request)
+	response, err := client.DeleteFederatedGraph(ctx, request)
 	if err != nil {
 		return err
+	}
+
+	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
+		return fmt.Errorf("failed to delete federated graph: %s", response.Msg)
 	}
 
 	return nil
