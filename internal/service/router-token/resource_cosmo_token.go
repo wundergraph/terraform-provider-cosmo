@@ -8,12 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 type TokenResource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type TokenResourceModel struct {
@@ -60,13 +59,13 @@ func (r *TokenResource) Configure(ctx context.Context, req resource.ConfigureReq
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.PlatformClient = client
+	r.client = client
 }
 
 func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -77,7 +76,7 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	apiResponse, err := api.CreateToken(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
+	apiResponse, err := r.client.CreateToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrCreatingToken, fmt.Sprintf("Could not create token: %s", err))
 		return

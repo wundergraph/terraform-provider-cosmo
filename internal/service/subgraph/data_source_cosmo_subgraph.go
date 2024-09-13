@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
@@ -21,7 +20,7 @@ func NewSubgraphDataSource() datasource.DataSource {
 }
 
 type SubgraphDataSource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type SubgraphDataSourceModel struct {
@@ -111,13 +110,13 @@ func (d *SubgraphDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	d.PlatformClient = client
+	d.client = client
 }
 
 func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -137,7 +136,7 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	subgraph, err := api.GetSubgraph(ctx, d.PlatformClient.Client, d.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	subgraph, err := d.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not read subgraph '%s' in namespace '%s': %s", data.Name.ValueString(), data.Namespace.ValueString(), err))
 		return

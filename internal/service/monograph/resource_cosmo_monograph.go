@@ -11,12 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 type MonographResource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type MonographResourceModel struct {
@@ -104,13 +103,13 @@ func (r *MonographResource) Configure(ctx context.Context, req resource.Configur
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.PlatformClient = client
+	r.client = client
 }
 
 func (r *MonographResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -126,10 +125,8 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	err := api.CreateMonograph(
+	err := r.client.CreateMonograph(
 		ctx,
-		r.PlatformClient.Client,
-		r.PlatformClient.CosmoApiKey,
 		data.Name.ValueString(),
 		data.Namespace.ValueString(),
 		data.RoutingURL.ValueString(),
@@ -146,7 +143,7 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	monograph, err := api.GetMonograph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrRetrievingMonograph, fmt.Sprintf("Could not retrieve monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
 		return
@@ -170,7 +167,7 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	monograph, err := api.GetMonograph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingMonograph, fmt.Sprintf("Could not read monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
 		return
@@ -198,10 +195,8 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	err := api.UpdateMonograph(
+	err := r.client.UpdateMonograph(
 		ctx,
-		r.PlatformClient.Client,
-		r.PlatformClient.CosmoApiKey,
 		data.Name.ValueString(),
 		data.Namespace.ValueString(),
 		data.RoutingURL.ValueString(),
@@ -218,7 +213,7 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	monograph, err := api.GetMonograph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrRetrievingMonograph, fmt.Sprintf("Could not fetch updated monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
 		return
@@ -240,7 +235,7 @@ func (r *MonographResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	err := api.DeleteMonograph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	err := r.client.DeleteMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrDeletingMonograph, fmt.Sprintf("Could not delete monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
 		return

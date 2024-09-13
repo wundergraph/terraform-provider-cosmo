@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
@@ -22,7 +21,7 @@ func NewMonographDataSource() datasource.DataSource {
 
 // MonographDataSource defines the data source implementation.
 type MonographDataSource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 // MonographDataSourceModel describes the data source data model.
@@ -101,13 +100,13 @@ func (d *MonographDataSource) Configure(ctx context.Context, req datasource.Conf
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *client.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	d.PlatformClient = client
+	d.client = client
 }
 
 // Read refreshes the data source data.
@@ -129,7 +128,7 @@ func (d *MonographDataSource) Read(ctx context.Context, req datasource.ReadReque
 		namespace = "default"
 	}
 
-	monograph, err := api.GetMonograph(ctx, d.PlatformClient.Client, d.PlatformClient.CosmoApiKey, data.Name.ValueString(), namespace)
+	monograph, err := d.client.GetMonograph(ctx, data.Name.ValueString(), namespace)
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingMonograph, fmt.Sprintf("Could not read monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), namespace))
 		return

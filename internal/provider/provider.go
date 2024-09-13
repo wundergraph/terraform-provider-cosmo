@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
@@ -33,7 +33,7 @@ type CosmoProvider struct {
 }
 
 type Provider struct {
-	*client.PlatformClient
+	*api.PlatformClient
 }
 
 // CosmoProviderModel describes the provider data model.
@@ -74,14 +74,14 @@ func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	cosmoApiKey := data.CosmoApiKey.ValueString()
 	cosmoApiUrl := data.CosmoApiUrl.ValueString()
 
-	providerConfig, err := client.NewClient(cosmoApiKey, cosmoApiUrl)
+	platformClient, err := api.NewClient(cosmoApiKey, cosmoApiUrl)
 
 	if err != nil {
 		utils.AddDiagnosticError(resp, "Error configuring client", err.Error())
 		return
 	}
-	resp.DataSourceData = providerConfig
-	resp.ResourceData = providerConfig
+	resp.DataSourceData = platformClient
+	resp.ResourceData = platformClient
 }
 
 func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resource {

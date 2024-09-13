@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"fmt"
@@ -25,15 +25,32 @@ func NewClient(apiKey, apiUrl string) (*PlatformClient, error) {
 		cosmoApiUrl = "https://cosmo-cp.wundergraph.com"
 	}
 
-	httpClient := http.Client{}
-	httpClient.Transport = &http.Transport{
+	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 	}
 
-	client := platformv1connect.NewPlatformServiceClient(&httpClient, cosmoApiUrl)
+	httpClient := &http.Client{
+		Transport: &transportWithAuth{
+			Transport: transport,
+			ApiKey:    cosmoApiKey,
+		},
+	}
+
+	client := platformv1connect.NewPlatformServiceClient(httpClient, cosmoApiUrl)
 
 	return &PlatformClient{
 		Client:      client,
 		CosmoApiKey: cosmoApiKey,
 	}, nil
 }
+
+type transportWithAuth struct {
+	Transport http.RoundTripper
+	ApiKey    string
+}
+
+func (t *transportWithAuth) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "Bearer "+t.ApiKey)
+	return t.Transport.RoundTrip(req)
+}
+
