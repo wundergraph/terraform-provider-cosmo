@@ -42,7 +42,7 @@ func DeleteToken(ctx context.Context, client platformv1connect.PlatformServiceCl
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete token: %s", response.Msg.GetResponse().GetDetails())
+		return fmt.Errorf("failed to delete token: %s", response.Msg)
 	}
 
 	return nil

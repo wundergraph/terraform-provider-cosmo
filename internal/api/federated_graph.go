@@ -63,7 +63,7 @@ func UpdateFederatedGraph(ctx context.Context, client platformv1connect.Platform
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to update federated graph: %s", response.Msg.GetResponse().GetDetails())
+		return nil, fmt.Errorf("failed to update federated graph: %s", response.Msg)
 	}
 
 	return response.Msg, nil
@@ -97,7 +97,7 @@ func GetFederatedGraph(ctx context.Context, client platformv1connect.PlatformSer
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to get federated graph: %s", response.Msg.GetResponse().GetDetails())
+		return nil, fmt.Errorf("failed to get federated graph: %s", response.Msg)
 	}
 
 	return response.Msg, nil

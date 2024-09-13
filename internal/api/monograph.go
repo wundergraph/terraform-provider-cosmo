@@ -68,7 +68,7 @@ func GetMonograph(ctx context.Context, client platformv1connect.PlatformServiceC
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to get monograph: %s", response.Msg.GetResponse().GetDetails())
+		return nil, fmt.Errorf("failed to get monograph: %s", response.Msg)
 	}
 
 	return response.Msg.Graph, nil
