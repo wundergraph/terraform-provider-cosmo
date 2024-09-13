@@ -33,6 +33,7 @@ Each resource and data source allows you to define and manage specific aspects o
 The provider can be used as follows:
 
 ```hcl
+# variables.tf
 variable "namespace" {
   type        = string
   description = "The name of the namespace to be used for the federated graph"
@@ -64,6 +65,7 @@ resource "cosmo_namespace" "namespace" {
   name = var.namespace
 }
 
+# main.tf
 resource "cosmo_federated_graph" "federated_graph" {
   name           = var.federated_graph.name
   routing_url    = var.federated_graph.routing_url
@@ -87,6 +89,7 @@ resource "cosmo_router_token" "router_token" {
   graph_name = cosmo_federated_graph.federated_graph.name
 }
 
+# outputs.tf
 output "router_token" {
   value = cosmo_router_token.router_token.token
 }
