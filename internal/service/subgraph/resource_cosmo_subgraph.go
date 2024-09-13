@@ -140,12 +140,15 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	var labels []*platformv1.Label
 	for key, value := range data.Labels.Elements() {
-		labels = append(labels, &platformv1.Label{
-			Key:   key,
-			Value: value.(types.String).ValueString(),
-		})
+		if strValue, ok := value.(types.String); ok {
+			labels = append(labels, &platformv1.Label{
+				Key:   key,
+				Value: strValue.ValueString(),
+			})
+		}
 	}
 
 	// TODO: re-enable this once Graph Feature Flags are implementd
@@ -206,10 +209,12 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 
 	var labels []*platformv1.Label
 	for key, value := range data.Labels.Elements() {
-		labels = append(labels, &platformv1.Label{
-			Key:   key,
-			Value: value.(types.String).ValueString(),
-		})
+		if strValue, ok := value.(types.String); ok {
+			labels = append(labels, &platformv1.Label{
+				Key:   key,
+				Value: strValue.ValueString(),
+			})
+		}
 	}
 
 	var unsetLabels *bool
