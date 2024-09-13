@@ -109,3 +109,21 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 
 	return subgraph, nil
 }
+
+func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, error) {
+	request := connect.NewRequest(&platformv1.PublishFederatedSubgraphRequest{
+		Name:      name,
+		Namespace: namespace,
+		Schema:    schema,
+	})
+	response, err := p.Client.PublishFederatedSubgraph(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Msg == nil {
+		return nil, fmt.Errorf("failed to publish subgraph: %s, the server response is nil", name)
+	}
+
+	return response.Msg, nil
+}

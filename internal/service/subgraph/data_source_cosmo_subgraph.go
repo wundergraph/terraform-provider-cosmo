@@ -37,6 +37,7 @@ type SubgraphDataSourceModel struct {
 	IsEventDrivenGraph   types.Bool   `tfsdk:"is_event_driven_graph"`
 	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	Headers              types.List   `tfsdk:"headers"`
+	Schema               types.String `tfsdk:"schema"`
 }
 
 func (d *SubgraphDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -100,6 +101,10 @@ func (d *SubgraphDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
+			},
+			"schema": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The schema for the subgraph.",
 			},
 		},
 	}

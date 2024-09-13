@@ -35,6 +35,7 @@ type SubgraphResourceModel struct {
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
 	Headers              types.List   `tfsdk:"headers"`
 	Labels               types.Map    `tfsdk:"labels"`
+	Schema               types.String `tfsdk:"schema"`
 }
 
 func NewSubgraphResource() resource.Resource {
@@ -123,6 +124,10 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
 			},
+			"schema": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The schema for the subgraph.",
+			},
 			// TODO: re-enable this once Graph Feature Flags are implementd
 			// "base_subgraph_name": schema.StringAttribute{
 			// 	Optional:            true,
@@ -162,6 +167,14 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
 		return
+	}
+
+	if data.Schema.ValueString() != "" {
+		_, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			return
+		}
 	}
 
 	data.Id = types.StringValue(subgraph.GetId())
@@ -213,6 +226,17 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 				Key:   key,
 				Value: strValue.ValueString(),
 			})
+		}
+	}
+
+	if data.Schema.ValueString() != "" {
+		apiResponse, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			return
+		}
+		if apiResponse.HasChanged != nil && *apiResponse.HasChanged {
+			resp.Diagnostics.AddWarning("Subgraph schema has changed", fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()))
 		}
 	}
 
