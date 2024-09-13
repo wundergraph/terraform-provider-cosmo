@@ -56,6 +56,9 @@ resource "cosmo_federated_graph" "test" {
   name      	= "%s"
   namespace 	= cosmo_namespace.test.name
   routing_url 	= "%s"
+  label_matchers = ["team=backend"]
+
+  depends_on = [cosmo_subgraph.test]
 }
 
 resource "cosmo_subgraph" "test" {

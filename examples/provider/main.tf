@@ -4,14 +4,6 @@ module "resource_cosmo_namespace" {
   name = "terraform-namespace-demo"
 }
 
-module "resource_cosmo_federated_graph" {
-  source = "../resources/cosmo_federated_graph"
-
-  name        = "terraform-federated-graph-demo"
-  routing_url = "http://localhost:3000"
-  namespace   = module.resource_cosmo_namespace.name
-}
-
 module "resource_cosmo_subgraph" {
   source = "../resources/cosmo_subgraph"
 
@@ -22,6 +14,17 @@ module "resource_cosmo_subgraph" {
     "team"  = "backend"
     "stage" = "dev"
   }
+}
+
+module "resource_cosmo_federated_graph" {
+  source = "../resources/cosmo_federated_graph"
+
+  name        = "terraform-federated-graph-demo"
+  routing_url = "http://localhost:3000"
+  namespace   = module.resource_cosmo_namespace.name
+  label_matchers = ["team=backend"]
+
+  depends_on = [module.resource_cosmo_subgraph]
 }
 
 module "data_cosmo_federated_graph" {

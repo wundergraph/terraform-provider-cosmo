@@ -48,6 +48,10 @@ resource "cosmo_federated_graph" "federated_graph" {
   name        = "${each.key}-federated-graph"
   routing_url = "http://${each.key}.localhost:3000"
   namespace   = cosmo_namespace.namespace[each.key].name
+
+  label_matchers = ["team=backend"]
+
+  depends_on = [cosmo_subgraph.subgraph]
 }
 
 // create each stages subgraph
@@ -56,8 +60,12 @@ resource "cosmo_subgraph" "subgraph" {
   for_each = local.stage_subgrahs
 
   name               = "${each.key}-subgraph"
-  base_subgraph_name = cosmo_federated_graph.federated_graph[each.value.stage].name
   namespace          = cosmo_namespace.namespace[each.value.stage].name
 
   routing_url = each.value.routing_url
+
+  labels = {
+    "team"  = "backend"
+    "stage" = "dev"
+  }
 }
