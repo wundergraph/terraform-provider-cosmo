@@ -37,6 +37,7 @@ The provider can be used as follows:
 variable "namespace" {
   type        = string
   description = "The name of the namespace to be used for the federated graph"
+  default = "your-namespace"
 }
 
 variable "federated_graph" {
@@ -46,6 +47,11 @@ variable "federated_graph" {
     label_matchers = list(string)
   })
   description = "The parameters of the federated graph"
+  default = {
+    name = "your-federated-graph"
+    routing_url = "http://localhost:3000"
+    label_matchers = ["team=backend", "stage=dev"]
+  }
 }
 
 variable "subgraphs" {
@@ -53,19 +59,33 @@ variable "subgraphs" {
     name        = string
     routing_url = string
     labels      = map(string)
+    schema      = string
   }))
   description = "The subgraphs to be added to the federated graph"
+  default = {
+    "subgraph-1" = {
+      name = "your-subgraph-1"
+      routing_url = "http://example.com/routing"
+      schema = "type Query { hello: String }"
+      labels = {
+        "team" = "backend"
+        "stage" = "dev"
+      }
+    }
+  }
 }
 
 variable "router_token_name" {
   type        = string
   description = "The name of the router token to be created"
+  default = "your-router-token"
 }
+
+# main.tf
 resource "cosmo_namespace" "namespace" {
   name = var.namespace
 }
 
-# main.tf
 resource "cosmo_federated_graph" "federated_graph" {
   name           = var.federated_graph.name
   routing_url    = var.federated_graph.routing_url
