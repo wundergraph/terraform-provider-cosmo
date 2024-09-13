@@ -1,9 +1,3 @@
-variable "stage" {
-  type        = string
-  default     = "dev"
-  description = "The stage of the federated graph"
-}
-
 variable "namespace" {
   type        = string
   description = "The name of the namespace to be used for the federated graph"
