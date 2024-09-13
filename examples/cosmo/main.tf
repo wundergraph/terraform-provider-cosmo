@@ -7,18 +7,38 @@ locals {
   subgraphs = {
     "product-api" = {
       routing_url = "http://product-api:3000/graphql"
+      labels = {
+        "team"  = "backend"
+        "stage" = "dev"
+      }
     },
     "employees-api" = {
       routing_url = "http://employees-api:3000/graphql"
-    }
+      labels = {
+        "team"  = "backend"
+        "stage" = "dev"
+      }
+    },
     "family-api" = {
       routing_url = "http://family-api:3000/graphql"
+      labels = {
+        "team"  = "backend"
+        "stage" = "dev"
+      }
     },
     "hobbies-api" = {
       routing_url = "http://hobbies-api:3000/graphql"
+      labels = {
+        "team"  = "backend"
+        "stage" = "dev"
+      }
     },
     "availability-api" = {
       routing_url = "http://availability-api:3000/graphql"
+      labels = {
+        "team"  = "qa"
+        "stage" = "int"
+      }
     },
   }
   stage_subgrahs = merge(flatten([
@@ -28,6 +48,7 @@ locals {
         "stage"       = key
         "subgraph"    = subgraph
         "routing_url" = subgraph_value.routing_url
+        "labels"      = subgraph_value.labels
       }
   }])...)
 }
@@ -64,8 +85,5 @@ resource "cosmo_subgraph" "subgraph" {
 
   routing_url = each.value.routing_url
 
-  labels = {
-    "team"  = "backend"
-    "stage" = "dev"
-  }
+  labels = each.value.labels
 }
