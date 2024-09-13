@@ -13,6 +13,7 @@ func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namesp
 	request := connect.NewRequest(&platformv1.CreateFederatedGraphTokenRequest{
 		GraphName: graphName,
 		Namespace: namespace,
+		TokenName: name,
 	})
 
 	response, err := p.Client.CreateFederatedGraphToken(ctx, request)
@@ -28,7 +29,7 @@ func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namesp
 		return "", fmt.Errorf("failed to create token: %s", response.Msg.GetResponse().GetDetails())
 	}
 
-	return fmt.Sprintf("Token created successfully: %s", response.Msg.Token), nil
+	return response.Msg.Token, nil
 }
 
 func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, namespace string) error {
