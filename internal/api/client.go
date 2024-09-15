@@ -16,8 +16,13 @@ type PlatformClient struct {
 
 func NewClient(apiKey, apiUrl string) (*PlatformClient, error) {
 	cosmoApiKey, ok := os.LookupEnv(utils.EnvCosmoApiKey)
-	if !ok {
+
+	if !ok && apiKey == "" {
 		return nil, fmt.Errorf("COSMO_API_KEY environment variable not set")
+	}
+
+	if apiKey != "" {
+		cosmoApiKey = apiKey
 	}
 
 	cosmoApiUrl, ok := os.LookupEnv(utils.EnvCosmoApiUrl)

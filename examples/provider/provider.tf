@@ -8,6 +8,6 @@ terraform {
 }
 
 provider "cosmo" {
-  api_url = "http://localhost:3001"
-  api_key = "cosmo_669b576aaadc10ee1ae81d9193425705"
+  api_url = var.api_url
+  api_key = var.api_key
 }
