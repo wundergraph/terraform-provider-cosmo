@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
+
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -65,12 +65,18 @@ func (r *FederatedGraphResource) Schema(ctx context.Context, req resource.Schema
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the federated graph. This is used to identify the graph and must be unique within the namespace.",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespace": schema.StringAttribute{
 				MarkdownDescription: "The namespace in which the federated graph is located. Defaults to 'default' if not provided.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"readme": schema.StringAttribute{
 				MarkdownDescription: "Readme content for the federated graph.",

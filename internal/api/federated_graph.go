@@ -56,6 +56,7 @@ func (p *PlatformClient) UpdateFederatedGraph(ctx context.Context, admissionWebh
 		AdmissionWebhookURL:    admissionWebhookURL,
 		AdmissionWebhookSecret: admissionWebhookSecret,
 		LabelMatchers:          graph.LabelMatchers,
+		Readme:                 graph.Readme,
 	})
 
 	response, err := p.Client.UpdateFederatedGraph(ctx, request)

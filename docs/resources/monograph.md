@@ -19,13 +19,13 @@ Cosmo Monograph Resource
 
 - `graph_url` (String) The GraphQL endpoint URL of the monograph.
 - `name` (String) The name of the monograph.
-- `namespace` (String) The namespace in which the monograph is located.
 - `routing_url` (String) The routing URL for the monograph.
 
 ### Optional
 
 - `admission_webhook_secret` (String) The admission webhook secret for the monograph.
 - `admission_webhook_url` (String) The admission webhook URL for the monograph.
+- `namespace` (String) The namespace in which the monograph is located.
 - `readme` (String) The readme for the subgraph.
 - `subscription_protocol` (String) The subscription protocol for the subgraph.
 - `subscription_url` (String) The subscription URL for the subgraph.
