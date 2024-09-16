@@ -7,6 +7,7 @@ VARS 						?= -var="api_url=$(COSMO_API_URL)" -var="api_key=$(COSMO_API_KEY)"
 
 e2e-init:
 	terraform -chdir=$(FEATURE) init $(INIT_FLAGS)
+	terraform -chdir=$(FEATURE) validate
 
 e2e-clean:
 	rm -rf $(FEATURE)/.terraform

@@ -22,9 +22,6 @@ terraform {
     }
   }
 }
-locals {
-  helm_values = yamldecode(file("${path.module}/values.yaml"))
-}
 
 provider "kubernetes" {
   host                   = module.minikube.host
