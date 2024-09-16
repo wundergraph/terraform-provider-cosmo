@@ -18,6 +18,7 @@ variable "subgraphs" {
     routing_url = string
     labels      = map(string)
     schema      = string
+    readme      = string
   }))
   description = "The subgraphs to be added to the federated graph"
 }

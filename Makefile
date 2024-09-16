@@ -8,6 +8,9 @@ EXAMPLES   						 = examples
 TEST							?= $$(go list ./... | grep -v 'vendor')
 HOSTNAME						?= terraform.local
 
+COSMO_API_URL					 ?= http://localhost:3001
+COSMO_API_KEY					 ?= cosmo_669b576aaadc10ee1ae81d9193425705
+
 default: testacc
 
 .PHONY: testacc
@@ -92,6 +95,17 @@ e2e-destroy-cosmo-monograph:
 
 e2e-clean-cosmo-monograph: 
 	FEATURE=examples/resources/comso_monograph make e2e-clean
+
+e2e-apply-cosmo-local-module: 
+	rm -rf modules/cosmo-local/.terraform.lock.hcl
+	FEATURE=modules/cosmo-local make e2e-init 
+	FEATURE=modules/cosmo-local make e2e-apply 
+
+e2e-destroy-cosmo-local-module: 
+	FEATURE=modules/cosmo-local make e2e-destroy 
+
+e2e-clean-cosmo-local-module: 
+	FEATURE=modules/cosmo-local make e2e-clean
 
 ## Convenience targets to run specific e2e tests
 
