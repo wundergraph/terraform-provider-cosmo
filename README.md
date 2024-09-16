@@ -117,13 +117,16 @@ output "router_token" {
 
 Further in depth examples can be found in the [examples](examples) directory.
 
-The module [cosmo-local](modules/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.
+The module [cosmo-local](examples/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.
 
 It will create a minikube cluster, install cosmo and other dependencies and also setup a federated graph and a subgraphs.
+
+To run the example, run `make e2e-apply-cosmo-local` from the root of the repository.
 
 Running apply will print out the hosts you need to add to your local `/etc/hosts` file to access the services:
 
 ```
+# example output
 hosts = <<EOT
     # WunderGraph
     192.168.49.2 studio.wundergraph.local
@@ -195,3 +198,6 @@ The Makefile includes several tasks to facilitate development and testing. For l
 - **e2e-cosmo-destroy**: Runs end-to-end tests for cosmo destroy. (References: `examples/cosmo`)
 - **e2e-cosmo-monograph-apply**: Runs end-to-end tests for the monograph feature. (References: `examples/resources/comso_monograph`)
 - **e2e-cosmo-monograph-destroy**: Runs end-to-end tests for monograph destroy. (References: `examples/resources/comso_monograph`)
+- **e2e-apply-cosmo-local**: Runs end-to-end tests for cosmo local. (References: `examples/cosmo-local`)
+- **e2e-destroy-cosmo-local**: Runs end-to-end tests for cosmo local destroy. (References: `examples/cosmo-local`)
+- **e2e-clean-cosmo-local**: Cleans up the cosmo local setup. (References: `examples/cosmo-local`)

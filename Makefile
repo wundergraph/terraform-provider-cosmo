@@ -101,16 +101,22 @@ e2e-destroy-cosmo-monograph:
 e2e-clean-cosmo-monograph: 
 	FEATURE=examples/resources/comso_monograph make e2e-clean
 
-e2e-apply-cosmo-local-module: 
-	rm -rf modules/cosmo-local/.terraform.lock.hcl
-	FEATURE=modules/cosmo-local make e2e-init 
-	FEATURE=modules/cosmo-local make e2e-apply 
+## Cosmo Local
+# Full example installing cosmo locally with a minikube kubernetes cluster 
+# This will also deploy a router and configure it to use the generated router token
+# Ensure to update your /etc/hosts file with
+# output "hosts" generated after apply
 
-e2e-destroy-cosmo-local-module: 
-	FEATURE=modules/cosmo-local make e2e-destroy 
+e2e-apply-cosmo-local: 
+	rm -rf examples/cosmo-local/.terraform.lock.hcl
+	FEATURE=examples/cosmo-local make e2e-init 
+	FEATURE=examples/cosmo-local make e2e-apply 
 
-e2e-clean-cosmo-local-module: 
-	FEATURE=modules/cosmo-local make e2e-clean
+e2e-destroy-cosmo-local: 
+	FEATURE=examples/cosmo-local make e2e-destroy 
+
+e2e-clean-cosmo-local: 
+	FEATURE=examples/cosmo-local make e2e-clean
 
 ## Convenience targets to run specific e2e tests
 

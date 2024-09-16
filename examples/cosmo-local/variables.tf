@@ -55,7 +55,7 @@ variable "cosmo" {
       namespace   = "cosmo"
       repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
       values      = []
-      init_values = "./values.yaml"
+      init_values = "./values/cosmo-values.yaml"
       set         = {}
     }
   }
@@ -83,7 +83,7 @@ variable "cosmo_router" {
       namespace   = "cosmo"
       repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
       values      = []
-      init_values = "./router-values.yaml"
+      init_values = "./values/router-values.yaml"
       set = {
         "image.registry"   = "ghcr.io"
         "image.repository" = "wundergraph/cosmo/router"
