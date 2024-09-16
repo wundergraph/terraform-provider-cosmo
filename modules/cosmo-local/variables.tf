@@ -84,7 +84,11 @@ variable "cosmo_router" {
       repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
       values      = []
       init_values = "./router-values.yaml"
-      set         = {}
+      set = {
+        "image.registry"   = "ghcr.io"
+        "image.repository" = "wundergraph/cosmo/router"
+        "image.version"    = "0.110.1"
+      }
     }
   }
 }

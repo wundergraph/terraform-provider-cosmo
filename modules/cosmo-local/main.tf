@@ -9,13 +9,11 @@ locals {
       values      = concat(var.cosmo_router.chart.values, [])
       init_values = var.cosmo_router.chart.init_values
       set = merge({
-        "image.registry"                           = "ghcr.io"
-        "image.repository"                         = "wundergraph/cosmo/router"
         "configuration.graphApiToken"              = module.cosmo_federated_graph.router_token
-        "configuration.controlplaneUrl"            = "http://cosmo-controlplane.cosmo.svc.cluster.local:3001"
-        "configuration.cdnUrl"                     = "http://cosmo-cdn.cosmo.svc.cluster.local:8787"
-        "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.cosmo.svc.cluster.local:4318"
-        "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.cosmo.svc.cluster.local:4005"
+        "configuration.controlplaneUrl"            = "http://cosmo-controlplane.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:3001"
+        "configuration.cdnUrl"                     = "http://cosmo-cdn.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:8787"
+        "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4318"
+        "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4005"
       }, var.cosmo_router.chart.set)
     }
   }
