@@ -117,9 +117,11 @@ output "router_token" {
 
 Further in depth examples can be found in the [examples](examples) directory.
 
+## Cosmo Local Example
+
 The module [cosmo-local](examples/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.
 
-It will create a minikube cluster, install cosmo and other dependencies and also setup a federated graph and a subgraphs.
+It will create a minikube cluster, install cosmo and other dependencies and also setup a federated graph with a subgraph and deploy a router with a router token.
 
 To run the example, run `make e2e-apply-cosmo-local` from the root of the repository.
 
@@ -147,7 +149,25 @@ To build the provider, clone the repository, enter the directory, and run `make 
 
 ## Usage
 
-To use the Cosmo Terraform provider:
+Ensure to set `COSMO_API_URL` and `COSMO_API_KEY` environment variables to point to your cosmo setup.
+
+For example:
+
+```bash
+export COSMO_API_KEY="cosmo_669b576aaadc10ee1ae81d9193425705"
+export COSMO_API_URL="http://localhost:3001"
+
+
+# start cosmo from within the cosmo repo
+cd cosmo
+make full-demo-up
+
+# build install and run the e2e tests with the cosmo provider
+cd terraform-provider-cosmo
+make clean build install e2e
+```
+
+The following commands are used to build and install the provider binary locally for use with end-to-end tests:
 
 1. **Install the Provider**: Run the following command to build and install the provider binary locally for use with end-to-end tests:
 
