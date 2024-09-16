@@ -8,6 +8,7 @@ variable "federated_graph" {
     name           = string
     routing_url    = string
     label_matchers = list(string)
+    readme         = string
   })
   description = "The parameters of the federated graph"
 }

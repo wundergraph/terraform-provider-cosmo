@@ -15,6 +15,7 @@ module "cosmo-federated-graph" {
   federated_graph = {
     name        = "${local.prefix}-federated-graph"
     routing_url = "http://localhost:3000"
+    readme      = "This is a test federated graph"
     label_matchers = [
       "team=backend",
       "stage=dev"
@@ -23,6 +24,7 @@ module "cosmo-federated-graph" {
   subgraphs = {
     "subgraph-1" = {
       name        = "${local.prefix}-subgraph-1"
+      readme      = "This is a test subgraph"
       routing_url = "http://example.com/routing"
       schema      = "type Query { hello: String }"
       labels = {

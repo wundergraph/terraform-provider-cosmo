@@ -7,6 +7,7 @@ resource "cosmo_federated_graph" "federated_graph" {
   routing_url    = var.federated_graph.routing_url
   namespace      = cosmo_namespace.namespace.name
   label_matchers = var.federated_graph.label_matchers
+  readme         = var.federated_graph.readme
   depends_on     = [cosmo_subgraph.subgraph]
 }
 
