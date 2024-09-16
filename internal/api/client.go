@@ -16,13 +16,21 @@ type PlatformClient struct {
 
 func NewClient(apiKey, apiUrl string) (*PlatformClient, error) {
 	cosmoApiKey, ok := os.LookupEnv(utils.EnvCosmoApiKey)
-	if !ok {
-		return nil, fmt.Errorf("COSMO_API_KEY environment variable not set")
+	if !ok && apiKey == "" {
+		return nil, fmt.Errorf("COSMO_API_KEY environment variable not set and no apiKey provided in provider")
+	} 
+
+	if ok && apiKey != "" {
+		cosmoApiKey = apiKey
 	}
 
 	cosmoApiUrl, ok := os.LookupEnv(utils.EnvCosmoApiUrl)
-	if !ok {
+	if !ok && apiUrl == "" {
 		cosmoApiUrl = "https://cosmo-cp.wundergraph.com"
+	}
+
+	if ok && apiUrl != "" {
+		cosmoApiUrl = apiUrl
 	}
 
 	transport := &http.Transport{

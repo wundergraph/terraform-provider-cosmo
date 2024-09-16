@@ -17,6 +17,11 @@ default: testacc
 testacc:
 	TF_ACC=1 go test $(TEST) -v -timeout 120m
 
+.PHONY: test-go
+test-go:
+	go test $(TEST) -v 
+
+
 .PHONY: test
 test: clean build install testacc e2e
 
