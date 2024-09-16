@@ -117,6 +117,27 @@ output "router_token" {
 
 Further in depth examples can be found in the [examples](examples) directory.
 
+The module [cosmo-local](modules/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.
+
+It will create a minikube cluster, install cosmo and other dependencies and also setup a federated graph and a subgraphs.
+
+Running apply will print out the hosts you need to add to your local `/etc/hosts` file to access the services:
+
+```
+hosts = <<EOT
+    # WunderGraph
+    192.168.49.2 studio.wundergraph.local
+    192.168.49.2 controlplane.wundergraph.local
+    192.168.49.2 router.wundergraph.local
+    192.168.49.2 keycloak.wundergraph.local
+    192.168.49.2 otelcollector.wundergraph.local
+    192.168.49.2 graphqlmetrics.wundergraph.local
+    192.168.49.2 cdn.wundergraph.local
+EOT
+```
+
+You can now access the router on `router.wundergraph.local` and the studio on `studio.wundergraph.local`. To test your installation.
+
 ## Building The Provider
 
 To build the provider, clone the repository, enter the directory, and run `make install` to compile and install the provider binary. Note that the `install` command will first build the provider to ensure the binary is up to date.

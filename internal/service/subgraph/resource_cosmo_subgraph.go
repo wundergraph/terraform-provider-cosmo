@@ -35,8 +35,8 @@ type SubgraphResourceModel struct {
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
 	// TBD: This is only used in the update subgraph method and not used atm
 	// Headers              types.List   `tfsdk:"headers"`
-	Labels               types.Map    `tfsdk:"labels"`
-	Schema               types.String `tfsdk:"schema"`
+	Labels types.Map    `tfsdk:"labels"`
+	Schema types.String `tfsdk:"schema"`
 }
 
 func NewSubgraphResource() resource.Resource {
