@@ -33,7 +33,8 @@ type SubgraphResourceModel struct {
 	IsEventDrivenGraph   types.Bool   `tfsdk:"is_event_driven_graph"`
 	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
-	Headers              types.List   `tfsdk:"headers"`
+	// TBD: This is only used in the update subgraph method and not used atm
+	// Headers              types.List   `tfsdk:"headers"`
 	Labels               types.Map    `tfsdk:"labels"`
 	Schema               types.String `tfsdk:"schema"`
 }
@@ -110,11 +111,11 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:            true,
 				MarkdownDescription: "Indicates if the subgraph is a feature subgraph.",
 			},
-			"headers": schema.ListAttribute{
-				Optional:            true,
-				MarkdownDescription: "Headers for the subgraph.",
-				ElementType:         types.StringType,
-			},
+			// "headers": schema.ListAttribute{
+			// 	Optional:            true,
+			// 	MarkdownDescription: "Headers for the subgraph.",
+			// 	ElementType:         types.StringType,
+			// },
 			"unset_labels": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Unset labels for the subgraph.",
@@ -218,8 +219,9 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		unsetLabels = &[]bool{true}[0]
 	}
 
-	headers := utils.ConvertHeadersToStringList(data.Headers)
-	err := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, headers, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	// TBD: This is only used in the update subgraph method and not used atm
+	// headers := utils.ConvertHeadersToStringList(data.Headers)
+	err := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
 		return
