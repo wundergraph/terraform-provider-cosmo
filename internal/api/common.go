@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/wundergraph/cosmo/connect-go/wg/cosmo/common"
+	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 )
 
 const (

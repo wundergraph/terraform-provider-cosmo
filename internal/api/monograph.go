@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/wundergraph/cosmo/connect-go/wg/cosmo/common"
-	platformv1 "github.com/wundergraph/cosmo/connect-go/wg/cosmo/platform/v1"
+	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
+	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
 func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) error {
