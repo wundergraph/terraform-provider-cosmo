@@ -34,14 +34,14 @@ resource "cosmo_router_token" "test" {
 
 ### Required
 
-- `graph_name` (String)
-- `name` (String)
+- `graph_name` (String) The name of the graph to create the token for.
+- `name` (String) The name of the router token.
 
 ### Optional
 
-- `namespace` (String)
+- `namespace` (String) The namespace to create the token in.
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
-- `token` (String, Sensitive)
+- `id` (String) The unique identifier of the router token.
+- `token` (String, Sensitive) The token to be used for the router.

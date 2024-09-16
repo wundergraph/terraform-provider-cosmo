@@ -6,14 +6,16 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 type TokenResource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type TokenResourceModel struct {
@@ -36,20 +38,36 @@ func (r *TokenResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "The unique identifier of the router token.",
+				Computed:            true,
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the router token.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"graph_name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the graph to create the token for.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespace": schema.StringAttribute{
-				Optional: true,
+				MarkdownDescription: "The namespace to create the token in.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"token": schema.StringAttribute{
-				Computed:  true,
-				Sensitive: true,
+				MarkdownDescription: "The token to be used for the router.",
+				Computed:            true,
+				Sensitive:           true,
 			},
 		},
 	}
@@ -60,13 +78,13 @@ func (r *TokenResource) Configure(ctx context.Context, req resource.ConfigureReq
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.PlatformClient = client
+	r.client = client
 }
 
 func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -77,8 +95,13 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	apiResponse, err := api.CreateToken(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
+	apiResponse, err := r.client.CreateToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
 	if err != nil {
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Token not found", fmt.Sprintf("Token '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		utils.AddDiagnosticError(resp, ErrCreatingToken, fmt.Sprintf("Could not create token: %s", err))
 		return
 	}

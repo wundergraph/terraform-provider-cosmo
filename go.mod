@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/wundergraph/cosmo/connect-go v0.0.0-20240912174639-638540986b46
+	github.com/wundergraph/cosmo/connect-go v0.0.0-20240916094337-a4c4cae55557
 )
 
 require (

@@ -82,8 +82,58 @@ func AddDiagnosticError(resp interface{}, title, message string) {
 	}
 }
 
+func AddDiagnosticWarning(resp interface{}, title, message string) {
+	switch r := resp.(type) {
+	case *resource.CreateResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.UpdateResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.DeleteResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.ReadResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *provider.ConfigureResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.SchemaResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.ConfigureResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *resource.ImportStateResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *datasource.ReadResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *datasource.ConfigureResponse:
+		r.Diagnostics.AddWarning(title, message)
+	case *datasource.SchemaResponse:
+		r.Diagnostics.AddWarning(title, message)
+	default:
+		panic(fmt.Sprintf("Unhandled response type: %T", resp))
+	}
+}
+
 func LogAction(ctx context.Context, action, resourceID, name, namespace string) {
 	tflog.Trace(ctx, fmt.Sprintf("%s federated graph resource", action), map[string]interface{}{
+		"id":        resourceID,
+		"name":      name,
+		"namespace": namespace,
+	})
+}
+
+func DebugAction(ctx context.Context, action string, name string, namespace string, additionalFields ...map[string]interface{}) {
+	mergedFields := map[string]interface{}{
+		"name":      name,
+		"namespace": namespace,
+	}
+	for _, fields := range additionalFields {
+		for k, v := range fields {
+			mergedFields[k] = v
+		}
+	}
+	tflog.Debug(ctx, fmt.Sprintf("%s federated graph resource", action), mergedFields)
+}
+
+func TraceAction(ctx context.Context, action, resourceID, name, namespace string) {
+	tflog.Debug(ctx, fmt.Sprintf("%s federated graph resource", action), map[string]interface{}{
 		"id":        resourceID,
 		"name":      name,
 		"namespace": namespace,

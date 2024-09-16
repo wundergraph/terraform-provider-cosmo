@@ -8,16 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	platformv1 "github.com/wundergraph/cosmo/connect-go/wg/cosmo/platform/v1"
+	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 type SubgraphResource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type SubgraphResourceModel struct {
@@ -34,8 +36,10 @@ type SubgraphResourceModel struct {
 	IsEventDrivenGraph   types.Bool   `tfsdk:"is_event_driven_graph"`
 	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
-	Headers              types.List   `tfsdk:"headers"`
-	Labels               types.Map    `tfsdk:"labels"`
+	// TBD: This is only used in the update subgraph method and not used atm
+	// Headers              types.List   `tfsdk:"headers"`
+	Labels types.Map    `tfsdk:"labels"`
+	Schema types.String `tfsdk:"schema"`
 }
 
 func NewSubgraphResource() resource.Resource {
@@ -47,13 +51,13 @@ func (r *SubgraphResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.PlatformClient = client
+	r.client = client
 }
 
 func (r *SubgraphResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -71,10 +75,15 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The name of the subgraph.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespace": schema.StringAttribute{
-				Required:            true,
 				MarkdownDescription: "The namespace in which the subgraph is located.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("default"),
 			},
 			"routing_url": schema.StringAttribute{
 				Required:            true,
@@ -110,11 +119,11 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:            true,
 				MarkdownDescription: "Indicates if the subgraph is a feature subgraph.",
 			},
-			"headers": schema.ListAttribute{
-				Optional:            true,
-				MarkdownDescription: "Headers for the subgraph.",
-				ElementType:         types.StringType,
-			},
+			// "headers": schema.ListAttribute{
+			// 	Optional:            true,
+			// 	MarkdownDescription: "Headers for the subgraph.",
+			// 	ElementType:         types.StringType,
+			// },
 			"unset_labels": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Unset labels for the subgraph.",
@@ -123,6 +132,10 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
+			},
+			"schema": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The schema for the subgraph.",
 			},
 			// TODO: re-enable this once Graph Feature Flags are implementd
 			// "base_subgraph_name": schema.StringAttribute{
@@ -140,25 +153,9 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var labels []*platformv1.Label
-	for key, value := range data.Labels.Elements() {
-		labels = append(labels, &platformv1.Label{
-			Key:   key,
-			Value: value.(types.String).ValueString(),
-		})
-	}
 
-	// TODO: re-enable this once Graph Feature Flags are implementd
-	// err := api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
-	err := api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	subgraph, err := r.createAndPublishSubgraph(ctx, data, resp)
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
-		return
-	}
-
-	subgraph, err := api.GetSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
 		return
 	}
 
@@ -180,9 +177,14 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	subgraph, err := api.GetSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not read subgraph '%s': %s", data.Name.ValueString(), err))
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Subgraph not found", fmt.Sprintf("Subgraph '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
 		return
 	}
 
@@ -206,10 +208,23 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 
 	var labels []*platformv1.Label
 	for key, value := range data.Labels.Elements() {
-		labels = append(labels, &platformv1.Label{
-			Key:   key,
-			Value: value.(types.String).ValueString(),
-		})
+		if strValue, ok := value.(types.String); ok {
+			labels = append(labels, &platformv1.Label{
+				Key:   key,
+				Value: strValue.ValueString(),
+			})
+		}
+	}
+
+	if data.Schema.ValueString() != "" {
+		apiResponse, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			return
+		}
+		if apiResponse.HasChanged != nil && *apiResponse.HasChanged {
+			resp.Diagnostics.AddWarning("Subgraph schema has changed", fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()))
+		}
 	}
 
 	var unsetLabels *bool
@@ -217,14 +232,19 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		unsetLabels = &[]bool{true}[0]
 	}
 
-	headers := utils.ConvertHeadersToStringList(data.Headers)
-	err := api.UpdateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, headers, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	// TBD: This is only used in the update subgraph method and not used atm
+	// headers := utils.ConvertHeadersToStringList(data.Headers)
+	err := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
-		return
+		if api.IsSubgraphCompositionFailedError(err) {
+			utils.AddDiagnosticWarning(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+		} else {
+			utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+			return
+		}
 	}
 
-	subgraph, err := api.GetSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch updated subgraph '%s': %s", data.Name.ValueString(), err))
 		return
@@ -248,7 +268,7 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	err := api.DeleteSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString())
+	err := r.client.DeleteSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrDeletingSubgraph, fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err))
 		return
@@ -259,4 +279,39 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *SubgraphResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data SubgraphResourceModel, resp *resource.CreateResponse) (*platformv1.Subgraph, error) {
+	var labels []*platformv1.Label
+	for key, value := range data.Labels.Elements() {
+		if strValue, ok := value.(types.String); ok {
+			labels = append(labels, &platformv1.Label{
+				Key:   key,
+				Value: strValue.ValueString(),
+			})
+		}
+	}
+	utils.DebugAction(ctx, "Labels", data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{"labels": labels})
+
+	err := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	if err != nil {
+		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
+		return nil, err
+	}
+
+	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if err != nil {
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
+		return nil, err
+	}
+
+	if data.Schema.ValueString() != "" {
+		_, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			return nil, err
+		}
+	}
+
+	return subgraph, nil
 }

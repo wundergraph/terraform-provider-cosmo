@@ -1,6 +1,3 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package provider
 
 import (
@@ -13,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
@@ -36,13 +33,13 @@ type CosmoProvider struct {
 }
 
 type Provider struct {
-	*client.PlatformClient
+	*api.PlatformClient
 }
 
 // CosmoProviderModel describes the provider data model.
 type CosmoProviderModel struct {
-	CosmoApiUrl types.String `tfsdk:"cosmo_api_url"`
-	CosmoApiKey types.String `tfsdk:"cosmo_api_key"`
+	ApiUrl types.String `tfsdk:"api_url"`
+	ApiKey types.String `tfsdk:"api_key"`
 }
 
 func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -53,11 +50,11 @@ func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataReque
 func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cosmo_api_url": schema.StringAttribute{
+			"api_url": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),
 				Optional:            true,
 			},
-			"cosmo_api_key": schema.StringAttribute{
+			"api_key": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Key to be used: %s", utils.EnvCosmoApiKey),
 				Optional:            true,
 			},
@@ -74,17 +71,17 @@ func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	cosmoApiKey := data.CosmoApiKey.ValueString()
-	cosmoApiUrl := data.CosmoApiUrl.ValueString()
+	cosmoApiKey := data.ApiKey.ValueString()
+	cosmoApiUrl := data.ApiUrl.ValueString()
 
-	providerConfig, err := client.NewClient(cosmoApiKey, cosmoApiUrl)
+	platformClient, err := api.NewClient(cosmoApiKey, cosmoApiUrl)
 
 	if err != nil {
 		utils.AddDiagnosticError(resp, "Error configuring client", err.Error())
 		return
 	}
-	resp.DataSourceData = providerConfig
-	resp.ResourceData = providerConfig
+	resp.DataSourceData = platformClient
+	resp.ResourceData = platformClient
 }
 
 func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resource {

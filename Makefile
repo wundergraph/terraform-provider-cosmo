@@ -8,11 +8,19 @@ EXAMPLES   						 = examples
 TEST							?= $$(go list ./... | grep -v 'vendor')
 HOSTNAME						?= terraform.local
 
+COSMO_API_URL					 ?= http://localhost:3001
+COSMO_API_KEY					 ?= cosmo_669b576aaadc10ee1ae81d9193425705
+
 default: testacc
 
 .PHONY: testacc
 testacc:
 	TF_ACC=1 go test $(TEST) -v -timeout 120m
+
+.PHONY: test-go
+test-go:
+	go test $(TEST) -v 
+
 
 .PHONY: test
 test: clean build install testacc e2e
@@ -31,6 +39,7 @@ build:
 	go build -o bin/${BINARY}
 
 install:
+	rm -f examples/**/.terraform.lock.hcl
 	rm -f ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv bin/${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
@@ -91,6 +100,23 @@ e2e-destroy-cosmo-monograph:
 
 e2e-clean-cosmo-monograph: 
 	FEATURE=examples/resources/comso_monograph make e2e-clean
+
+## Cosmo Local
+# Full example installing cosmo locally with a minikube kubernetes cluster 
+# This will also deploy a router and configure it to use the generated router token
+# Ensure to update your /etc/hosts file with
+# output "hosts" generated after apply
+
+e2e-apply-cosmo-local: 
+	rm -rf examples/cosmo-local/.terraform.lock.hcl
+	FEATURE=examples/cosmo-local make e2e-init 
+	FEATURE=examples/cosmo-local make e2e-apply 
+
+e2e-destroy-cosmo-local: 
+	FEATURE=examples/cosmo-local make e2e-destroy 
+
+e2e-clean-cosmo-local: 
+	FEATURE=examples/cosmo-local make e2e-clean
 
 ## Convenience targets to run specific e2e tests
 

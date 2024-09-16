@@ -1,0 +1,242 @@
+# Default values for router.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: wundergraph/cosmo/router
+  registry: ghcr.io
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  #version: "latest"
+
+# -- Add labels to all deployed resources
+commonLabels: {}
+
+deploymentStrategy: {}
+
+imagePullSecrets: []
+
+# -- String to partially override common.names.fullname template (will maintain the release name)
+nameOverride: ""
+
+# -- String to fully override common.names.fullname template
+fullnameOverride: ""
+
+# -- Allows to set additional environment / runtime variables on the container. Useful for global application non-specific settings.
+extraEnvVars:
+  []
+  # Is set automatically by the router but can be overridden if needed.
+  # GOMEMLIMIT is not compatible with dynamic pod resource requests introduced in Kubernetes 2.27 alpha.
+  # For more information see https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/
+  # Set the limit to around 90% of the max memory limit set in the pod spec. In this example, the limit is set to 2750MiB.
+#  - name: GOMEMLIMIT
+#    value: "2750MiB"
+
+# -- Optionally specify extra list of additional volumes for Router pods
+extraVolumes: []
+
+# -- Optionally specify extra list of additional volumeMounts for Router container's
+extraVolumeMounts: []
+
+# -- Name of existing ConfigMap containing extra env vars
+extraEnvVarsCM: ""
+
+# -- Name of existing Secret containing extra env vars
+extraEnvVarsSecret: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+serviceAnnotations: {}
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3002
+
+ingress:
+  enabled: true
+  #  className: ""
+  #  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: router.wundergraph.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# -- Sets the [istio gateway](https://istio.io/latest/docs/reference/config/networking/gateway/) load balancer to expose the virtual service
+# -- Requires Istio v1.5 or greater
+istioGateway:
+  # -- enable the istioGateway - often used in conjunction with istioVirtualService to expose services via an istio gateway deployment
+  enabled: false
+  # -- Selectors for the Gateway deployment
+  selector: {}
+  # -- Annotations for the Gateway
+  annotations: {}
+  # -- List of hosts that the gateway can serve
+  hosts:
+    []
+    # -- Hostname the Gateway can serve
+    # - host: router.wundergraph.local
+    # -- The name of the secret that holds the TLS certs including the CA certificates
+    #   credentialName: istio-ingressgateway-certs
+
+# -- Sets the [virtual service](https://istio.io/latest/docs/reference/config/networking/virtual-service/) to route a Gateway to the router
+# -- Requires Istio v1.5 or greater
+istioVirtualService:
+  # -- enable an Istio VirtualService
+  enabled: false
+  # -- Annotations for the VirtualService
+  annotations: {}
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+#initContainers:
+#  init-controlplane:
+#    image: busybox:1.28
+#    imagePullPolicy: "IfNotPresent"
+#    command: ['sh', '-c', 'until nslookup {{ include "controlplane.fullname" . }}; do echo waiting for controlplane; sleep 2; done;']
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -- Sets the [pod disruption budget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for Deployment pods
+podDisruptionBudget: {}
+
+# -- Set to existing PriorityClass name to control pod preemption by the scheduler
+priorityClassName: ""
+
+# -- Sets the [termination grace period](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) for Deployment pods
+terminationGracePeriodSeconds: 30
+
+probes:
+  # -- Configure readiness probe
+  readiness:
+    httpGet:
+      path: /health/ready
+      port: http
+    initialDelaySeconds: 5
+  # -- Configure liveness probe
+  liveness:
+    httpGet:
+      path: /health/live
+      port: http
+    initialDelaySeconds: 10
+
+global:
+  helmTests: false
+
+#############################
+# Application configuration #
+#############################
+
+# You have two options to configure the router:
+# 1. Use the existingConfigmap to provide the router configuration via a configmap.
+# 2. Use the commonConfiguration to provide the router configuration via yaml.
+# The configuration section should be used for simple use-cases and to pass sensitive information like the graphApiToken.
+# Only in that way, we guarantee that sensitive information are stored as secrets in the cluster.
+
+# -- The name of the configmap to use for the router configuration. The key "config.yaml" is required in the configmap.
+# If this is set, the commonConfiguration section is ignored.
+existingConfigmap: ""
+
+# -- Existing secret in the same namespace containing the graphApiToken. The secret key has to match with current secret.
+existingSecret: ""
+
+# Use this section to pass the graphApiToken or to configure simple settings.
+# -- You can use this to provide the router configuration via yaml. Values here have precedence over the configurations section.
+# For a full list of available configuration options, see https://cosmo-docs.wundergraph.com/router/configuration
+# This value is processed with the helm `tpl` function allowing referencing of variables and inclusion of templates
+commonConfiguration: |-
+  version: "1"
+  log_level: "info"
+
+# Use this section to pass the graphApiToken or to configure simple settings.
+configuration:
+  # -- The router token is used to authenticate the router against the controlplane (required)
+  graphApiToken: "replace-me"
+  # -- The execution config file to statically configure the router. If set, polling of the config is disabled.
+  # If your config exceeds 1MB (Kubernetes limit), you have to mount it as a file and set the path in routerConfigPath instead
+  executionConfig: ""
+  # -- The log level of the router. Default to info if not set.
+  logLevel: "info"
+  # -- The URL of the Cosmo Controlplane. Should be internal to the cluster. Default to cloud if not set.
+  controlplaneUrl: "http://cosmo-controlplane.cosmo.svc.cluster.local:3001"
+  # -- The URL of the Cosmo GraphQL OTEL Collector. Should be internal to the cluster. Default to cloud if not set.
+  otelCollectorUrl: "http://cosmo-otelcollector.cosmo.svc.cluster.local:4318"
+  # -- The URL of the Cosmo GraphQL Metrics Collector. Should be internal to the cluster. Default to cloud if not set.
+  graphqlMetricsCollectorUrl: "http://cosmo-graphqlmetrics.cosmo.svc.cluster.local:4005"
+  # -- Set to true to enable the development mode. This allows for Advanced Request Tracing (ART) in the GraphQL Playground
+  devMode: true
+  #-- The URL of the Cosmo CDN. Should be internal to the cluster. Default to cloud if not set.
+  cdnUrl: "http://cosmo-cdn.cosmo.svc.cluster.local:8787"
+  # -- The path to the router execution config file. Before, you have to mount the file as a volume and set the path here.
+  # A possible to solution could be to use an init container to download the file from a CDN. If set, polling of the config is disabled.
+  routerConfigPath: ""
+
+  # Use this section to disable/enable and configure prometheus metrics.
+  prometheus:
+    # -- Enables prometheus metrics support. Default is true.
+    enabled: true
+    # -- The port where metrics are exposed. Default is port 8088.
+    port: 8088
+    # -- The HTTP path where metrics are exposed. Default is "/metrics".
+    path: "/metrics"
+
+  # Use this section to configure the router's HTTP(S) proxy settings.
+  # When set the proxy is enabled.
+  # -- The URL of the HTTPS proxy server. Default is an empty string.
+  httpsProxy: ""
+  # -- The URL of the HTTP proxy server. Default is an empty string.
+  httpProxy: ""
+  # -- NO_PROXY is a comma-separated list of hosts or domains for which the proxy should not be used.
+  noProxy: ""

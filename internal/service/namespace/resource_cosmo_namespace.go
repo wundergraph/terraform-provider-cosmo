@@ -8,15 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	platformv1 "github.com/wundergraph/cosmo/connect-go/wg/cosmo/platform/v1"
-	platformv1connect "github.com/wundergraph/cosmo/connect-go/wg/cosmo/platform/v1/platformv1connect"
+	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 type NamespaceResource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 type NamespaceResourceModel struct {
@@ -33,13 +31,13 @@ func (r *NamespaceResource) Configure(ctx context.Context, req resource.Configur
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *client.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.PlatformClient = client
+	r.client = client
 }
 
 func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -75,13 +73,13 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	err := api.CreateNamespace(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString())
+	err := r.client.CreateNamespace(ctx, data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrCreatingNamespace, fmt.Sprintf("Could not create namespace: %s, name: %s", err, data.Name.ValueString()))
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString())
+	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
 		return
@@ -103,7 +101,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString())
+	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
 		return
@@ -132,13 +130,13 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString())
+	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
 		return
 	}
 
-	err = api.RenameNamespace(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, namespace.Name, data.Name.String())
+	err = r.client.RenameNamespace(ctx, namespace.Name, data.Name.String())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrUpdatingNamespace, fmt.Sprintf("Could not update namespace: %s", err))
 		return
@@ -157,7 +155,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	err := api.DeleteNamespace(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString())
+	err := r.client.DeleteNamespace(ctx, data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrDeletingNamespace, fmt.Sprintf("Could not delete namespace: %s", err))
 		return
@@ -166,8 +164,8 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), "")
 }
 
-func getNamespaceByName(ctx context.Context, client platformv1connect.PlatformServiceClient, cosmoApiKey string, name string) (*platformv1.Namespace, error) {
-	namespaces, err := api.ListNamespaces(ctx, client, cosmoApiKey)
+func getNamespaceByName(ctx context.Context, client api.PlatformClient, name string) (*platformv1.Namespace, error) {
+	namespaces, err := client.ListNamespaces(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not list namespaces: %w", err)
 	}

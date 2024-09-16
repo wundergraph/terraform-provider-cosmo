@@ -8,9 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	platformv1 "github.com/wundergraph/cosmo/connect-go/wg/cosmo/platform/v1"
+	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
@@ -23,7 +22,7 @@ func NewNamespaceDataSource() datasource.DataSource {
 
 // NamespaceDataSource defines the data source implementation.
 type NamespaceDataSource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 // NamespaceDataSourceModel describes the data source data model.
@@ -58,13 +57,13 @@ func (d *NamespaceDataSource) Configure(ctx context.Context, req datasource.Conf
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *client.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	d.PlatformClient = client
+	d.client = client
 }
 
 func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -80,7 +79,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	namespaceData, err := api.ListNamespaces(ctx, d.PlatformClient.Client, d.PlatformClient.CosmoApiKey)
+	namespaceData, err := d.client.ListNamespaces(ctx)
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingNamespace, fmt.Sprintf("Could not read namespace: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Name.ValueString()))
 		return

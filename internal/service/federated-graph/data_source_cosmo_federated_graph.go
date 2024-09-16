@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/client"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
@@ -23,7 +21,7 @@ func NewFederatedGraphDataSource() datasource.DataSource {
 
 // FederatedGraphDataSource defines the data source implementation.
 type FederatedGraphDataSource struct {
-	*client.PlatformClient
+	client *api.PlatformClient
 }
 
 // FederatedGraphDataSourceModel describes the data source data model.
@@ -35,7 +33,7 @@ type FederatedGraphDataSourceModel struct {
 	RoutingURL             types.String `tfsdk:"routing_url"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
-	LabelMatchers          types.List   `tfsdk:"label_matchers"`
+	LabelMatchers          types.Map    `tfsdk:"label_matchers"`
 }
 
 func (d *FederatedGraphDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -72,7 +70,7 @@ func (d *FederatedGraphDataSource) Schema(ctx context.Context, req datasource.Sc
 				Computed:            true,
 				Sensitive:           true,
 			},
-			"label_matchers": schema.ListAttribute{
+			"label_matchers": schema.MapAttribute{
 				MarkdownDescription: "A list of label matchers used to select the services that will form the federated graph.",
 				Computed:            true,
 				ElementType:         types.StringType,
@@ -90,13 +88,13 @@ func (d *FederatedGraphDataSource) Configure(ctx context.Context, req datasource
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.PlatformClient)
+	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
 		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	d.PlatformClient = client
+	d.client = client
 }
 
 func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -117,7 +115,7 @@ func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.Read
 		namespace = "default"
 	}
 
-	apiResponse, err := api.GetFederatedGraph(ctx, d.PlatformClient.Client, d.PlatformClient.CosmoApiKey, data.Name.ValueString(), namespace)
+	apiResponse, err := d.client.GetFederatedGraph(ctx, data.Name.ValueString(), namespace)
 	if err != nil {
 		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Could not read federated graph: %s", err))
 		return
@@ -132,12 +130,6 @@ func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.Read
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)
 	}
-
-	var labelMatchers []attr.Value
-	for _, matcher := range graph.GetLabelMatchers() {
-		labelMatchers = append(labelMatchers, types.StringValue(matcher))
-	}
-	data.LabelMatchers = types.ListValueMust(types.StringType, labelMatchers)
 
 	tflog.Trace(ctx, "Read federated graph data source", map[string]interface{}{
 		"id": data.Id.ValueString(),

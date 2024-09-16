@@ -28,13 +28,146 @@ The Cosmo Terraform provider includes the following resources and data sources:
 
 Each resource and data source allows you to define and manage specific aspects of your Cosmo infrastructure seamlessly within Terraform.
 
+## Example Usage
+
+The provider can be used as follows:
+
+```hcl
+# variables.tf
+variable "namespace" {
+  type        = string
+  description = "The name of the namespace to be used for the federated graph"
+  default = "your-namespace"
+}
+
+variable "federated_graph" {
+  type = object({
+    name           = string
+    routing_url    = string
+    label_matchers = list(string)
+  })
+  description = "The parameters of the federated graph"
+  default = {
+    name = "your-federated-graph"
+    routing_url = "http://localhost:3000"
+    label_matchers = ["team=backend", "stage=dev"]
+  }
+}
+
+variable "subgraphs" {
+  type = map(object({
+    name        = string
+    routing_url = string
+    labels      = map(string)
+    schema      = string
+  }))
+  description = "The subgraphs to be added to the federated graph"
+  default = {
+    "subgraph-1" = {
+      name = "your-subgraph-1"
+      routing_url = "http://example.com/routing"
+      schema = "type Query { hello: String }"
+      labels = {
+        "team" = "backend"
+        "stage" = "dev"
+      }
+    }
+  }
+}
+
+variable "router_token_name" {
+  type        = string
+  description = "The name of the router token to be created"
+  default = "your-router-token"
+}
+
+# main.tf
+resource "cosmo_namespace" "namespace" {
+  name = var.namespace
+}
+
+resource "cosmo_federated_graph" "federated_graph" {
+  name           = var.federated_graph.name
+  routing_url    = var.federated_graph.routing_url
+  namespace      = cosmo_namespace.namespace.name
+  label_matchers = var.federated_graph.label_matchers
+
+  depends_on     = [cosmo_subgraph.subgraph]
+}
+
+resource "cosmo_subgraph" "subgraph" {
+  for_each = var.subgraphs
+
+  name        = each.value.name
+  namespace   = cosmo_namespace.namespace.name
+  routing_url = each.value.routing_url
+}
+
+resource "cosmo_router_token" "router_token" {
+  name       = var.router_token_name
+  namespace  = cosmo_namespace.namespace.name
+  graph_name = cosmo_federated_graph.federated_graph.name
+}
+
+# outputs.tf
+output "router_token" {
+  value = cosmo_router_token.router_token.token
+}
+```
+
+Further in depth examples can be found in the [examples](examples) directory.
+
+## Cosmo Local Example
+
+The module [cosmo-local](examples/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.
+
+It will create a minikube cluster, install cosmo and other dependencies and also setup a federated graph with a subgraph and deploy a router with a router token.
+
+To run the example, run `make e2e-apply-cosmo-local` from the root of the repository.
+
+Running apply will print out the hosts you need to add to your local `/etc/hosts` file to access the services:
+
+```
+# example output
+hosts = <<EOT
+    # WunderGraph
+    192.168.49.2 studio.wundergraph.local
+    192.168.49.2 controlplane.wundergraph.local
+    192.168.49.2 router.wundergraph.local
+    192.168.49.2 keycloak.wundergraph.local
+    192.168.49.2 otelcollector.wundergraph.local
+    192.168.49.2 graphqlmetrics.wundergraph.local
+    192.168.49.2 cdn.wundergraph.local
+EOT
+```
+
+You can now access the router on `router.wundergraph.local` and the studio on `studio.wundergraph.local`. To test your installation.
+
 ## Building The Provider
 
 To build the provider, clone the repository, enter the directory, and run `make install` to compile and install the provider binary. Note that the `install` command will first build the provider to ensure the binary is up to date.
 
 ## Usage
 
-To use the Cosmo Terraform provider:
+Ensure to set `COSMO_API_URL` and `COSMO_API_KEY` environment variables to point to your cosmo setup.
+
+For example:
+
+```bash
+export COSMO_API_KEY="<cosmo-api-token>"
+export COSMO_API_URL="http://localhost:3001"
+
+
+# start cosmo from within the cosmo repo
+cd cosmo
+make full-demo-up
+
+# build install and run the e2e tests with the cosmo provider
+cd terraform-provider-cosmo
+make clean build install e2e
+```
+
+The following commands are used to build and install the provider binary locally for use with end-to-end tests:
 
 1. **Install the Provider**: Run the following command to build and install the provider binary locally for use with end-to-end tests:
 
@@ -85,3 +218,6 @@ The Makefile includes several tasks to facilitate development and testing. For l
 - **e2e-cosmo-destroy**: Runs end-to-end tests for cosmo destroy. (References: `examples/cosmo`)
 - **e2e-cosmo-monograph-apply**: Runs end-to-end tests for the monograph feature. (References: `examples/resources/comso_monograph`)
 - **e2e-cosmo-monograph-destroy**: Runs end-to-end tests for monograph destroy. (References: `examples/resources/comso_monograph`)
+- **e2e-apply-cosmo-local**: Runs end-to-end tests for cosmo local. (References: `examples/cosmo-local`)
+- **e2e-destroy-cosmo-local**: Runs end-to-end tests for cosmo local destroy. (References: `examples/cosmo-local`)
+- **e2e-clean-cosmo-local**: Cleans up the cosmo local setup. (References: `examples/cosmo-local`)
