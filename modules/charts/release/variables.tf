@@ -13,7 +13,7 @@ variable "chart" {
     version     = "0.11.1"
     namespace   = "cosmo"
     repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
-    values      = ["ingress"]
+    values      = []
     init_values = ""
     set         = {}
   }
