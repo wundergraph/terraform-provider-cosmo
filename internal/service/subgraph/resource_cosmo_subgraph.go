@@ -145,36 +145,9 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	var labels []*platformv1.Label
-	for key, value := range data.Labels.Elements() {
-		if strValue, ok := value.(types.String); ok {
-			labels = append(labels, &platformv1.Label{
-				Key:   key,
-				Value: strValue.ValueString(),
-			})
-		}
-	}
-
-	// TODO: re-enable this once Graph Feature Flags are implementd
-	// err := api.CreateSubgraph(ctx, r.PlatformClient.Client, r.PlatformClient.CosmoApiKey, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), data.BaseSubgraphName.ValueStringPointer(), labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
-	err := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	subgraph, err := r.createAndPublishSubgraph(ctx, data, resp)
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
 		return
-	}
-
-	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
-		return
-	}
-
-	if data.Schema.ValueString() != "" {
-		_, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
-		if err != nil {
-			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
-			return
-		}
 	}
 
 	data.Id = types.StringValue(subgraph.GetId())
@@ -287,4 +260,39 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *SubgraphResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data SubgraphResourceModel, resp *resource.CreateResponse) (*platformv1.Subgraph, error) {
+	var labels []*platformv1.Label
+	for key, value := range data.Labels.Elements() {
+		if strValue, ok := value.(types.String); ok {
+			labels = append(labels, &platformv1.Label{
+				Key:   key,
+				Value: strValue.ValueString(),
+			})
+		}
+	}
+	utils.DebugAction(ctx, "Labels", data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{"labels": labels})
+
+	err := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	if err != nil {
+		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
+		return nil, err
+	}
+
+	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if err != nil {
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
+		return nil, err
+	}
+
+	if data.Schema.ValueString() != "" {
+		_, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			return nil, err
+		}
+	}
+
+	return subgraph, nil
 }

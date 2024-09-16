@@ -100,6 +100,10 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 		return nil, fmt.Errorf("failed to get subgraph: %s, the server response is nil", name)
 	}
 
+	if response.Msg.Graph == nil {
+		return nil, fmt.Errorf("failed to get subgraph: %s", name)
+	}
+
 	subgraph := &platformv1.Subgraph{
 		Id:         response.Msg.Graph.Id,
 		Name:       response.Msg.Graph.Name,
