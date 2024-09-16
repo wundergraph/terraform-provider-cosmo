@@ -2,8 +2,8 @@ default: e2e-apply
 
 FEATURE  				?= examples/provider
 FLAGS 					?= -auto-approve
-INIT_FLAGS				?= -upgrade
-VARS 					?= -var="api_url=$(COSMO_API_URL)" -var="api_key=$(COSMO_API_KEY)"
+INIT_FLAGS			?= -upgrade
+VARS 						?= -var="api_url=$(COSMO_API_URL)" -var="api_key=$(COSMO_API_KEY)"
 
 e2e-init:
 	terraform -chdir=$(FEATURE) init $(INIT_FLAGS)
