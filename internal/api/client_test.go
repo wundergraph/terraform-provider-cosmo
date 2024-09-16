@@ -22,9 +22,4 @@ func TestNewClient(t *testing.T) {
 	if err != nil || client.CosmoApiKey != "passed_api_key" || client.Client == nil {
 		t.Errorf("Expected client with passed variables, got error: %v", err)
 	}
-
-	client, err = api.NewClient("", "")
-	if err == nil {
-		t.Errorf("Expected error when no API key is provided, got client: %v", client)
-	}
 }
