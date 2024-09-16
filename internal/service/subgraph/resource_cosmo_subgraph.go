@@ -179,7 +179,12 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not read subgraph '%s': %s", data.Name.ValueString(), err))
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Subgraph not found", fmt.Sprintf("Subgraph '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
 		return
 	}
 
@@ -231,8 +236,12 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	// headers := utils.ConvertHeadersToStringList(data.Headers)
 	err := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
-		return
+		if api.IsSubgraphCompositionFailedError(err) {
+			utils.AddDiagnosticWarning(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+		} else {
+			utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+			return
+		}
 	}
 
 	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())

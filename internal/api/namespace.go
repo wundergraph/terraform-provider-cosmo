@@ -2,11 +2,9 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"connectrpc.com/connect"
 
-	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
@@ -18,11 +16,12 @@ func (p PlatformClient) CreateNamespace(ctx context.Context, name string) error 
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to create namespace: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to create namespace: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return err
@@ -39,13 +38,15 @@ func (p PlatformClient) RenameNamespace(ctx context.Context, oldName, newName st
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to rename the namespace: %s, the server response is nil", oldName)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to rename the namespace: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (p PlatformClient) DeleteNamespace(ctx context.Context, name string) error {
@@ -56,13 +57,15 @@ func (p PlatformClient) DeleteNamespace(ctx context.Context, name string) error 
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to delete namespace: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete namespace: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (p PlatformClient) ListNamespaces(ctx context.Context) ([]*platformv1.Namespace, error) {
@@ -73,11 +76,12 @@ func (p PlatformClient) ListNamespaces(ctx context.Context) ([]*platformv1.Names
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to list namespaces, the server response is nil")
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to list namespaces: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.Msg.Namespaces, nil

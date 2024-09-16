@@ -180,6 +180,11 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Monograph not found", fmt.Sprintf("Monograph '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		utils.AddDiagnosticError(resp, ErrReadingMonograph, fmt.Sprintf("Could not read monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
 		return
 	}

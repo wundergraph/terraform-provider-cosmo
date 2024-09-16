@@ -169,7 +169,12 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 
 	apiResponse, err := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Could not read federated graph: %s, graph name: %s, graph namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Graph not found", fmt.Sprintf("Graph '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
 		return
 	}
 

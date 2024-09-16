@@ -97,6 +97,11 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	apiResponse, err := r.client.CreateToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
 	if err != nil {
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticWarning(resp, "Token not found", fmt.Sprintf("Token '%s' not found will be recreated", data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		utils.AddDiagnosticError(resp, ErrCreatingToken, fmt.Sprintf("Could not create token: %s", err))
 		return
 	}

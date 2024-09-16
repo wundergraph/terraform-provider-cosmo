@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
@@ -28,11 +26,12 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to create monograph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to create monograph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -57,11 +56,12 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to update monograph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to update monograph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -78,11 +78,12 @@ func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namesp
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to delete monograph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete monograph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -99,11 +100,12 @@ func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to get monograph: %s, the server response is nil", name)
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to get monograph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.Msg.Graph, nil

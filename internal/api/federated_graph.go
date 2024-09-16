@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
@@ -33,11 +31,12 @@ func (p *PlatformClient) CreateFederatedGraph(ctx context.Context, admissionWebh
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to create federated graph: %s, the server response is nil", graph.Name)
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to create federated graph: %s", response.Msg.GetResponse().GetDetails())
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.Msg, nil
@@ -65,11 +64,12 @@ func (p *PlatformClient) UpdateFederatedGraph(ctx context.Context, admissionWebh
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to create federated graph: %s, the server response is nil", graph.Name)
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to update federated graph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.Msg, nil
@@ -87,11 +87,12 @@ func (p *PlatformClient) DeleteFederatedGraph(ctx context.Context, name, namespa
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to delete federated graph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete federated graph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -109,11 +110,12 @@ func (p *PlatformClient) GetFederatedGraph(ctx context.Context, name, namespace 
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to get federated graph: %s, the server response is nil", name)
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return nil, fmt.Errorf("failed to get federated graph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.Msg, nil

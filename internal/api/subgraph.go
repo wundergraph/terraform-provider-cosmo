@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
@@ -29,11 +27,12 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to create subgraph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to create subgraph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -59,7 +58,12 @@ func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, rou
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to update subgraph: %s, the server response is nil", name)
+		return ErrEmptyMsg
+	}
+
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -76,11 +80,12 @@ func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace stri
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to delete subgraph: %s, the server response is nil", name)
+		return ErrEmptyMsg
 	}
 
-	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete subgraph: %s", response.Msg)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -97,21 +102,15 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to get subgraph: %s, the server response is nil", name)
+		return nil, ErrEmptyMsg
 	}
 
-	if response.Msg.Graph == nil {
-		return nil, fmt.Errorf("failed to get subgraph: %s", name)
+	err = handleErrorCodes(response.Msg.GetResponse().Code)
+	if err != nil {
+		return nil, err
 	}
 
-	subgraph := &platformv1.Subgraph{
-		Id:         response.Msg.Graph.Id,
-		Name:       response.Msg.Graph.Name,
-		Namespace:  response.Msg.Graph.Namespace,
-		RoutingURL: response.Msg.Graph.RoutingURL,
-	}
-
-	return subgraph, nil
+	return response.Msg.GetGraph(), nil
 }
 
 func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, error) {
@@ -126,7 +125,7 @@ func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, sc
 	}
 
 	if response.Msg == nil {
-		return nil, fmt.Errorf("failed to publish subgraph: %s, the server response is nil", name)
+		return nil, ErrEmptyMsg
 	}
 
 	return response.Msg, nil
