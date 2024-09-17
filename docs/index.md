@@ -3,12 +3,24 @@
 page_title: "cosmo Provider"
 subcategory: ""
 description: |-
-  The Cosmo provider is used to interact with the Cosmo API.
+  The Cosmo provider is used to interact with WunderGraph's Cosmo API.
+  It can be used to manage the following resources:
+  Namespace: Create or read namespaces.Federated Graph: Create or read federated graphs.Router Token: Create router tokens to be used with the router.Subgraph: Create and publish or read subgraphs.Monograph: Create or read monographs.
+  For more information on Cosmo, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/.
 ---
 
 # cosmo Provider
 
-The Cosmo provider is used to interact with the Cosmo API.
+The Cosmo provider is used to interact with WunderGraph's Cosmo API.
+It can be used to manage the following resources:
+
+- Namespace: Create or read namespaces.
+- Federated Graph: Create or read federated graphs.
+- Router Token: Create router tokens to be used with the router. 
+- Subgraph: Create and publish or read subgraphs.
+- Monograph: Create or read monographs.
+
+For more information on Cosmo, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/).
 
 ## Example Usage
 

@@ -49,7 +49,18 @@ func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataReque
 
 func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Cosmo provider is used to interact with the Cosmo API.",
+		MarkdownDescription: `
+The Cosmo provider is used to interact with WunderGraph's Cosmo API.
+It can be used to manage the following resources:
+
+- Namespace: Create or read namespaces.
+- Federated Graph: Create or read federated graphs.
+- Router Token: Create router tokens to be used with the router. 
+- Subgraph: Create and publish or read subgraphs.
+- Monograph: Create or read monographs.
+
+For more information on Cosmo, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/).
+		`,
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),
