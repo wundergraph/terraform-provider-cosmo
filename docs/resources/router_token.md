@@ -3,12 +3,16 @@
 page_title: "cosmo_router_token Resource - cosmo"
 subcategory: ""
 description: |-
-  Cosmo Router Token Resource
+  Generates a token that is limited to a federated graph. This token allows the router to interact with the platform and send metrics to the collectors.
+  
+  	For more information on router tokens, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/router/token/create).
 ---
 
 # cosmo_router_token (Resource)
 
-Cosmo Router Token Resource
+Generates a token that is limited to a federated graph. This token allows the router to interact with the platform and send metrics to the collectors.
+
+		For more information on router tokens, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/router/token/create).
 
 ## Example Usage
 

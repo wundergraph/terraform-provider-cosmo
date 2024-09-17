@@ -45,7 +45,11 @@ func (r *MonographResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *MonographResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Cosmo Monograph Resource",
+		MarkdownDescription: `
+		A monograph is a resource that represents a single subgraph with GraphQL Federation disabled.
+
+		For more information on monographs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/monograph).
+		`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
