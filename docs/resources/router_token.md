@@ -3,12 +3,12 @@
 page_title: "cosmo_router_token Resource - cosmo"
 subcategory: ""
 description: |-
-  
+  Cosmo Router Token Resource
 ---
 
 # cosmo_router_token (Resource)
 
-
+Cosmo Router Token Resource
 
 ## Example Usage
 

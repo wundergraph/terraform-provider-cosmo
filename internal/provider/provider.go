@@ -49,6 +49,7 @@ func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataReque
 
 func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The Cosmo provider is used to interact with the Cosmo API.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),

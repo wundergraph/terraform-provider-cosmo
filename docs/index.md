@@ -3,12 +3,12 @@
 page_title: "cosmo Provider"
 subcategory: ""
 description: |-
-  
+  The Cosmo provider is used to interact with the Cosmo API.
 ---
 
 # cosmo Provider
 
-
+The Cosmo provider is used to interact with the Cosmo API.
 
 ## Example Usage
 

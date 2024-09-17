@@ -36,6 +36,7 @@ func (r *TokenResource) Metadata(ctx context.Context, req resource.MetadataReque
 
 func (r *TokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Cosmo Router Token Resource",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the router token.",
