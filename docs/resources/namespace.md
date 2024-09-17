@@ -3,12 +3,15 @@
 page_title: "cosmo_namespace Resource - cosmo"
 subcategory: ""
 description: |-
-  Cosmo Namespace Resource
+  Namespaces group federated graphs and subgraphs. Each organization has a default, non-deletable namespace.
+  For more information on namespaces, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/cli/namespace.
 ---
 
 # cosmo_namespace (Resource)
 
-Cosmo Namespace Resource
+Namespaces group federated graphs and subgraphs. Each organization has a default, non-deletable namespace. 
+
+For more information on namespaces, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/namespace).
 
 ## Example Usage
 

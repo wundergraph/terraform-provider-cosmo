@@ -1,7 +1,9 @@
 variable "api_url" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "api_key" {
-  type = string
+  type    = string
+  default = ""
 }

@@ -36,6 +36,11 @@ func (r *TokenResource) Metadata(ctx context.Context, req resource.MetadataReque
 
 func (r *TokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `
+Generates a token that is limited to a federated graph. This token allows the router to interact with the platform and send metrics to the collectors.
+
+For more information on router tokens, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/router/token/create).
+		`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the router token.",
