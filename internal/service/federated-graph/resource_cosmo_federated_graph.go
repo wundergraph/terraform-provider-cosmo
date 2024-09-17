@@ -53,9 +53,9 @@ func (r *FederatedGraphResource) Metadata(ctx context.Context, req resource.Meta
 func (r *FederatedGraphResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
-		The federated graph resource is used to manage a single, unified data graph that is composed of multiple subgraphs.
+The federated graph resource is used to manage a single, unified data graph that is composed of multiple subgraphs.
 
-		For more information on federated graphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/federated-graph).
+For more information on federated graphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/federated-graph).
 		`,
 
 		Attributes: map[string]schema.Attribute{

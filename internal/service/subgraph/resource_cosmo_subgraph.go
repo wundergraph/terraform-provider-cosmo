@@ -67,9 +67,9 @@ func (r *SubgraphResource) Metadata(ctx context.Context, req resource.MetadataRe
 func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
-		This resource handles subgraphs. Each subgraph is responsible for defining its specific segment of the schema and managing the related queries.
+This resource handles subgraphs. Each subgraph is responsible for defining its specific segment of the schema and managing the related queries.
 		
-		For more information on subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/subgraph).
+For more information on subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/subgraph).
 		`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

@@ -4,15 +4,14 @@ page_title: "cosmo_monograph Resource - cosmo"
 subcategory: ""
 description: |-
   A monograph is a resource that represents a single subgraph with GraphQL Federation disabled.
-  
-  	For more information on monographs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/monograph).
+  For more information on monographs, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/cli/monograph.
 ---
 
 # cosmo_monograph (Resource)
 
 A monograph is a resource that represents a single subgraph with GraphQL Federation disabled.
 
-		For more information on monographs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/monograph).
+For more information on monographs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/monograph).
 
 
 

@@ -47,9 +47,9 @@ func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataR
 func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
-		Namespaces group federated graphs and subgraphs. Each organization has a default, non-deletable namespace. 
+Namespaces group federated graphs and subgraphs. Each organization has a default, non-deletable namespace. 
 
-		For more information on namespaces, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/namespace).
+For more information on namespaces, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/namespace).
 		`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

@@ -4,15 +4,14 @@ page_title: "cosmo_federated_graph Resource - cosmo"
 subcategory: ""
 description: |-
   The federated graph resource is used to manage a single, unified data graph that is composed of multiple subgraphs.
-  
-  	For more information on federated graphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/federated-graph).
+  For more information on federated graphs, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/cli/federated-graph.
 ---
 
 # cosmo_federated_graph (Resource)
 
 The federated graph resource is used to manage a single, unified data graph that is composed of multiple subgraphs.
 
-		For more information on federated graphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/federated-graph).
+For more information on federated graphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/federated-graph).
 
 ## Example Usage
 
