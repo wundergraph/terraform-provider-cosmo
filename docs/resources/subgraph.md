@@ -19,7 +19,7 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 terraform {
   required_providers {
     cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
+      source  = "wundergraph/cosmo"
       version = "0.0.1"
     }
   }

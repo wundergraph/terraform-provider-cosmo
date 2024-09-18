@@ -23,7 +23,7 @@ Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/)
 terraform {
   required_providers {
     cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
+      source  = "wundergraph/cosmo"
       version = "0.0.1"
     }
   }

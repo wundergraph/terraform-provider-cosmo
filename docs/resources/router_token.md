@@ -19,7 +19,7 @@ For more information on router tokens, please refer to the [Cosmo Documentation]
 terraform {
   required_providers {
     cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
+      source  = "wundergraph/cosmo"
       version = "0.0.1"
     }
   }

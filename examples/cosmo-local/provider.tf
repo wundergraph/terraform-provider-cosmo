@@ -13,7 +13,7 @@ terraform {
       version = "2.15.0"
     }
     cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
+      source  = "wundergraph/cosmo"
       version = "0.0.1"
     }
     time = {
