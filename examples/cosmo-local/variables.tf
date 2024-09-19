@@ -51,7 +51,7 @@ variable "cosmo" {
     release_name = "cosmo"
     chart = {
       name        = "cosmo"
-      version     = "0.11.1"
+      version     = "0.11.2"
       namespace   = "cosmo"
       repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
       values      = []

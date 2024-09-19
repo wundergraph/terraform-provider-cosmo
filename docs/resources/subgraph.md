@@ -16,15 +16,6 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 ## Example Usage
 
 ```terraform
-terraform {
-  required_providers {
-    cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
-      version = "0.0.1"
-    }
-  }
-}
-
 resource "cosmo_subgraph" "test" {
   name        = var.name
   namespace   = var.namespace

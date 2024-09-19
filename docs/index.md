@@ -20,15 +20,6 @@ Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/)
 ## Example Usage
 
 ```terraform
-terraform {
-  required_providers {
-    cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
-      version = "0.0.1"
-    }
-  }
-}
-
 provider "cosmo" {
   api_url = var.api_url
   api_key = var.api_key
