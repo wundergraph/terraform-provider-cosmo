@@ -10,6 +10,7 @@ module "resource_cosmo_subgraph" {
   name        = "subgraph-1"
   namespace   = module.resource_cosmo_namespace.name
   routing_url = "http://example.com/routing"
+  schema      = file("schema.graphql")
   labels = {
     "team"  = "backend"
     "stage" = "dev"

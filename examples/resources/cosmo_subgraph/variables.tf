@@ -13,3 +13,7 @@ variable "routing_url" {
 variable "labels" {
   type = map(string)
 }
+
+variable "schema" {
+  type = string
+}
