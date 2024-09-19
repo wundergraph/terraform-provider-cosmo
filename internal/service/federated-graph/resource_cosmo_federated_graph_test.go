@@ -59,7 +59,7 @@ func TestAccFederatedGraphResourceInvalidConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFederatedGraphResourceConfig(name, namespace, "invalid-url", ""),
-				ExpectError: regexp.MustCompile(`.*failed to create resource*`),
+				ExpectError: regexp.MustCompile(`.*Routing URL is not a valid URL*`),
 			},
 		},
 	})

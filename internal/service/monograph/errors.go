@@ -10,4 +10,5 @@ const (
 	ErrUpdatingMonograph        = "Error Updating Monograph"
 	ErrDeletingMonograph        = "Error Deleting Monograph"
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
+	ErrUnexpectedResourceType   = "Unexpected Resource Configure Type"
 )

@@ -53,7 +53,10 @@ func (r *SubgraphResource) Configure(ctx context.Context, req resource.Configure
 
 	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp,
+			ErrUnexpectedDataSourceType,
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 		return
 	}
 
@@ -181,14 +184,17 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		if api.IsNotFoundError(err) {
-			utils.AddDiagnosticWarning(resp, "Subgraph not found", fmt.Sprintf("Subgraph '%s' not found will be recreated", data.Name.ValueString()))
+	subgraph, apiError := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrSubgraphNotFound,
+				fmt.Sprintf("Subgraph '%s' not found will be recreated %s", data.Name.ValueString(), apiError.Error()),
+			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
 		return
 	}
 
@@ -223,11 +229,17 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	if data.Schema.ValueString() != "" {
 		apiResponse, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
 		if err != nil {
-			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
+			utils.AddDiagnosticError(resp,
+				ErrPublishingSubgraph,
+				fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err.Error()),
+			)
 			return
 		}
 		if apiResponse.HasChanged != nil && *apiResponse.HasChanged {
-			resp.Diagnostics.AddWarning("Subgraph schema has changed", fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()))
+			resp.Diagnostics.AddWarning(
+				ErrSubgraphSchemaChanged,
+				fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()),
+			)
 		}
 	}
 
@@ -238,19 +250,28 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// TBD: This is only used in the update subgraph method and not used atm
 	// headers := utils.ConvertHeadersToStringList(data.Headers)
-	err := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
-	if err != nil {
-		if api.IsSubgraphCompositionFailedError(err) {
-			utils.AddDiagnosticWarning(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+	apiErr := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	if apiErr != nil {
+		if api.IsSubgraphCompositionFailedError(apiErr) {
+			utils.AddDiagnosticWarning(resp,
+				ErrUpdatingSubgraph,
+				fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+			)
 		} else {
-			utils.AddDiagnosticError(resp, ErrUpdatingSubgraph, fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), err))
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingSubgraph,
+				fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+			)
 			return
 		}
 	}
 
 	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch updated subgraph '%s': %s", data.Name.ValueString(), err))
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingSubgraph,
+			fmt.Sprintf("Could not fetch updated subgraph '%s': %s", data.Name.ValueString(), err.Error()),
+		)
 		return
 	}
 
@@ -274,7 +295,10 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	err := r.client.DeleteSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrDeletingSubgraph, fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err))
+		utils.AddDiagnosticError(resp,
+			ErrDeletingSubgraph,
+			fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err.Error()),
+		)
 		return
 	}
 
@@ -297,23 +321,39 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 	}
 	utils.DebugAction(ctx, "Labels", data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{"labels": labels})
 
-	err := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingSubgraph, fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), err))
-		return nil, err
+	apiErr := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	if apiErr != nil {
+		utils.AddDiagnosticError(resp,
+			ErrCreatingSubgraph,
+			fmt.Sprintf("Could not create subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+		)
+		return nil, apiErr
 	}
 
-	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), err))
-		return nil, err
+	subgraph, apiErr := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiErr != nil {
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingSubgraph,
+			fmt.Sprintf("Could not fetch created subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+		)
+		return nil, apiErr
 	}
 
 	if data.Schema.ValueString() != "" {
-		_, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
-		if err != nil {
-			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err))
-			return nil, err
+		_, apiErr := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if apiErr != nil {
+			if api.IsSubgraphCompositionFailedError(apiErr) {
+				utils.AddDiagnosticWarning(resp,
+					ErrPublishingSubgraph,
+					fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+				)
+			} else {
+				utils.AddDiagnosticError(resp,
+					ErrPublishingSubgraph,
+					fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+				)
+				return nil, apiErr
+			}
 		}
 	}
 

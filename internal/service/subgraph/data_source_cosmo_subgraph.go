@@ -117,7 +117,10 @@ func (d *SubgraphDataSource) Configure(ctx context.Context, req datasource.Confi
 
 	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp,
+			ErrUnexpectedDataSourceType,
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 		return
 	}
 
@@ -133,17 +136,26 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	if data.Name.IsNull() || data.Name.ValueString() == "" {
-		utils.AddDiagnosticError(resp, ErrInvalidSubgraphName, "The 'name' attribute is required.")
+		utils.AddDiagnosticError(resp,
+			ErrInvalidSubgraphName,
+			"The 'name' attribute is required.",
+		)
 		return
 	}
 	if data.Namespace.IsNull() || data.Namespace.ValueString() == "" {
-		utils.AddDiagnosticError(resp, ErrInvalidNamespace, "The 'namespace' attribute is required.")
+		utils.AddDiagnosticError(resp,
+			ErrInvalidNamespace,
+			"The 'namespace' attribute is required.",
+		)
 		return
 	}
 
-	subgraph, err := d.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not read subgraph '%s' in namespace '%s': %s", data.Name.ValueString(), data.Namespace.ValueString(), err))
+	subgraph, apiError := d.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingSubgraph,
+			fmt.Sprintf("Could not read subgraph '%s' in namespace '%s': %s", data.Name.ValueString(), data.Namespace.ValueString(), apiError.Error()),
+		)
 		return
 	}
 

@@ -85,7 +85,7 @@ func (r *TokenResource) Configure(ctx context.Context, req resource.ConfigureReq
 
 	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
@@ -100,14 +100,17 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	apiResponse, err := r.client.CreateToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		if api.IsNotFoundError(err) {
-			utils.AddDiagnosticWarning(resp, "Token not found", fmt.Sprintf("Token '%s' not found will be recreated", data.Name.ValueString()))
+	apiResponse, apiError := r.client.CreateToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrCreatingToken,
+				fmt.Sprintf("Token '%s' not found will be recreated\nReason: %s", data.Name.ValueString(), apiError.Error()),
+			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrCreatingToken, fmt.Sprintf("Could not create token: %s", err))
+		utils.AddDiagnosticError(resp, ErrCreatingToken, "Could not create token: "+apiError.Error())
 		return
 	}
 

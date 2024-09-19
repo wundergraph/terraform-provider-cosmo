@@ -120,7 +120,10 @@ func (r *MonographResource) Configure(ctx context.Context, req resource.Configur
 
 	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp,
+			ErrUnexpectedResourceType,
+			fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 		return
 	}
 
@@ -136,11 +139,14 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if data.Name.IsNull() || data.Name.ValueString() == "" {
-		utils.AddDiagnosticError(resp, ErrInvalidMonographName, fmt.Sprintf("The 'name' attribute is required for monograph in namespace: %s", data.Namespace.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrInvalidMonographName,
+			"The 'name' attribute is required.",
+		)
 		return
 	}
 
-	err := r.client.CreateMonograph(
+	_, err := r.client.CreateMonograph(
 		ctx,
 		data.Name.ValueString(),
 		data.Namespace.ValueString(),
@@ -154,13 +160,19 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		data.AdmissionWebhookSecret.ValueString(),
 	)
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingMonograph, fmt.Sprintf("Could not create monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrCreatingMonograph,
+			"Could not create monograph: "+err.Error(),
+		)
 		return
 	}
 
-	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingMonograph, fmt.Sprintf("Could not retrieve monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+	monograph, apiError := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingMonograph,
+			"Could not create monograph: "+apiError.Error(),
+		)
 		return
 	}
 
@@ -182,14 +194,20 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		if api.IsNotFoundError(err) {
-			utils.AddDiagnosticWarning(resp, "Monograph not found", fmt.Sprintf("Monograph '%s' not found will be recreated", data.Name.ValueString()))
+	monograph, apiError := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				"Monograph not found",
+				"Monograph not found will be recreated: "+apiError.Error(),
+			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrReadingMonograph, fmt.Sprintf("Could not read monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingMonograph,
+			"Could not read monograph: "+apiError.Error(),
+		)
 		return
 	}
 
@@ -229,13 +247,19 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 		data.AdmissionWebhookSecret.ValueString(),
 	)
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingMonograph, fmt.Sprintf("Could not update monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingMonograph,
+			"Could not update monograph: "+err.Error(),
+		)
 		return
 	}
 
 	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingMonograph, fmt.Sprintf("Could not fetch updated monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingMonograph,
+			"Could not fetch updated monograph: "+err.Error(),
+		)
 		return
 	}
 
@@ -255,9 +279,12 @@ func (r *MonographResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	err := r.client.DeleteMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrDeletingMonograph, fmt.Sprintf("Could not delete monograph: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+	apiError := r.client.DeleteMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrDeletingMonograph,
+			"Could not delete monograph: "+apiError.Error(),
+		)
 		return
 	}
 

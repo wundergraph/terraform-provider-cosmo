@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespace string, routingUrl string, baseSubgraphName *string, labels []*platformv1.Label, subscriptionUrl *string, readme *string, isEventDrivenGraph *bool, isFeatureSubgraph *bool, subscriptionProtocol string, websocketSubprotocol string) error {
+func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespace string, routingUrl string, baseSubgraphName *string, labels []*platformv1.Label, subscriptionUrl *string, readme *string, isEventDrivenGraph *bool, isFeatureSubgraph *bool, subscriptionProtocol string, websocketSubprotocol string) *ApiError {
 	request := connect.NewRequest(&platformv1.CreateFederatedSubgraphRequest{
 		Name:                 name,
 		Namespace:            namespace,
@@ -23,22 +24,22 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 	})
 	response, err := p.Client.CreateFederatedSubgraph(ctx, request)
 	if err != nil {
-		return err
+		return &ApiError{Err: err, Reason: "CreateSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return &ApiError{Err: ErrEmptyMsg, Reason: "CreateSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
 	}
 
 	return nil
 }
 
-func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) error {
+func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) *ApiError {
 	request := connect.NewRequest(&platformv1.UpdateSubgraphRequest{
 		Name:                 name,
 		RoutingUrl:           &routingUrl,
@@ -54,66 +55,66 @@ func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, rou
 
 	response, err := p.Client.UpdateSubgraph(ctx, request)
 	if err != nil {
-		return err
+		return &ApiError{Err: err, Reason: "UpdateSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return &ApiError{Err: ErrEmptyMsg, Reason: "UpdateSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
 	}
 
 	return nil
 }
 
-func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace string) error {
+func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteFederatedSubgraphRequest{
 		SubgraphName: name,
 		Namespace:    namespace,
 	})
 	response, err := p.Client.DeleteFederatedSubgraph(ctx, request)
 	if err != nil {
-		return err
+		return &ApiError{Err: err, Reason: "DeleteSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return &ApiError{Err: ErrEmptyMsg, Reason: "DeleteSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
 	}
 
 	return nil
 }
 
-func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string) (*platformv1.Subgraph, error) {
+func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string) (*platformv1.Subgraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetSubgraphByNameRequest{
 		Name:      name,
 		Namespace: namespace,
 	})
 	response, err := p.Client.GetSubgraphByName(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, &ApiError{Err: err, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return nil, ErrEmptyMsg
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return nil, err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
 	}
 
 	return response.Msg.GetGraph(), nil
 }
 
-func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, error) {
+func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.PublishFederatedSubgraphRequest{
 		Name:      name,
 		Namespace: namespace,
@@ -121,11 +122,16 @@ func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, sc
 	})
 	response, err := p.Client.PublishFederatedSubgraph(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, &ApiError{Err: err, Reason: "PublishSubgraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return nil, ErrEmptyMsg
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "PublishSubgraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
 	}
 
 	return response.Msg, nil

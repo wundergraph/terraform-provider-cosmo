@@ -13,6 +13,7 @@ import (
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 
+	contract "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/contract"
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
 	monograph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/monograph"
 	namespace "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/namespace"
@@ -98,6 +99,7 @@ func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resourc
 		subgraph.NewSubgraphResource,
 		monograph.NewMonographResource,
 		router_token.NewTokenResource,
+		contract.NewContractResource,
 	}
 }
 
@@ -107,6 +109,7 @@ func (p *CosmoProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		subgraph.NewSubgraphDataSource,
 		namespace.NewNamespaceDataSource,
 		monograph.NewMonographDataSource,
+		contract.NewContractDataSource,
 	}
 }
 

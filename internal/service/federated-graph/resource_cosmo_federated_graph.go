@@ -305,14 +305,14 @@ func (r *FederatedGraphResource) createFederatedGraph(ctx context.Context, data 
 		"label_matchers":        labelMatchers,
 	})
 
-	_, err = r.client.CreateFederatedGraph(ctx, admissionWebhookSecret, &apiGraph)
-	if err != nil {
-		return nil, fmt.Errorf("could not create federated graph: %w", err)
+	_, apiError := r.client.CreateFederatedGraph(ctx, admissionWebhookSecret, &apiGraph)
+	if apiError != nil {
+		return nil, fmt.Errorf("could not create federated graph: %w", apiError)
 	}
 
-	response, err := r.client.GetFederatedGraph(ctx, apiGraph.Name, apiGraph.Namespace)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve federated graph: %w", err)
+	response, apiError := r.client.GetFederatedGraph(ctx, apiGraph.Name, apiGraph.Namespace)
+	if apiError != nil {
+		return nil, fmt.Errorf("could not retrieve federated graph: %w", apiError)
 	}
 
 	utils.DebugAction(ctx, DebugCreate, data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{
