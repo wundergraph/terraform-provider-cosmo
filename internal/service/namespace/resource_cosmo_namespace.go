@@ -140,9 +140,9 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	err = r.client.RenameNamespace(ctx, namespace.Name, data.Name.String())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingNamespace, fmt.Sprintf("Could not update namespace: %s", err))
+	renameApiError := r.client.RenameNamespace(ctx, namespace.Name, data.Name.String())
+	if renameApiError != nil {
+		utils.AddDiagnosticError(resp, ErrUpdatingNamespace, fmt.Sprintf("Could not update namespace: %s", renameApiError))
 		return
 	}
 
