@@ -14,12 +14,12 @@ func TestAccSubgraphResource(t *testing.T) {
 	namespace := acctest.RandomWithPrefix("test-namespace")
 
 	federatedGraphName := acctest.RandomWithPrefix("test-subgraph")
-	federatedGraphRoutingURL := "https://example.com"
+	federatedGraphRoutingURL := "https://federated-graph-example.com"
 
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
 
-	routingURL := "https://example.com"
-	updatedRoutingURL := "https://updated-example.com"
+	routingURL := "https://subgraph-example.com"
+	updatedRoutingURL := "https://updated-subgraph-example.com"
 
 	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
@@ -55,16 +55,15 @@ func TestAccSubgraphResource(t *testing.T) {
 	})
 }
 
-// these subgraphs should be deleteable without any issues
 func TestAccStandaloneSubgraphResource(t *testing.T) {
 	namespace := acctest.RandomWithPrefix("test-namespace")
 
 	federatedGraphName := acctest.RandomWithPrefix("test-subgraph")
-	federatedGraphRoutingURL := "https://example.com"
+	federatedGraphRoutingURL := "https://federated-graph-standalone-subgraph-example.com"
 
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
 
-	routingURL := "https://example.com"
+	routingURL := "https://subgraph-standalone-example.com"
 	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
 	resource.Test(t, resource.TestCase{
@@ -106,10 +105,10 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 func TestAccSubgraphResourceInvalidSchema(t *testing.T) {
 	namespace := acctest.RandomWithPrefix("test-namespace")
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
-	subgraphRoutingURL := "https://example.com"
+	subgraphRoutingURL := "https://subgraph-invalid-schema-example.com"
 
 	federatedGraphName := acctest.RandomWithPrefix("test-subgraph")
-	federatedGraphRoutingURL := "https://example.com"
+	federatedGraphRoutingURL := "https://federated-graph-invalid-subgraph-schema-example.com"
 	subgraphSchema := "invalid"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -127,7 +126,7 @@ func TestAccSubgraphResourceInvalidSchema(t *testing.T) {
 func TestAccStandaloneSubgraphResourcePublishSchema(t *testing.T) {
 	namespace := acctest.RandomWithPrefix("test-namespace")
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
-	subgraphRoutingURL := "https://example.com"
+	subgraphRoutingURL := "https://subgraph-publish-schema-example.com"
 
 	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 	updatedSubgraphSchema := "invalid"

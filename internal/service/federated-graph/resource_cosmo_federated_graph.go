@@ -137,13 +137,10 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 
 	response, apiError := r.createFederatedGraph(ctx, data, resp)
 	if apiError != nil {
-		if api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
-		} else {
+		if !api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticError(resp, ErrCreatingGraph, apiError.Error())
 			return
 		}
-		utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
 	}
 
 	graph := response.Graph
@@ -230,7 +227,7 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		admissionWebhookSecret = data.AdmissionWebhookSecret.ValueStringPointer()
 	}
 
-	apiResponse, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &graph)
+	_, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &graph)
 	if apiError != nil {
 		if api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticWarning(resp,
@@ -244,11 +241,6 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 			)
 			return
 		}
-	}
-
-	if len(apiResponse.CompositionErrors) > 0 {
-		utils.AddDiagnosticWarning(resp, ErrCompositionError, fmt.Sprintf("Composition errors: %v, graph name: %s, graph namespace: %s", apiResponse.CompositionErrors, graph.GetName(), graph.GetNamespace()))
-		return
 	}
 
 	utils.LogAction(ctx, "updated", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
