@@ -3,12 +3,15 @@
 page_title: "cosmo_contract Resource - cosmo"
 subcategory: ""
 description: |-
-  
+  A contract is a Terraform resource representing a single subgraph with GraphQL Federation enabled, allowing developers to build versatile, multi-audience graphs while simplifying development and ensuring maintainability.
+  For more information, refer to the Cosmo Documentation at https://cosmo-docs.wundergraph.com/concepts/schema-contracts.
 ---
 
 # cosmo_contract (Resource)
 
+A contract is a Terraform resource representing a single subgraph with GraphQL Federation enabled, allowing developers to build versatile, multi-audience graphs while simplifying development and ensuring maintainability. 
 
+For more information, refer to the Cosmo Documentation at https://cosmo-docs.wundergraph.com/concepts/schema-contracts.
 
 ## Example Usage
 
