@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	common "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -67,7 +68,6 @@ For more information on namespaces, please refer to the [Cosmo Documentation](ht
 func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data NamespaceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -105,9 +105,13 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
+	namespace, apiError := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrReadingNamespace, apiError.Error())
 		return
 	}
 
@@ -168,10 +172,10 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), "")
 }
 
-func getNamespaceByName(ctx context.Context, client api.PlatformClient, name string) (*platformv1.Namespace, error) {
+func getNamespaceByName(ctx context.Context, client api.PlatformClient, name string) (*platformv1.Namespace, *api.ApiError) {
 	namespaces, err := client.ListNamespaces(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could not list namespaces: %w", err)
+		return nil, err
 	}
 
 	for _, namespace := range namespaces {
@@ -180,9 +184,8 @@ func getNamespaceByName(ctx context.Context, client api.PlatformClient, name str
 		}
 	}
 
-	return nil, fmt.Errorf("namespace with name '%s' not found", name)
+	return nil, api.NewApiErrorWithErr(common.EnumStatusCode_ERR_NOT_FOUND, fmt.Sprintf("namespace with name '%s' not found", name), fmt.Errorf("namespace with name '%s' not found", name))
 }
-
 func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

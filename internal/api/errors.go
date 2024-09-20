@@ -43,6 +43,10 @@ func (e *ApiError) Error() string {
 	return fmt.Sprintf("%s: %s (status: %s)", e.Err.Error(), e.Reason, e.Status.String())
 }
 
+func NewApiErrorWithErr(statusCode common.EnumStatusCode, reason string, err error) *ApiError {
+	return &ApiError{Err: err, Reason: reason, Status: statusCode}
+}
+
 func handleErrorCodes(statusCode common.EnumStatusCode, reason string) *ApiError {
 	if strings.Contains(reason, ContractCompositionFailedReason) {
 		return &ApiError{Err: ErrContractCompositionFailed, Reason: reason, Status: statusCode}
