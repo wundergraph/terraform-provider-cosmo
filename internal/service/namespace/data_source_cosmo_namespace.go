@@ -79,9 +79,12 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	namespaceData, err := d.client.ListNamespaces(ctx)
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrReadingNamespace, fmt.Sprintf("Could not read namespace: %s, name: %s, namespace: %s", err, data.Name.ValueString(), data.Name.ValueString()))
+	namespaceData, apiError := d.client.ListNamespaces(ctx)
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrReadingNamespace,
+			apiError.Error(),
+		)
 		return
 	}
 

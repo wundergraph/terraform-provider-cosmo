@@ -105,6 +105,18 @@ variable "api_key" {
 
 variable "switch_schema" {
   type        = bool
-  description = "The schema to use for the federated graph"
+  description = "Switch the schema to use for the federated graph"
   default     = false
+}
+
+variable "federated_graphs" {
+  type = map(object({
+    name = string
+  }))
+  description = "Switch the schema to use for the federated graph"
+  default = {
+    "spacex" = {
+      name = "spacex"
+    }
+  }
 }

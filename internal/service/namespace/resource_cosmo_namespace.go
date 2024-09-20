@@ -79,13 +79,19 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 
 	apiError := r.client.CreateNamespace(ctx, data.Name.ValueString())
 	if apiError != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingNamespace, fmt.Sprintf("Could not create namespace: %s, name: %s", apiError, data.Name.ValueString()))
+		utils.AddDiagnosticError(resp,
+			ErrCreatingNamespace,
+			apiError.Error(),
+		)
 		return
 	}
 
 	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
+		utils.AddDiagnosticError(resp,
+			ErrReadingNamespace,
+			err.Error(),
+		)
 		return
 	}
 
@@ -140,13 +146,19 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 
 	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrReadingNamespace, err.Error())
+		utils.AddDiagnosticError(resp,
+			ErrReadingNamespace,
+			err.Error(),
+		)
 		return
 	}
 
 	renameApiError := r.client.RenameNamespace(ctx, namespace.Name, data.Name.String())
 	if renameApiError != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingNamespace, fmt.Sprintf("Could not update namespace: %s", renameApiError))
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingNamespace,
+			renameApiError.Error(),
+		)
 		return
 	}
 
@@ -165,7 +177,10 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	err := r.client.DeleteNamespace(ctx, data.Name.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp, ErrDeletingNamespace, fmt.Sprintf("Could not delete namespace: %s", err))
+		utils.AddDiagnosticError(resp,
+			ErrDeletingNamespace,
+			err.Error(),
+		)
 		return
 	}
 

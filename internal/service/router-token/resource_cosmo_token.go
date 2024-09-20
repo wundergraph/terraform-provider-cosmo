@@ -105,12 +105,15 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
 				ErrCreatingToken,
-				fmt.Sprintf("Token '%s' not found will be recreated\nReason: %s", data.Name.ValueString(), apiError.Error()),
+				apiError.Error(),
 			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrCreatingToken, "Could not create token: "+apiError.Error())
+		utils.AddDiagnosticError(resp,
+			ErrCreatingToken,
+			apiError.Error(),
+		)
 		return
 	}
 

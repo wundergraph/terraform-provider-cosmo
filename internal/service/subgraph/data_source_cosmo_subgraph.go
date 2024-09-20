@@ -154,7 +154,7 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 	if apiError != nil {
 		utils.AddDiagnosticError(resp,
 			ErrRetrievingSubgraph,
-			fmt.Sprintf("Could not read subgraph '%s' in namespace '%s': %s", data.Name.ValueString(), data.Namespace.ValueString(), apiError.Error()),
+			apiError.Error(),
 		)
 		return
 	}

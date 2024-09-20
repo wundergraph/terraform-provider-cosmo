@@ -138,7 +138,10 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 	response, apiError := r.createFederatedGraph(ctx, data, resp)
 	if apiError != nil {
 		if !api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticError(resp, ErrCreatingGraph, apiError.Error())
+			utils.AddDiagnosticError(resp,
+				ErrCreatingGraph,
+				apiError.Error(),
+			)
 			return
 		}
 	}
@@ -167,14 +170,17 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	apiResponse, err := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if err != nil {
-		if api.IsNotFoundError(err) {
-			utils.AddDiagnosticWarning(resp, "Graph not found", fmt.Sprintf("Graph '%s' not found will be recreated", data.Name.ValueString()))
+	apiResponse, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrGraphNotFound,
+				apiError.Error(),
+			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
+		utils.AddDiagnosticError(resp, ErrReadingGraph, apiError.Error())
 		return
 	}
 
@@ -231,7 +237,7 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 	if apiError != nil {
 		if api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticWarning(resp,
-				ErrCompositionErrors,
+				ErrCompositionError,
 				apiError.Error(),
 			)
 		} else {
@@ -261,10 +267,13 @@ func (r *FederatedGraphResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	err := r.client.DeleteFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	apiError := r.client.DeleteFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrDeletingGraph, fmt.Sprintf("Could not delete federated graph: %s, graph name: %s, graph namespace: %s", err, data.Name.ValueString(), data.Namespace.ValueString()))
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrDeletingGraph,
+			apiError.Error(),
+		)
 		return
 	}
 

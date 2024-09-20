@@ -11,4 +11,5 @@ const (
 	ErrDeletingMonograph        = "Error Deleting Monograph"
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
 	ErrUnexpectedResourceType   = "Unexpected Resource Configure Type"
+	ErrMonographNotFound        = "Monograph Not Found"
 )

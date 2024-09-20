@@ -146,7 +146,7 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	_, err := r.client.CreateMonograph(
+	_, apiError := r.client.CreateMonograph(
 		ctx,
 		data.Name.ValueString(),
 		data.Namespace.ValueString(),
@@ -159,10 +159,10 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		data.AdmissionWebhookURL.ValueString(),
 		data.AdmissionWebhookSecret.ValueString(),
 	)
-	if err != nil {
+	if apiError != nil {
 		utils.AddDiagnosticError(resp,
 			ErrCreatingMonograph,
-			"Could not create monograph: "+err.Error(),
+			apiError.Error(),
 		)
 		return
 	}
@@ -171,7 +171,7 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 	if apiError != nil {
 		utils.AddDiagnosticError(resp,
 			ErrRetrievingMonograph,
-			"Could not create monograph: "+apiError.Error(),
+			apiError.Error(),
 		)
 		return
 	}
@@ -198,15 +198,15 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
-				"Monograph not found",
-				"Monograph not found will be recreated: "+apiError.Error(),
+				ErrMonographNotFound,
+				apiError.Error(),
 			)
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		utils.AddDiagnosticError(resp,
 			ErrRetrievingMonograph,
-			"Could not read monograph: "+apiError.Error(),
+			apiError.Error(),
 		)
 		return
 	}
@@ -249,7 +249,7 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 	if err != nil {
 		utils.AddDiagnosticError(resp,
 			ErrUpdatingMonograph,
-			"Could not update monograph: "+err.Error(),
+			err.Error(),
 		)
 		return
 	}
@@ -258,7 +258,7 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 	if err != nil {
 		utils.AddDiagnosticError(resp,
 			ErrRetrievingMonograph,
-			"Could not fetch updated monograph: "+err.Error(),
+			err.Error(),
 		)
 		return
 	}
@@ -283,7 +283,7 @@ func (r *MonographResource) Delete(ctx context.Context, req resource.DeleteReque
 	if apiError != nil {
 		utils.AddDiagnosticError(resp,
 			ErrDeletingMonograph,
-			"Could not delete monograph: "+apiError.Error(),
+			apiError.Error(),
 		)
 		return
 	}
