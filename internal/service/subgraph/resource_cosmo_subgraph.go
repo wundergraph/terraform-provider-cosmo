@@ -295,11 +295,19 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	err := r.client.DeleteSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
-		utils.AddDiagnosticError(resp,
-			ErrDeletingSubgraph,
-			fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err.Error()),
-		)
-		return
+		if api.IsSubgraphCompositionFailedError(err) {
+			utils.AddDiagnosticWarning(resp,
+				ErrDeletingSubgraph,
+				fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err.Error()),
+			)
+			return
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingSubgraph,
+				fmt.Sprintf("Could not delete subgraph '%s': %s", data.Name.ValueString(), err.Error()),
+			)
+			return
+		}
 	}
 
 	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
