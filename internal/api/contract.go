@@ -53,7 +53,7 @@ func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace str
 		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "UpdateContract", Status: common.EnumStatusCode_ERR}
 	}
 
-	apiError := handleErrorCodes(response.Msg.GetResponse().Code, *response.Msg.GetResponse().Details)
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
 	if apiError != nil {
 		return nil, apiError
 	}

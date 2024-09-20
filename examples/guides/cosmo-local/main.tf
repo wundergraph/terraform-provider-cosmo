@@ -1,22 +1,5 @@
 locals {
-  cosmo_router = {
-    release_name = var.cosmo_router.release_name
-    chart = {
-      name        = var.cosmo_router.chart.name
-      version     = var.cosmo_router.chart.version
-      namespace   = var.cosmo_router.chart.namespace
-      repository  = var.cosmo_router.chart.repository
-      values      = concat(var.cosmo_router.chart.values, [])
-      init_values = var.cosmo_router.chart.init_values
-      set = merge({
-        "configuration.graphApiToken"              = module.cosmo_federated_graph.router_token
-        "configuration.controlplaneUrl"            = "http://cosmo-controlplane.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:3001"
-        "configuration.cdnUrl"                     = "http://cosmo-cdn.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:8787"
-        "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4318"
-        "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4005"
-      }, var.cosmo_router.chart.set)
-    }
-  }
+
 }
 
 // 1. Install minikube on which cosmo will be deployed
@@ -65,10 +48,26 @@ module "cosmo_release" {
 // see local.cosmo_router.release_name and local.cosmo_router.chart for more details
 // this happens after graphs.tf was applied after the router token was created
 module "cosmo_router_release" {
-  source = "../../../modules/charts/release"
-  chart  = local.cosmo_router.chart
+  for_each = var.federated_graphs
+  source   = "../../../modules/charts/release"
+  # chart  = local.cosmo_router.chart
+  chart = {
+    name        = var.cosmo_router.chart.name
+    version     = var.cosmo_router.chart.version
+    namespace   = var.cosmo_router.chart.namespace
+    repository  = var.cosmo_router.chart.repository
+    values      = concat(var.cosmo_router.chart.values, [])
+    init_values = var.cosmo_router.chart.init_values
+    set = merge({
+      "configuration.graphApiToken"              = module.cosmo_federated_graph[each.key].router_token
+      "configuration.controlplaneUrl"            = "http://cosmo-controlplane.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:3001"
+      "configuration.cdnUrl"                     = "http://cosmo-cdn.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:8787"
+      "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4318"
+      "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4005"
+    }, var.cosmo_router.chart.set)
+  }
 
-  release_name = local.cosmo_router.release_name
+  release_name = "${each.key}-${var.stage}-${local.prefix}-router"
 
   depends_on = [
     module.cosmo_release,

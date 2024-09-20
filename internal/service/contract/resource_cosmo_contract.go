@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -21,7 +24,7 @@ type contractResource struct {
 }
 
 type contractResourceModel struct {
-	ID                     types.String `tfsdk:"id"`
+	Id                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	SourceGraphName        types.String `tfsdk:"source"`
 	Namespace              types.String `tfsdk:"namespace"`
@@ -29,7 +32,7 @@ type contractResourceModel struct {
 	Readme                 types.String `tfsdk:"readme"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
-	RoutingUrl             types.String `tfsdk:"routing_url"`
+	RoutingURL             types.String `tfsdk:"routing_url"`
 }
 
 func (r *contractResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,11 +52,17 @@ For more information, refer to the Cosmo Documentation at https://cosmo-docs.wun
 			},
 			"name": schema.StringAttribute{
 				Required: true,
-			},
-			"source": schema.StringAttribute{
-				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespace": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"source": schema.StringAttribute{
 				Required: true,
 			},
 			"exclude_tags": schema.ListAttribute{
@@ -109,7 +118,7 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 		)
 		return
 	}
-	_, apiError := r.client.CreateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.SourceGraphName.ValueString(), data.RoutingUrl.ValueString(), data.AdmissionWebhookUrl.ValueString(), data.AdmissionWebhookSecret.ValueString(), excludeTags, data.Readme.ValueString())
+	_, apiError := r.client.CreateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.SourceGraphName.ValueString(), data.RoutingURL.ValueString(), data.AdmissionWebhookUrl.ValueString(), data.AdmissionWebhookSecret.ValueString(), excludeTags, data.Readme.ValueString())
 	if apiError != nil {
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticWarning(resp,
@@ -125,7 +134,7 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
-	data.ID = data.Name
+	data.Id = data.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -134,9 +143,41 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 	var data contractResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	if resp.Diagnostics.HasError() {
+	if data.Id.IsNull() || data.Id.ValueString() == "" {
+		utils.AddDiagnosticError(resp, ErrInvalidResourceID, "Cannot read federated graph without an ID.")
 		return
 	}
+
+	apiResponse, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrReadingContract,
+				apiError.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp,
+			ErrReadingContract,
+			apiError.Error(),
+		)
+		return
+	}
+
+	graph := apiResponse.Graph
+	data.Id = types.StringValue(graph.GetId())
+	data.Name = types.StringValue(graph.GetName())
+	data.Namespace = types.StringValue(graph.GetNamespace())
+	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var excludeTags []attr.Value
+	for _, matcher := range graph.LabelMatchers {
+		excludeTags = append(excludeTags, types.StringValue(matcher))
+	}
+	data.ExcludeTags = types.ListValueMust(types.StringType, excludeTags)
+
+	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -163,12 +204,12 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticWarning(resp,
 				ErrUpdatingContract,
-				"Contract composition failed: "+apiError.Error(),
+				apiError.Error(),
 			)
 		} else {
 			utils.AddDiagnosticError(resp,
 				ErrUpdatingContract,
-				"Could not update contract: "+apiError.Error(),
+				apiError.Error(),
 			)
 			return
 		}

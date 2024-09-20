@@ -4,7 +4,6 @@ module "cosmo_namespace" {
   name = var.monograph_namespace
 }
 
-
 module "cosmo_monograph" {
   source = "../../resources/cosmo_monograph"
 

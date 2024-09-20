@@ -13,3 +13,7 @@ variable "namespace" {
 variable "source_graph_name" {
   type = string
 }
+
+variable "exclude_tags" {
+  type = list(string)
+}

@@ -103,3 +103,8 @@ variable "api_key" {
   description = "The helm Charts control plane api key"
 }
 
+variable "switch_schema" {
+  type        = bool
+  description = "The schema to use for the federated graph"
+  default     = false
+}

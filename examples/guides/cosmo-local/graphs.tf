@@ -10,6 +10,17 @@ resource "random_string" "module_prefix" {
 // namespace have to be lowercase therefore we lowercase the prefix
 locals {
   prefix = lower(random_string.module_prefix.result)
+  schema = <<EOF
+type Book {
+  title: String
+  author: Author
+}
+
+type Author {
+  name: String
+  books: [Book]
+}
+EOF
 }
 
 // 3. Create the federated graph
@@ -40,7 +51,7 @@ module "cosmo_federated_graph" {
     "spacex" = {
       name        = "${var.stage}-${local.prefix}-spacex"
       routing_url = "https://spacex-production.up.railway.app/graphql"
-      schema      = file("${path.module}/schema/spacex-api.graphql")
+      schema      = var.switch_schema ? local.schema : file("${path.module}/schema/spacex-api.graphql")
       readme      = <<EOF
 # Overview 
 
