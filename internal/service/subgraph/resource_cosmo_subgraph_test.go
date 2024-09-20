@@ -2,6 +2,7 @@ package subgraph_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -20,12 +21,14 @@ func TestAccSubgraphResource(t *testing.T) {
 	routingURL := "https://example.com"
 	updatedRoutingURL := "https://updated-example.com"
 
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL),
+				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL, subgraphSchema),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -35,7 +38,7 @@ func TestAccSubgraphResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, updatedRoutingURL),
+				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, updatedRoutingURL, subgraphSchema),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", updatedRoutingURL),
 				),
@@ -45,7 +48,7 @@ func TestAccSubgraphResource(t *testing.T) {
 				RefreshState: true,
 			},
 			{
-				Config:  testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL),
+				Config:  testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL, subgraphSchema),
 				Destroy: true,
 			},
 		},
@@ -62,13 +65,14 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
 
 	routingURL := "https://example.com"
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL),
+				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL, subgraphSchema),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -78,7 +82,7 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testStandaloneSubgraph(namespace, subgraphName, routingURL),
+				Config: testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -92,14 +96,65 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 				RefreshState: true,
 			},
 			{
-				Config:  testStandaloneSubgraph(namespace, subgraphName, routingURL),
+				Config:  testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema),
 				Destroy: true,
 			},
 		},
 	})
 }
 
-func testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL string) string {
+func TestAccSubgraphResourceInvalidSchema(t *testing.T) {
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	subgraphRoutingURL := "https://example.com"
+
+	federatedGraphName := acctest.RandomWithPrefix("test-subgraph")
+	federatedGraphRoutingURL := "https://example.com"
+	subgraphSchema := "invalid"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, subgraphRoutingURL, subgraphSchema),
+				ExpectError: regexp.MustCompile(`.*ERR_INVALID_SUBGRAPH_SCHEMA*`),
+			},
+		},
+	})
+}
+
+func TestAccStandaloneSubgraphResourcePublishSchema(t *testing.T) {
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	subgraphRoutingURL := "https://example.com"
+
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
+	updatedSubgraphSchema := "invalid"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", subgraphRoutingURL),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.team", "backend"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.stage", "dev"),
+				),
+			},
+			{
+				Config:      testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, updatedSubgraphSchema),
+				ExpectError: regexp.MustCompile(`.*ERR_INVALID_SUBGRAPH_SCHEMA*`),
+			},
+		},
+	})
+}
+
+func testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL, subgraphSchema string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
   name = "%s"
@@ -118,15 +173,18 @@ resource "cosmo_subgraph" "test" {
   name                = "%s"
   namespace           = cosmo_namespace.test.name
   routing_url         = "%s"
+  schema              = <<-EOT
+  %s
+  EOT
   labels              = { 
   	"team"	= "backend", 
 	"stage" = "dev" 
   }
 }
-`, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL)
+`, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL, subgraphSchema)
 }
 
-func testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL string) string {
+func testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
   name = "%s"
@@ -136,10 +194,13 @@ resource "cosmo_subgraph" "test" {
   name                = "%s"
   namespace           = cosmo_namespace.test.name
   routing_url         = "%s"
+  schema              = <<-EOT
+  %s
+  EOT
   labels              = { 
   	"team"	= "backend", 
 	"stage" = "dev" 
   }
 }
-`, namespace, subgraphName, subgraphRoutingURL)
+`, namespace, subgraphName, subgraphRoutingURL, subgraphSchema)
 }

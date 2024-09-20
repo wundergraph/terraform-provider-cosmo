@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 
+	common "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -135,16 +135,15 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	response, err := r.createFederatedGraph(ctx, data, resp)
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrCreatingGraph, err.Error())
-		return
-	}
-
-	compositionErrors := response.Graph.GetCompositionErrors()
-	if len(compositionErrors) > 0 {
-		utils.AddDiagnosticWarning(resp, ErrCompositionError, fmt.Sprintf("Composition errors: %v", compositionErrors))
-		return
+	response, apiError := r.createFederatedGraph(ctx, data, resp)
+	if apiError != nil {
+		if api.IsSubgraphCompositionFailedError(apiError) {
+			utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
+		} else {
+			utils.AddDiagnosticError(resp, ErrCreatingGraph, apiError.Error())
+			return
+		}
+		utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
 	}
 
 	graph := response.Graph
@@ -179,11 +178,6 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 			return
 		}
 		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), err))
-		return
-	}
-
-	if apiResponse.GetResponse().Code != common.EnumStatusCode_OK {
-		utils.AddDiagnosticError(resp, ErrReadingGraph, fmt.Sprintf("Failed to retrieve federated graph with status code: %v, details: %s", apiResponse.GetResponse().Code, apiResponse.GetResponse().GetDetails()))
 		return
 	}
 
@@ -236,10 +230,20 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		admissionWebhookSecret = data.AdmissionWebhookSecret.ValueStringPointer()
 	}
 
-	apiResponse, err := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &graph)
-	if err != nil {
-		utils.AddDiagnosticError(resp, ErrUpdatingGraph, fmt.Sprintf("error: %s, graph name: %s, graph namespace: %s", err, graph.Name, graph.Namespace))
-		return
+	apiResponse, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &graph)
+	if apiError != nil {
+		if api.IsSubgraphCompositionFailedError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrCompositionErrors,
+				apiError.Error(),
+			)
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingGraph,
+				apiError.Error(),
+			)
+			return
+		}
 	}
 
 	if len(apiResponse.CompositionErrors) > 0 {
@@ -279,10 +283,10 @@ func (r *FederatedGraphResource) ImportState(ctx context.Context, req resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *FederatedGraphResource) createFederatedGraph(ctx context.Context, data FederatedGraphResourceModel, resp *resource.CreateResponse) (*platformv1.GetFederatedGraphByNameResponse, error) {
+func (r *FederatedGraphResource) createFederatedGraph(ctx context.Context, data FederatedGraphResourceModel, resp *resource.CreateResponse) (*platformv1.GetFederatedGraphByNameResponse, *api.ApiError) {
 	labelMatchers, err := utils.ConvertAndValidateLabelMatchers(data.LabelMatchers, resp)
 	if err != nil {
-		return nil, err
+		return nil, &api.ApiError{Err: err, Reason: "CreateFederatedGraph", Status: common.EnumStatusCode_ERR}
 	}
 
 	apiGraph := platformv1.FederatedGraph{
@@ -307,12 +311,16 @@ func (r *FederatedGraphResource) createFederatedGraph(ctx context.Context, data 
 
 	_, apiError := r.client.CreateFederatedGraph(ctx, admissionWebhookSecret, &apiGraph)
 	if apiError != nil {
-		return nil, fmt.Errorf("could not create federated graph: %w", apiError)
+		if api.IsSubgraphCompositionFailedError(apiError) {
+			utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
+		} else {
+			return nil, apiError
+		}
 	}
 
 	response, apiError := r.client.GetFederatedGraph(ctx, apiGraph.Name, apiGraph.Namespace)
 	if apiError != nil {
-		return nil, fmt.Errorf("could not retrieve federated graph: %w", apiError)
+		return nil, apiError
 	}
 
 	utils.DebugAction(ctx, DebugCreate, data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{

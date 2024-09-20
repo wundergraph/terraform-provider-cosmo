@@ -10,6 +10,7 @@ const (
 	ErrUpdatingGraph            = "Error Updating Federated Graph"
 	ErrDeletingGraph            = "Error Deleting Federated Graph"
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
+	ErrCompositionErrors        = "Composition Errors"
 )
 
 const (

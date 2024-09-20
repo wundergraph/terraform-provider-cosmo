@@ -43,7 +43,7 @@ func (p *PlatformClient) CreateFederatedGraph(ctx context.Context, admissionWebh
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) UpdateFederatedGraph(ctx context.Context, admissionWebhookSecret *string, graph *platformv1.FederatedGraph) (*platformv1.UpdateFederatedGraphResponse, error) {
+func (p *PlatformClient) UpdateFederatedGraph(ctx context.Context, admissionWebhookSecret *string, graph *platformv1.FederatedGraph) (*platformv1.UpdateFederatedGraphResponse, *ApiError) {
 	var admissionWebhookURL *string
 	if graph.AdmissionWebhookUrl != nil {
 		admissionWebhookURL = graph.AdmissionWebhookUrl

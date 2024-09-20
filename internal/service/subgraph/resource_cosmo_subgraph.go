@@ -226,23 +226,6 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
-	if data.Schema.ValueString() != "" {
-		apiResponse, err := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
-		if err != nil {
-			utils.AddDiagnosticError(resp,
-				ErrPublishingSubgraph,
-				fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), err.Error()),
-			)
-			return
-		}
-		if apiResponse.HasChanged != nil && *apiResponse.HasChanged {
-			resp.Diagnostics.AddWarning(
-				ErrSubgraphSchemaChanged,
-				fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()),
-			)
-		}
-	}
-
 	var unsetLabels *bool
 	if data.UnsetLabels.ValueBool() {
 		unsetLabels = &[]bool{true}[0]
@@ -257,13 +240,12 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 				ErrUpdatingSubgraph,
 				fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
 			)
-		} else {
-			utils.AddDiagnosticError(resp,
-				ErrUpdatingSubgraph,
-				fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
-			)
-			return
 		}
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingSubgraph,
+			fmt.Sprintf("Could not update subgraph '%s': %s", data.Name.ValueString(), apiErr.Error()),
+		)
+		return
 	}
 
 	subgraph, err := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
@@ -273,6 +255,36 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 			fmt.Sprintf("Could not fetch updated subgraph '%s': %s", data.Name.ValueString(), err.Error()),
 		)
 		return
+	}
+	if data.Schema.ValueString() != "" {
+		apiResponse, apiError := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if apiError != nil {
+			if api.IsSubgraphCompositionFailedError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrPublishingSubgraph,
+					fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), apiError.Error()),
+				)
+			} else if api.IsInvalidSubgraphSchemaError(apiError) {
+				utils.AddDiagnosticError(resp,
+					ErrPublishingSubgraph,
+					fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), apiError.Error()),
+				)
+				return
+			} else {
+				utils.AddDiagnosticError(resp,
+					ErrPublishingSubgraph,
+					fmt.Sprintf("Could not publish subgraph '%s': %s", data.Name.ValueString(), apiError.Error()),
+				)
+				return
+			}
+		}
+
+		if apiResponse.HasChanged != nil && *apiResponse.HasChanged {
+			resp.Diagnostics.AddWarning(
+				ErrSubgraphSchemaChanged,
+				fmt.Sprintf("The schema for subgraph '%s' has changed and was published.", data.Name.ValueString()),
+			)
+		}
 	}
 
 	data.Id = types.StringValue(subgraph.GetId())

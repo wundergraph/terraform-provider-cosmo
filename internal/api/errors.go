@@ -15,6 +15,7 @@ var (
 	ErrSubgraphCompositionFailed = errors.New("ErrSubgraphCompositionFailed")
 	ErrEmptyMsg                  = fmt.Errorf("ErrEmptyMsg")
 	ErrContractCompositionFailed = fmt.Errorf("ErrContractCompositionFailed")
+	ErrInvalidSubgraphSchema     = fmt.Errorf("ErrInvalidSubgraphSchema")
 )
 
 const (
@@ -27,6 +28,10 @@ func IsNotFoundError(err *ApiError) bool {
 
 func IsSubgraphCompositionFailedError(err *ApiError) bool {
 	return errors.Is(err.Err, ErrSubgraphCompositionFailed)
+}
+
+func IsInvalidSubgraphSchemaError(err *ApiError) bool {
+	return errors.Is(err.Err, ErrInvalidSubgraphSchema)
 }
 
 func IsContractCompositionFailedError(err *ApiError) bool {
@@ -59,6 +64,8 @@ func handleErrorCodes(statusCode common.EnumStatusCode, reason string) *ApiError
 		return &ApiError{Err: ErrSubgraphCompositionFailed, Reason: reason, Status: statusCode}
 	case common.EnumStatusCode_ERR_NOT_FOUND:
 		return &ApiError{Err: ErrNotFound, Reason: reason, Status: statusCode}
+	case common.EnumStatusCode_ERR_INVALID_SUBGRAPH_SCHEMA:
+		return &ApiError{Err: ErrInvalidSubgraphSchema, Reason: reason, Status: statusCode}
 	case common.EnumStatusCode_ERR:
 		return &ApiError{Err: ErrGeneral, Reason: reason, Status: statusCode}
 	default:
