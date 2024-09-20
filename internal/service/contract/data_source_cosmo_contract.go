@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -123,10 +124,17 @@ func (d *contractDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	graph := apiResponse.Graph
+
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	labelMatchers := make(map[string]attr.Value)
+	for _, labelMatcher := range graph.GetLabelMatchers() {
+		labelMatchers[labelMatcher] = types.StringValue(labelMatcher)
+	}
+	data.LabelMatchers = types.MapValueMust(types.StringType, labelMatchers)
 
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)

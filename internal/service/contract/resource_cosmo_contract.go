@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -170,12 +169,6 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
-
-	var excludeTags []attr.Value
-	for _, matcher := range graph.LabelMatchers {
-		excludeTags = append(excludeTags, types.StringValue(matcher))
-	}
-	data.ExcludeTags = types.ListValueMust(types.StringType, excludeTags)
 
 	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
