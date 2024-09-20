@@ -203,21 +203,42 @@ The following commands are used to build and install the provider binary locally
 
 The Makefile includes several tasks to facilitate development and testing. For local development, `make build install` should be used to install the provider locally.
 
+### General Build Tasks
+
 - **default**: Runs acceptance tests.
 - **testacc**: Runs tests with a timeout.
+- **test-go**: Runs Go tests.
+- **test**: Cleans, builds, installs, runs acceptance tests, and executes end-to-end tests.
 - **generate**: Updates generated files.
 - **tidy**: Cleans up the `go.mod` file.
-- **fmt**: Formats code.
+- **fmt**: Formats Go and Terraform files for consistency.
 - **build**: Compiles the provider binary.
 - **install**: Installs the binary in the Terraform plugin directory after building it.
+- **clean-local**: Cleans up local build artifacts.
 - **build-all-arches**: Compiles the binary for multiple OS and architectures.
-- **release**: Generates files and builds binaries for all architectures.
-- **e2e-cd-apply**: Runs end-to-end tests for apply. (References: `examples/provider`)
-- **e2e-cd-destroy**: Runs end-to-end tests for destroy. (References: `examples/provider`)
-- **e2e-cosmo-apply**: Runs end-to-end tests for the cosmo feature. (References: `examples/cosmo`)
-- **e2e-cosmo-destroy**: Runs end-to-end tests for cosmo destroy. (References: `examples/cosmo`)
-- **e2e-cosmo-monograph-apply**: Runs end-to-end tests for the monograph feature. (References: `examples/resources/comso_monograph`)
-- **e2e-cosmo-monograph-destroy**: Runs end-to-end tests for monograph destroy. (References: `examples/resources/comso_monograph`)
-- **e2e-apply-cosmo-local**: Runs end-to-end tests for cosmo local. (References: `examples/cosmo-local`)
-- **e2e-destroy-cosmo-local**: Runs end-to-end tests for cosmo local destroy. (References: `examples/cosmo-local`)
-- **e2e-clean-cosmo-local**: Cleans up the cosmo local setup. (References: `examples/cosmo-local`)
+
+### End-to-End (E2E) Tasks
+
+- **e2e-apply-cd**: Runs end-to-end tests for the CD feature (points to `examples/provider`).
+- **e2e-destroy-cd**: Cleans up after CD tests (points to `examples/provider`).
+- **e2e-clean-cd**: Cleans up CD test artifacts (points to `examples/provider`).
+- **e2e-apply-cosmo**: Runs end-to-end tests for the Cosmo feature (points to `examples/guides/cosmo`).
+- **e2e-destroy-cosmo**: Cleans up after Cosmo tests (points to `examples/guides/cosmo`).
+- **e2e-clean-cosmo**: Cleans up Cosmo test artifacts (points to `examples/guides/cosmo`).
+- **e2e-apply-cosmo-monograph**: Runs end-to-end tests for the Cosmo monograph feature (points to `examples/guides/cosmo-monograph`).
+- **e2e-destroy-cosmo-monograph**: Cleans up after Cosmo monograph tests (points to `examples/guides/cosmo-monograph`).
+- **e2e-clean-cosmo-monograph**: Cleans up Cosmo monograph test artifacts (points to `examples/guides/cosmo-monograph`).
+- **e2e-apply-cosmo-monograph-contract**: Runs end-to-end tests for the Cosmo monograph contract feature (points to `examples/guides/cosmo-monograph-contract`).
+- **e2e-destroy-cosmo-monograph-contract**: Cleans up after Cosmo monograph contract tests (points to `examples/guides/cosmo-monograph-contract`).
+- **e2e-clean-cosmo-monograph-contract**: Cleans up Cosmo monograph contract test artifacts (points to `examples/guides/cosmo-monograph-contract`).
+- **e2e-apply-cosmo-local**: Runs end-to-end tests for the local Cosmo setup (points to `examples/guides/cosmo-local`).
+- **e2e-destroy-cosmo-local**: Cleans up after local Cosmo tests (points to `examples/guides/cosmo-local`).
+- **e2e-clean-cosmo-local**: Cleans up local Cosmo test artifacts (points to `examples/guides/cosmo-local`).
+- **e2e-cd**: Runs both apply and destroy for CD tests.
+- **e2e-cosmo**: Runs both apply and destroy for Cosmo tests.
+- **e2e-cosmo-monograph**: Runs both apply and destroy for Cosmo monograph tests.
+- **e2e-cosmo-monograph-contract**: Runs both apply and destroy for Cosmo monograph contract tests.
+- **e2e-cosmo-local**: Runs both apply and destroy for local Cosmo tests.
+- **e2e**: Runs all end-to-end tests.
+- **clean**: Cleans up all test artifacts and local builds.
+- **destroy**: Cleans up all resources created by the tests.
