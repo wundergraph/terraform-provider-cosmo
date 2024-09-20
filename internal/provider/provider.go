@@ -59,7 +59,7 @@ Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/)
 		`,
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),
+				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s Leave blank to use: https://cosmo-cp.wundergraph.com", utils.EnvCosmoApiUrl),
 				Optional:            true,
 			},
 			"api_key": schema.StringAttribute{
