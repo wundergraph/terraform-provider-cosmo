@@ -32,6 +32,10 @@ func TestAccNamespaceResource(t *testing.T) {
 				Config:      testAccNamespaceResourceConfig(updatedName),
 				ExpectError: regexp.MustCompile(`Changing the namespace name requires recreation.`),
 			},
+			{
+				Config:  testAccNamespaceResourceConfig(rName),
+				Destroy: true,
+			},
 		},
 	})
 }

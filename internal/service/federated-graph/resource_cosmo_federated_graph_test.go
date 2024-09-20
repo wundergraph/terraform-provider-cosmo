@@ -45,6 +45,10 @@ func TestAccFederatedGraphResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "routing_url", updatedRoutingURL),
 				),
 			},
+			{
+				ResourceName: "cosmo_federated_graph.test",
+				RefreshState: true,
+			},
 		},
 	})
 }
