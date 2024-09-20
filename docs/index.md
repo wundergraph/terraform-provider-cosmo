@@ -22,7 +22,8 @@ Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/)
 ```terraform
 provider "cosmo" {
   api_key = var.api_key
-  api_url = var.api_url
+  # Set to your onpremise instance if needed
+  # api_url = var.api_url
 }
 ```
 
@@ -31,5 +32,5 @@ provider "cosmo" {
 
 ### Optional
 
-- `api_key` (String) The Api Key to be used: COSMO_API_KEY
-- `api_url` (String) The Api Url to be used: COSMO_API_URL Leave blank to use: https://cosmo-cp.wundergraph.com
+- `api_key` (String) The Api Key to be used: Leave blank to use the COSMO_API_KEY environment variable
+- `api_url` (String) The Api Url to be used: Leave blank to use: https://cosmo-cp.wundergraph.com or use the COSMO_API_URL environment variable
