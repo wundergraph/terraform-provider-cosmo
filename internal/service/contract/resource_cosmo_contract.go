@@ -187,7 +187,7 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 	if err != nil {
 		utils.AddDiagnosticError(resp,
 			ErrUpdatingContract,
-			"Could not update contract: "+err.Error(),
+			err.Error(),
 		)
 		return
 	}
@@ -224,18 +224,18 @@ func (r *contractResource) Delete(ctx context.Context, req resource.DeleteReques
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticWarning(resp,
 				ErrDeletingContract,
-				"Contract composition failed: "+apiError.Error(),
+				apiError.Error(),
 			)
 		} else if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
 				ErrDeletingContract,
-				"Contract composition failed: "+apiError.Error(),
+				apiError.Error(),
 			)
 			resp.State.RemoveResource(ctx)
 		} else {
 			utils.AddDiagnosticError(resp,
 				ErrDeletingContract,
-				"Could not delete contract: "+apiError.Error(),
+				apiError.Error(),
 			)
 			return
 		}
