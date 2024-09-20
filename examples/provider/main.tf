@@ -35,6 +35,7 @@ module "resource_cosmo_contract" {
   namespace         = module.resource_cosmo_namespace.name
   routing_url       = module.resource_cosmo_federated_graph.routing_url
   source_graph_name = module.resource_cosmo_federated_graph.name
+  exclude_tags      = ["backend"]
 }
 
 module "data_cosmo_federated_graph" {
