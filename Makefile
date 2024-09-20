@@ -140,7 +140,7 @@ e2e-cosmo-monograph: e2e-apply-cosmo-monograph e2e-destroy-cosmo-monograph
 e2e-cosmo-monograph-contract: e2e-apply-cosmo-monograph-contract e2e-destroy-cosmo-monograph-contract
 e2e-cosmo-local: e2e-apply-cosmo-local e2e-destroy-cosmo-local
 
-e2e: e2e-cd e2e-cosmo e2e-cosmo-monograph e2e-cosmo-monograph-contract e2e-cosmo-local
+e2e: e2e-cd e2e-cosmo e2e-cosmo-monograph e2e-cosmo-monograph-contract
 
-clean: e2e-clean-cd e2e-clean-cosmo e2e-clean-cosmo-monograph e2e-clean-cosmo-monograph-contract e2e-clean-cosmo-local clean-local
+clean: e2e-clean-cd e2e-clean-cosmo e2e-clean-cosmo-monograph e2e-clean-cosmo-monograph-contract clean-local
 destroy: e2e-destroy-cd e2e-destroy-cosmo e2e-destroy-cosmo-monograph e2e-destroy-cosmo-monograph-contract e2e-destroy-cosmo-local
