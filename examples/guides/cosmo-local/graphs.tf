@@ -16,7 +16,7 @@ locals {
 // this module wraps generating a federated graph and related subgraphs
 // the resources are deployed within the given namespace
 module "cosmo_federated_graph" {
-  source            = "../../modules/cosmo-federated-graph"
+  source            = "../../../modules/cosmo-federated-graph"
   namespace         = "${var.stage}-${local.prefix}"
   router_token_name = "${var.stage}-${local.prefix}-router-token"
 

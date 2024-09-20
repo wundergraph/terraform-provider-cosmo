@@ -21,7 +21,7 @@ locals {
 
 // 1. Install minikube on which cosmo will be deployed
 module "minikube" {
-  source             = "../../modules/minikube"
+  source             = "../../../modules/minikube"
   minikube_clusters  = var.minikube
   kubernetes_version = var.kubernetes_version
 }
@@ -35,7 +35,7 @@ resource "time_sleep" "wait_for_minikube" {
 
 // 3. Render the cosmo charts (used for local development and debugging)
 module "cosmo_charts" {
-  source = "../../modules/charts/template"
+  source = "../../../modules/charts/template"
   chart  = var.cosmo.chart
 
   depends_on = [time_sleep.wait_for_minikube]
@@ -53,7 +53,7 @@ resource "kubernetes_namespace" "cosmo_namespace" {
 // 5. Install the cosmo helm release 
 // see var.cosmo.release_name and var.cosmo.chart for more details
 module "cosmo_release" {
-  source = "../../modules/charts/release"
+  source = "../../../modules/charts/release"
   chart  = var.cosmo.chart
 
   release_name = var.cosmo.release_name
@@ -65,7 +65,7 @@ module "cosmo_release" {
 // see local.cosmo_router.release_name and local.cosmo_router.chart for more details
 // this happens after graphs.tf was applied after the router token was created
 module "cosmo_router_release" {
-  source = "../../modules/charts/release"
+  source = "../../../modules/charts/release"
   chart  = local.cosmo_router.chart
 
   release_name = local.cosmo_router.release_name
