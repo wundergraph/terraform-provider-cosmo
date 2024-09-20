@@ -29,6 +29,11 @@ variable "contract_routing_url" {
   default = "http://example.com/routing"
 }
 
+variable "contract_exclude_tags" {
+  type    = list(string)
+  default = []
+}
+
 variable "api_url" {
   type    = string
   default = "http://example.com/graphql"

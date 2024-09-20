@@ -20,4 +20,5 @@ module "cosmo_contract" {
   namespace         = module.cosmo_namespace.name
   source_graph_name = module.cosmo_monograph.name
   routing_url       = var.contract_routing_url
+  exclude_tags      = var.contract_exclude_tags
 }
