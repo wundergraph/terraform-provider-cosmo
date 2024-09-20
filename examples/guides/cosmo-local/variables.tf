@@ -94,10 +94,12 @@ variable "cosmo_router" {
 }
 
 variable "api_url" {
-  type = string
+  type        = string
+  description = "The helm Charts control plane url"
 }
 
 variable "api_key" {
-  type = string
+  type        = string
+  description = "The helm Charts control plane api key"
 }
 

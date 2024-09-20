@@ -28,7 +28,7 @@ module "minikube" {
 
 // 2. Wait for minikube to be ready to avoid race conditions with helm
 resource "time_sleep" "wait_for_minikube" {
-  create_duration = "10s"
+  create_duration = "30s"
 
   depends_on = [module.minikube]
 }
