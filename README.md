@@ -221,3 +221,13 @@ The Makefile includes several tasks to facilitate development and testing. For l
 - **e2e-apply-cosmo-local**: Runs end-to-end tests for cosmo local. (References: `examples/cosmo-local`)
 - **e2e-destroy-cosmo-local**: Runs end-to-end tests for cosmo local destroy. (References: `examples/cosmo-local`)
 - **e2e-clean-cosmo-local**: Cleans up the cosmo local setup. (References: `examples/cosmo-local`)
+
+## Releasing
+
+The Terraform Provider can be release by triggering the `Release` workflow in the `.github/workflows` directory.
+This workflow must be triggered manually on the main branch when a release is needed.
+
+The workflow will create a new tag and push it to the remote.
+Subsequently the workflow will build the go release and create a new github release.
+
+Tags follow this schema: `vX.Y.Z`. This is needed for the terraform registry to pick up new versions.
