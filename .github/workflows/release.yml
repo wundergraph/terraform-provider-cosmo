@@ -1,11 +1,7 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,7 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.7
         with:
-          # Allow goreleaser to access older tag information.
+          fetch-depth: 0
+      # push the latest tag to the remote
+      - id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # refetch the repo to make sure we have the latest tag
+      - uses: actions/checkout@v4.1.7
+        with:
           fetch-depth: 0
       - uses: actions/setup-go@v5.0.2
         with:

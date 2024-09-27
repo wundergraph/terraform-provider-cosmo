@@ -242,3 +242,13 @@ The Makefile includes several tasks to facilitate development and testing. For l
 - **e2e**: Runs all end-to-end tests.
 - **clean**: Cleans up all test artifacts and local builds.
 - **destroy**: Cleans up all resources created by the tests.
+
+## Releasing
+
+The Terraform Provider can be release by triggering the `Release` workflow in the `.github/workflows` directory.
+This workflow must be triggered manually on the main branch when a release is needed.
+
+The workflow will create a new tag and push it to the remote.
+Subsequently the workflow will build the go release and create a new github release.
+
+Tags follow this schema: `vX.Y.Z`. This is needed for the terraform registry to pick up new versions.
