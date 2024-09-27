@@ -4,34 +4,24 @@ page_title: "cosmo Provider"
 subcategory: ""
 description: |-
   The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources.
-  It supports creating and reading namespaces, federated graphs, and monographs.
-  You can also generate router tokens for use with the router, and manage subgraphs by creating, publishing, or reading them.
+  It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts.
   Refer to the official Cosmo Documentation https://cosmo-docs.wundergraph.com/ for more details.
 ---
 
 # cosmo Provider
 
 The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources. 
-It supports creating and reading namespaces, federated graphs, and monographs. 
-You can also generate router tokens for use with the router, and manage subgraphs by creating, publishing, or reading them. 
+It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts. 
 
 Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/) for more details.
 
 ## Example Usage
 
 ```terraform
-terraform {
-  required_providers {
-    cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
-      version = "0.0.1"
-    }
-  }
-}
-
 provider "cosmo" {
-  api_url = var.api_url
   api_key = var.api_key
+  # Set to your onpremise instance if needed
+  # api_url = var.api_url
 }
 ```
 
@@ -40,5 +30,5 @@ provider "cosmo" {
 
 ### Optional
 
-- `api_key` (String) The Api Key to be used: COSMO_API_KEY
-- `api_url` (String) The Api Url to be used: COSMO_API_URL
+- `api_key` (String) The Api Key to be used: Leave blank to use the COSMO_API_KEY environment variable
+- `api_url` (String) The Api Url to be used: Leave blank to use: https://cosmo-cp.wundergraph.com or use the COSMO_API_URL environment variable

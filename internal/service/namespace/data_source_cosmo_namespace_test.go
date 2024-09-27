@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 )
 
 func TestAccNamespaceDataSource(t *testing.T) {
-	rName := "test-namespace-unique" // Ensure a unique name
+	rName := acctest.RandomWithPrefix("test-namespace")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },

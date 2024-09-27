@@ -51,7 +51,7 @@ variable "cosmo" {
     release_name = "cosmo"
     chart = {
       name        = "cosmo"
-      version     = "0.11.1"
+      version     = "0.11.2"
       namespace   = "cosmo"
       repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
       values      = []
@@ -94,10 +94,29 @@ variable "cosmo_router" {
 }
 
 variable "api_url" {
-  type = string
+  type        = string
+  description = "The helm Charts control plane url"
 }
 
 variable "api_key" {
-  type = string
+  type        = string
+  description = "The helm Charts control plane api key"
 }
 
+variable "switch_schema" {
+  type        = bool
+  description = "Switch the schema to use for the federated graph"
+  default     = false
+}
+
+variable "federated_graphs" {
+  type = map(object({
+    name = string
+  }))
+  description = "Switch the schema to use for the federated graph"
+  default = {
+    "spacex" = {
+      name = "spacex"
+    }
+  }
+}

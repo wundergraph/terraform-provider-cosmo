@@ -10,6 +10,7 @@ module "resource_cosmo_subgraph" {
   name        = "subgraph-1"
   namespace   = module.resource_cosmo_namespace.name
   routing_url = "http://example.com/routing"
+  schema      = file("schema.graphql")
   labels = {
     "team"  = "backend"
     "stage" = "dev"
@@ -25,6 +26,16 @@ module "resource_cosmo_federated_graph" {
   label_matchers = ["team=backend"]
 
   depends_on = [module.resource_cosmo_subgraph]
+}
+
+module "resource_cosmo_contract" {
+  source = "../resources/cosmo_contract"
+
+  name              = "terraform-contract-demo"
+  namespace         = module.resource_cosmo_namespace.name
+  routing_url       = module.resource_cosmo_federated_graph.routing_url
+  source_graph_name = module.resource_cosmo_federated_graph.name
+  exclude_tags      = ["backend"]
 }
 
 module "data_cosmo_federated_graph" {

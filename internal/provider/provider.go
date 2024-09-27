@@ -13,6 +13,7 @@ import (
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 
+	contract "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/contract"
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
 	monograph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/monograph"
 	namespace "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/namespace"
@@ -51,18 +52,17 @@ func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources. 
-It supports creating and reading namespaces, federated graphs, and monographs. 
-You can also generate router tokens for use with the router, and manage subgraphs by creating, publishing, or reading them. 
+It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts. 
 
 Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/) for more details.
 		`,
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("The Api Url to be used: %s", utils.EnvCosmoApiUrl),
+				MarkdownDescription: fmt.Sprintf("The Api Url to be used: Leave blank to use: https://cosmo-cp.wundergraph.com or use the %s environment variable", utils.EnvCosmoApiUrl),
 				Optional:            true,
 			},
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("The Api Key to be used: %s", utils.EnvCosmoApiKey),
+				MarkdownDescription: fmt.Sprintf("The Api Key to be used: Leave blank to use the %s environment variable", utils.EnvCosmoApiKey),
 				Optional:            true,
 			},
 		},
@@ -98,6 +98,7 @@ func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resourc
 		subgraph.NewSubgraphResource,
 		monograph.NewMonographResource,
 		router_token.NewTokenResource,
+		contract.NewContractResource,
 	}
 }
 
@@ -107,6 +108,7 @@ func (p *CosmoProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		subgraph.NewSubgraphDataSource,
 		namespace.NewNamespaceDataSource,
 		monograph.NewMonographDataSource,
+		contract.NewContractDataSource,
 	}
 }
 

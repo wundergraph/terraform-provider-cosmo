@@ -14,9 +14,3 @@ output "hosts" {
     ${local.minikube_ip} cdn.wundergraph.local
     EOF
 }
-
-output "router_token" {
-  value     = module.cosmo_federated_graph.router_token
-  sensitive = true
-}
-

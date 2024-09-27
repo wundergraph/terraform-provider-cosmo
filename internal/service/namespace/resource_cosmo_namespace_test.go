@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 )
 
 func TestAccNamespaceResource(t *testing.T) {
-	rName := "test-namespace"
-	updatedName := "updated-namespace"
+	rName := acctest.RandomWithPrefix("test-namespace")
+	updatedName := acctest.RandomWithPrefix("updated-namespace")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
@@ -30,6 +31,10 @@ func TestAccNamespaceResource(t *testing.T) {
 			{
 				Config:      testAccNamespaceResourceConfig(updatedName),
 				ExpectError: regexp.MustCompile(`Changing the namespace name requires recreation.`),
+			},
+			{
+				Config:  testAccNamespaceResourceConfig(rName),
+				Destroy: true,
 			},
 		},
 	})

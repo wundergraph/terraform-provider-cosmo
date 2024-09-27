@@ -9,7 +9,7 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namespace string) (string, error) {
+func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namespace string) (string, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateFederatedGraphTokenRequest{
 		GraphName: graphName,
 		Namespace: namespace,
@@ -18,21 +18,21 @@ func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namesp
 
 	response, err := p.Client.CreateFederatedGraphToken(ctx, request)
 	if err != nil {
-		return "", err
+		return "", &ApiError{Err: err, Reason: "CreateToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return "", fmt.Errorf("failed to create token, the server response is nil")
+		return "", &ApiError{Err: ErrEmptyMsg, Reason: "CreateToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return "", fmt.Errorf("failed to create token: %s", response.Msg.GetResponse().GetDetails())
+		return "", &ApiError{Err: fmt.Errorf("failed to create token: %s", response.Msg.GetResponse().GetDetails()), Reason: "CreateToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	return response.Msg.Token, nil
 }
 
-func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, namespace string) error {
+func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteRouterTokenRequest{
 		TokenName: tokenName,
 		Namespace: namespace,
@@ -40,15 +40,15 @@ func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, n
 
 	response, err := p.Client.DeleteRouterToken(ctx, request)
 	if err != nil {
-		return fmt.Errorf("failed to delete token: %w", err)
+		return &ApiError{Err: err, Reason: "DeleteToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return fmt.Errorf("failed to delete token, the server response is nil")
+		return &ApiError{Err: ErrEmptyMsg, Reason: "DeleteToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg.GetResponse().Code != common.EnumStatusCode_OK {
-		return fmt.Errorf("failed to delete token: %s", response.Msg)
+		return &ApiError{Err: fmt.Errorf("failed to delete token: %s", response.Msg), Reason: "DeleteToken", Status: common.EnumStatusCode_ERR}
 	}
 
 	return nil

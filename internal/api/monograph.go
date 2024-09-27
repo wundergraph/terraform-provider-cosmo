@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) error {
+func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) (*platformv1.CreateMonographResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
@@ -22,22 +23,22 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 	})
 	response, err := p.Client.CreateMonograph(ctx, request)
 	if err != nil {
-		return err
+		return nil, &ApiError{Err: err, Reason: "CreateMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "CreateMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
 	}
 
-	return nil
+	return response.Msg, nil
 }
 
-func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) error {
+func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) *ApiError {
 	request := connect.NewRequest(&platformv1.UpdateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
@@ -52,60 +53,60 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 	})
 	response, err := p.Client.UpdateMonograph(ctx, request)
 	if err != nil {
-		return err
+		return &ApiError{Err: err, Reason: "UpdateMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return &ApiError{Err: ErrEmptyMsg, Reason: "UpdateMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
 	}
 
 	return nil
 }
 
-func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namespace string) error {
+func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteMonographRequest{
 		Name:      name,
 		Namespace: namespace,
 	})
 	response, err := p.Client.DeleteMonograph(ctx, request)
 	if err != nil {
-		return err
+		return &ApiError{Err: err, Reason: "DeleteMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return ErrEmptyMsg
+		return &ApiError{Err: ErrEmptyMsg, Reason: "DeleteMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
 	}
 
 	return nil
 }
 
-func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace string) (*platformv1.FederatedGraph, error) {
+func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace string) (*platformv1.FederatedGraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetFederatedGraphByNameRequest{
 		Name:      name,
 		Namespace: namespace,
 	})
 	response, err := p.Client.GetFederatedGraphByName(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, &ApiError{Err: err, Reason: "GetMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return nil, ErrEmptyMsg
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetMonograph", Status: common.EnumStatusCode_ERR}
 	}
 
-	err = handleErrorCodes(response.Msg.GetResponse().Code)
-	if err != nil {
-		return nil, err
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
 	}
 
 	return response.Msg.Graph, nil

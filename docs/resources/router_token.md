@@ -16,15 +16,6 @@ For more information on router tokens, please refer to the [Cosmo Documentation]
 ## Example Usage
 
 ```terraform
-terraform {
-  required_providers {
-    cosmo = {
-      source  = "terraform.local/wundergraph/cosmo"
-      version = "0.0.1"
-    }
-  }
-}
-
 resource "cosmo_router_token" "test" {
   name       = var.name
   graph_name = var.graph_name

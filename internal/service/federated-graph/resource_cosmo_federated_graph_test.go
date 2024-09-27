@@ -45,6 +45,10 @@ func TestAccFederatedGraphResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "routing_url", updatedRoutingURL),
 				),
 			},
+			{
+				ResourceName: "cosmo_federated_graph.test",
+				RefreshState: true,
+			},
 		},
 	})
 }
@@ -59,7 +63,7 @@ func TestAccFederatedGraphResourceInvalidConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFederatedGraphResourceConfig(name, namespace, "invalid-url", ""),
-				ExpectError: regexp.MustCompile(`.*failed to create resource*`),
+				ExpectError: regexp.MustCompile(`.*Routing URL is not a valid URL*`),
 			},
 		},
 	})

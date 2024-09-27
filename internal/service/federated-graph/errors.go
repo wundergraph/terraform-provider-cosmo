@@ -10,6 +10,8 @@ const (
 	ErrUpdatingGraph            = "Error Updating Federated Graph"
 	ErrDeletingGraph            = "Error Deleting Federated Graph"
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
+	ErrUnexpectedResourceType   = "Unexpected Resource Configure Type"
+	ErrGraphNotFound            = "Graph Not Found"
 )
 
 const (

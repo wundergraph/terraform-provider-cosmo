@@ -72,6 +72,7 @@ include examples/Makefile
 .PHONY: e2e-cd e2e-cosmo e2e-cosmo-monograph clean
 
 e2e-apply-cd:
+	rm -rf examples/provider/.terraform.lock.hcl
 	FEATURE=examples/provider make e2e-init
 	FEATURE=examples/provider make e2e-apply 
 
@@ -82,24 +83,37 @@ e2e-clean-cd:
 	make e2e-clean 
 
 e2e-apply-cosmo: 
-	FEATURE=examples/cosmo make e2e-init 
-	FEATURE=examples/cosmo make e2e-apply 
+	rm -rf examples/guides/cosmo/.terraform.lock.hcl
+	FEATURE=examples/guides/cosmo make e2e-init 
+	FEATURE=examples/guides/cosmo make e2e-apply 
 
 e2e-destroy-cosmo: 
-	FEATURE=examples/cosmo make e2e-destroy 
+	FEATURE=examples/guides/cosmo make e2e-destroy 
 
 e2e-clean-cosmo: 
-	FEATURE=examples/cosmo make e2e-clean
+	FEATURE=examples/guides/cosmo make e2e-clean
 
 e2e-apply-cosmo-monograph: 
-	FEATURE=examples/resources/comso_monograph make e2e-init 
-	FEATURE=examples/resources/comso_monograph make e2e-apply 
+	rm -rf examples/guides/cosmo-monograph/.terraform.lock.hcl
+	FEATURE=examples/guides/cosmo-monograph make e2e-init 
+	FEATURE=examples/guides/cosmo-monograph make e2e-apply 
 
 e2e-destroy-cosmo-monograph: 
-	FEATURE=examples/resources/comso_monograph make e2e-destroy 
+	FEATURE=examples/guides/cosmo-monograph make e2e-destroy 
 
 e2e-clean-cosmo-monograph: 
-	FEATURE=examples/resources/comso_monograph make e2e-clean
+	FEATURE=examples/guides/cosmo-monograph make e2e-clean
+
+e2e-apply-cosmo-monograph-contract: 
+	rm -rf examples/guides/cosmo-monograph-contract/.terraform.lock.hcl
+	FEATURE=examples/guides/cosmo-monograph-contract make e2e-init 
+	FEATURE=examples/guides/cosmo-monograph-contract make e2e-apply 
+
+e2e-destroy-cosmo-monograph-contract: 
+	FEATURE=examples/guides/cosmo-monograph-contract make e2e-destroy 
+
+e2e-clean-cosmo-monograph-contract: 
+	FEATURE=examples/guides/cosmo-monograph-contract make e2e-clean
 
 ## Cosmo Local
 # Full example installing cosmo locally with a minikube kubernetes cluster 
@@ -108,23 +122,25 @@ e2e-clean-cosmo-monograph:
 # output "hosts" generated after apply
 
 e2e-apply-cosmo-local: 
-	rm -rf examples/cosmo-local/.terraform.lock.hcl
-	FEATURE=examples/cosmo-local make e2e-init 
-	FEATURE=examples/cosmo-local make e2e-apply 
+	rm -rf examples/guides/cosmo-local/.terraform.lock.hcl
+	FEATURE=examples/guides/cosmo-local make e2e-init 
+	FEATURE=examples/guides/cosmo-local make e2e-apply 
 
 e2e-destroy-cosmo-local: 
-	FEATURE=examples/cosmo-local make e2e-destroy 
+	FEATURE=examples/guides/cosmo-local make e2e-destroy 
 
 e2e-clean-cosmo-local: 
-	FEATURE=examples/cosmo-local make e2e-clean
+	FEATURE=examples/guides/cosmo-local make e2e-clean
 
 ## Convenience targets to run specific e2e tests
 
 e2e-cd: e2e-apply-cd e2e-destroy-cd
 e2e-cosmo: e2e-apply-cosmo e2e-destroy-cosmo
 e2e-cosmo-monograph: e2e-apply-cosmo-monograph e2e-destroy-cosmo-monograph
+e2e-cosmo-monograph-contract: e2e-apply-cosmo-monograph-contract e2e-destroy-cosmo-monograph-contract
+e2e-cosmo-local: e2e-apply-cosmo-local e2e-destroy-cosmo-local
 
-e2e: e2e-cd e2e-cosmo e2e-cosmo-monograph
+e2e: e2e-cd e2e-cosmo e2e-cosmo-monograph e2e-cosmo-monograph-contract
 
-clean: e2e-clean-cd e2e-clean-cosmo e2e-clean-cosmo-monograph clean-local
-destroy: e2e-destroy-cd e2e-destroy-cosmo e2e-destroy-cosmo-monograph
+clean: e2e-clean-cd e2e-clean-cosmo e2e-clean-cosmo-monograph e2e-clean-cosmo-monograph-contract clean-local
+destroy: e2e-destroy-cd e2e-destroy-cosmo e2e-destroy-cosmo-monograph e2e-destroy-cosmo-monograph-contract e2e-destroy-cosmo-local

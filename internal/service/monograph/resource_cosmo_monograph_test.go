@@ -41,6 +41,10 @@ func TestAccMonographResource(t *testing.T) {
 				ResourceName: "cosmo_monograph.test",
 				RefreshState: true,
 			},
+			{
+				Config:  testAccMonographResourceConfig(namespace, name, graphUrl, rRoutingURL),
+				Destroy: true,
+			},
 		},
 	})
 }

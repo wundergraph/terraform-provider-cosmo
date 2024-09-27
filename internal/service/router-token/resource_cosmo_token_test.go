@@ -35,6 +35,10 @@ func TestAccTokenResource(t *testing.T) {
 				ResourceName: "cosmo_router_token.test",
 				RefreshState: true,
 			},
+			{
+				Config:  testAccTokenResourceConfig(namespace, name),
+				Destroy: true,
+			},
 		},
 	})
 }
