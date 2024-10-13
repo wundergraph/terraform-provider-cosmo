@@ -23,12 +23,11 @@ type SubgraphResource struct {
 }
 
 type SubgraphResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Name       types.String `tfsdk:"name"`
-	Namespace  types.String `tfsdk:"namespace"`
-	RoutingURL types.String `tfsdk:"routing_url"`
-	// TODO: re-enable this once Graph Feature Flags are implementd
-	// BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
+	Id                   types.String `tfsdk:"id"`
+	Name                 types.String `tfsdk:"name"`
+	Namespace            types.String `tfsdk:"namespace"`
+	RoutingURL           types.String `tfsdk:"routing_url"`
+	BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
 	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
@@ -144,11 +143,10 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Optional:            true,
 				MarkdownDescription: "The schema for the subgraph.",
 			},
-			// TODO: re-enable this once Graph Feature Flags are implementd
-			// "base_subgraph_name": schema.StringAttribute{
-			// 	Optional:            true,
-			// 	MarkdownDescription: "The base subgraph name.",
-			// },
+			"base_subgraph_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The base subgraph name.",
+			},
 		},
 	}
 }
@@ -333,6 +331,18 @@ func (r *SubgraphResource) ImportState(ctx context.Context, req resource.ImportS
 
 func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data SubgraphResourceModel, resp *resource.CreateResponse) (*platformv1.Subgraph, *api.ApiError) {
 	var labels []*platformv1.Label
+
+	baseSubgraphName := data.BaseSubgraphName.ValueString()
+	name := data.Name.ValueString()
+	namespace := data.Namespace.ValueString()
+	routingURL := data.RoutingURL.ValueString()
+	subscriptionURL := data.SubscriptionUrl.ValueString()
+	readme := data.Readme.ValueString()
+	isEventDrivenGraph := data.IsEventDrivenGraph.ValueBool()
+	isFeatureSubgraph := data.IsFeatureSubgraph.ValueBool()
+	subscriptionProtocol := data.SubscriptionProtocol.ValueString()
+	websocketSubprotocol := data.WebsocketSubprotocol.ValueString()
+
 	for key, value := range data.Labels.Elements() {
 		if strValue, ok := value.(types.String); ok {
 			labels = append(labels, &platformv1.Label{
@@ -341,8 +351,7 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 			})
 		}
 	}
-
-	apiErr := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	apiErr := r.client.CreateSubgraph(ctx, name, namespace, routingURL, &baseSubgraphName, &subscriptionURL, &readme, &isEventDrivenGraph, &isFeatureSubgraph, subscriptionProtocol, websocketSubprotocol, labels)
 	if apiErr != nil {
 		utils.AddDiagnosticError(resp,
 			ErrCreatingSubgraph,
@@ -351,7 +360,7 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 		return nil, apiErr
 	}
 
-	subgraph, apiErr := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	subgraph, apiErr := r.client.GetSubgraph(ctx, name, namespace)
 	if apiErr != nil {
 		return nil, apiErr
 	}
@@ -382,7 +391,11 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 }
 
 func (r *SubgraphResource) publishSubgraphSchema(ctx context.Context, data SubgraphResourceModel) (bool, *api.ApiError) {
-	apiResponse, apiError := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+	name := data.Name.ValueString()
+	namespace := data.Namespace.ValueString()
+	schema := data.Schema.ValueString()
+
+	apiResponse, apiError := r.client.PublishSubgraph(ctx, name, namespace, schema)
 	if apiError != nil {
 		return false, apiError
 	}

@@ -8,7 +8,7 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespace string, routingUrl string, baseSubgraphName *string, labels []*platformv1.Label, subscriptionUrl *string, readme *string, isEventDrivenGraph *bool, isFeatureSubgraph *bool, subscriptionProtocol string, websocketSubprotocol string) *ApiError {
+func (p PlatformClient) CreateSubgraph(ctx context.Context, name, namespace, routingUrl string, baseSubgraphName *string, subscriptionUrl *string, readme *string, isEventDrivenGraph *bool, isFeatureSubgraph *bool, subscriptionProtocol string, websocketSubprotocol string, labels []*platformv1.Label) *ApiError {
 	request := connect.NewRequest(&platformv1.CreateFederatedSubgraphRequest{
 		Name:                 name,
 		Namespace:            namespace,
