@@ -37,26 +37,28 @@ variable "cosmo" {
   type = object({
     release_name = string
     chart = object({
-      name        = string
-      version     = string
-      namespace   = string
-      repository  = string
-      values      = list(string)
-      init_values = string
-      set         = map(string)
+      name             = string
+      version          = string
+      namespace        = string
+      repository       = string
+      values           = list(string)
+      init_values      = string
+      set              = map(string)
+      create_namespace = bool
     })
   })
   description = "The cosmo chart to deploy"
   default = {
     release_name = "cosmo"
     chart = {
-      name        = "cosmo"
-      version     = "0.11.2"
-      namespace   = "cosmo"
-      repository  = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
-      values      = []
-      init_values = "./values/cosmo-values.yaml"
-      set         = {}
+      name             = "cosmo"
+      version          = "0.12.2"
+      namespace        = "cosmo"
+      repository       = "oci://ghcr.io/wundergraph/cosmo/helm-charts"
+      values           = []
+      init_values      = "./values/cosmo-values.yaml"
+      set              = {}
+      create_namespace = true
     }
   }
 }

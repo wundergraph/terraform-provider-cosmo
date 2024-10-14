@@ -24,16 +24,7 @@ module "cosmo_charts" {
   depends_on = [time_sleep.wait_for_minikube]
 }
 
-// 4. Create a namespace for the cosmo deployment
-resource "kubernetes_namespace" "cosmo_namespace" {
-  metadata {
-    name = var.cosmo.chart.namespace
-  }
-
-  depends_on = [time_sleep.wait_for_minikube]
-}
-
-// 5. Install the cosmo helm release 
+// 4. Install the cosmo helm release 
 // see var.cosmo.release_name and var.cosmo.chart for more details
 module "cosmo_release" {
   source = "../../../modules/charts/release"
@@ -44,26 +35,27 @@ module "cosmo_release" {
   depends_on = [time_sleep.wait_for_minikube]
 }
 
-// 6. Install the cosmo router helm release
+// 5. Install the cosmo router helm release
 // see local.cosmo_router.release_name and local.cosmo_router.chart for more details
 // this happens after graphs.tf was applied after the router token was created
 module "cosmo_router_release" {
   for_each = var.federated_graphs
   source   = "../../../modules/charts/release"
-  # chart  = local.cosmo_router.chart
+
   chart = {
-    name        = var.cosmo_router.chart.name
-    version     = var.cosmo_router.chart.version
-    namespace   = var.cosmo_router.chart.namespace
-    repository  = var.cosmo_router.chart.repository
-    values      = concat(var.cosmo_router.chart.values, [])
-    init_values = var.cosmo_router.chart.init_values
+    name             = var.cosmo_router.chart.name
+    version          = var.cosmo_router.chart.version
+    namespace        = var.cosmo_router.chart.namespace
+    repository       = var.cosmo_router.chart.repository
+    values           = concat(var.cosmo_router.chart.values, [])
+    init_values      = var.cosmo_router.chart.init_values
+    create_namespace = false
     set = merge({
       "configuration.graphApiToken"              = module.cosmo_federated_graph[each.key].router_token
-      "configuration.controlplaneUrl"            = "http://cosmo-controlplane.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:3001"
-      "configuration.cdnUrl"                     = "http://cosmo-cdn.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:8787"
-      "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4318"
-      "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.${kubernetes_namespace.cosmo_namespace.metadata[0].name}.svc.cluster.local:4005"
+      "configuration.controlplaneUrl"            = "http://cosmo-controlplane.${var.cosmo.chart.namespace}.svc.cluster.local:3001"
+      "configuration.cdnUrl"                     = "http://cosmo-cdn.${var.cosmo.chart.namespace}.svc.cluster.local:8787"
+      "configuration.otelCollectorUrl"           = "http://cosmo-otelcollector.${var.cosmo.chart.namespace}.svc.cluster.local:4318"
+      "configuration.graphqlMetricsCollectorUrl" = "http://cosmo-graphqlmetrics.${var.cosmo.chart.namespace}.svc.cluster.local:4005"
     }, var.cosmo_router.chart.set)
   }
 

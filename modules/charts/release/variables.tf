@@ -1,12 +1,13 @@
 variable "chart" {
   type = object({
-    name        = string
-    version     = string
-    namespace   = string
-    repository  = string
-    values      = list(string)
-    init_values = string
-    set         = map(string)
+    name             = string
+    version          = string
+    namespace        = string
+    repository       = string
+    values           = list(string)
+    init_values      = string
+    set              = map(string)
+    create_namespace = optional(bool)
   })
   default = {
     name        = "cosmo"

@@ -1,10 +1,11 @@
 resource "helm_release" "this" {
-  name       = var.release_name
-  namespace  = var.chart.namespace
-  repository = var.chart.repository
-  version    = var.chart.version
-  chart      = var.chart.name
-  values     = concat([file(var.chart.init_values)], var.chart.values)
+  name             = var.release_name
+  namespace        = var.chart.namespace
+  repository       = var.chart.repository
+  version          = var.chart.version
+  chart            = var.chart.name
+  values           = concat([file(var.chart.init_values)], var.chart.values)
+  create_namespace = var.chart.create_namespace
 
   wait          = true
   wait_for_jobs = true
