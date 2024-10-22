@@ -71,7 +71,7 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 This resource handles subgraphs. Each subgraph is responsible for defining its specific segment of the schema and managing the related queries.
-		
+
 For more information on subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/subgraph).
 		`,
 		Attributes: map[string]schema.Attribute{
@@ -193,7 +193,25 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	subgraph, apiError := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	var apiError *api.ApiError
+	var subgraph *platformv1.Subgraph
+	// We're doing an import if the name isn't provided and therefore we need
+	// to fetch the subgraph by ID and namespace.
+	if data.Name.ValueString() == "" {
+		subgraphs, apiError := r.client.GetSubgraphs(ctx, data.Namespace.ValueString())
+		if apiError != nil {
+			utils.AddDiagnosticError(resp, ErrRetrievingSubgraphs, fmt.Sprintf("Could not fetch subgraphs: %s", apiError.Error()))
+			return
+		}
+		for _, sg := range subgraphs {
+			if sg.Id == data.Id.ValueString() {
+				subgraph = sg
+				break
+			}
+		}
+	} else {
+		subgraph, apiError = r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	}
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
