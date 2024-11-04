@@ -10,7 +10,7 @@ description: |-
 # cosmo_subgraph (Resource)
 
 This resource handles subgraphs. Each subgraph is responsible for defining its specific segment of the schema and managing the related queries.
-		
+
 For more information on subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/subgraph).
 
 ## Example Usage
