@@ -114,6 +114,51 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 	return response.Msg.GetGraph(), nil
 }
 
+func (p PlatformClient) GetSubgraphs(ctx context.Context, namespace string) ([]*platformv1.Subgraph, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetSubgraphsRequest{
+		Namespace: namespace,
+	})
+
+	response, err := p.Client.GetSubgraphs(ctx, request)
+	if err != nil {
+		return nil, &ApiError{Err: err, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	if response.Msg == nil {
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
+	}
+
+	return response.Msg.GetGraphs(), nil
+}
+
+func (p PlatformClient) GetSubgraphSchema(ctx context.Context, name, namespace string) (string, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetLatestSubgraphSDLRequest{
+		Name:      name,
+		Namespace: namespace,
+	})
+
+	response, err := p.Client.GetLatestSubgraphSDL(ctx, request)
+	if err != nil {
+		return "", &ApiError{Err: err, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	if response.Msg == nil {
+		return "", &ApiError{Err: ErrEmptyMsg, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return "", apiError
+	}
+
+	return response.Msg.GetSdl(), nil
+}
+
 func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.PublishFederatedSubgraphRequest{
 		Name:      name,

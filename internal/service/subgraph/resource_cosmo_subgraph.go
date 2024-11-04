@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -71,7 +72,7 @@ func (r *SubgraphResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 This resource handles subgraphs. Each subgraph is responsible for defining its specific segment of the schema and managing the related queries.
-		
+
 For more information on subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/subgraph).
 		`,
 		Attributes: map[string]schema.Attribute{
@@ -193,7 +194,45 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	subgraph, apiError := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	var apiError *api.ApiError
+	var subgraph *platformv1.Subgraph
+	// We're doing an import if the name isn't provided and therefore we need
+	// to fetch the subgraph by ID and namespace.
+	if data.Name.ValueString() == "" {
+		subgraphs, apiError := r.client.GetSubgraphs(ctx, data.Namespace.ValueString())
+		if apiError != nil {
+			utils.AddDiagnosticError(resp, ErrRetrievingSubgraphs, fmt.Sprintf("Could not fetch subgraphs: %s", apiError.Error()))
+			return
+		}
+		for _, sg := range subgraphs {
+			if sg.Id == data.Id.ValueString() {
+				subgraph = sg
+				break
+			}
+		}
+
+		if subgraph == nil {
+			utils.AddDiagnosticError(resp, ErrSubgraphNotFound, fmt.Sprintf("Subgraph with ID '%s' not found", data.Id.ValueString()))
+			return
+		}
+
+	} else {
+		subgraph, apiError = r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrSubgraphNotFound,
+					fmt.Sprintf("Subgraph '%s' not found will be recreated %s", data.Name.ValueString(), apiError.Error()),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
+			return
+		}
+	}
+
+	schema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
@@ -206,11 +245,23 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
 		return
 	}
+	labels := map[string]attr.Value{}
+	for _, label := range subgraph.GetLabels() {
+		if label != nil {
+			labels[label.GetKey()] = types.StringValue(label.GetValue())
+		}
+	}
+	mapValue, diags := types.MapValueFrom(ctx, types.StringType, labels)
+	resp.Diagnostics.Append(diags...)
 
 	data.Id = types.StringValue(subgraph.GetId())
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
+	if len(schema) > 0 {
+		data.Schema = types.StringValue(schema)
+	}
+	data.Labels = mapValue
 
 	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
