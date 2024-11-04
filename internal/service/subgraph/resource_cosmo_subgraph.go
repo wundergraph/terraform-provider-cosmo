@@ -258,7 +258,9 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
-	data.Schema = types.StringValue(schema)
+	if len(schema) > 0 {
+		data.Schema = types.StringValue(schema)
+	}
 	data.Labels = mapValue
 
 	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
