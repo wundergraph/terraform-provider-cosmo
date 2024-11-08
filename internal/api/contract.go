@@ -8,7 +8,7 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, sourceGraphName, routingUrl, admissionWebhookUrl, admissionWebhookSecret string, excludeTags []string, readme string) (*platformv1.CreateContractResponse, *ApiError) {
+func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, sourceGraphName, routingUrl, admissionWebhookUrl, admissionWebhookSecret string, excludeTags []string, includeTags []string, readme string) (*platformv1.CreateContractResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateContractRequest{
 		Name:                   name,
 		Namespace:              namespace,
@@ -18,6 +18,7 @@ func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, so
 		ExcludeTags:            excludeTags,
 		Readme:                 &readme,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
+		IncludeTags:            includeTags,
 	})
 
 	response, err := p.Client.CreateContract(ctx, request)
@@ -37,11 +38,12 @@ func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, so
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace string, excludeTags []string) (*platformv1.UpdateContractResponse, *ApiError) {
+func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace string, excludeTags []string, includeTags []string) (*platformv1.UpdateContractResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.UpdateContractRequest{
 		Name:        name,
 		Namespace:   namespace,
 		ExcludeTags: excludeTags,
+		IncludeTags: includeTags,
 	})
 
 	response, err := p.Client.UpdateContract(ctx, request)
