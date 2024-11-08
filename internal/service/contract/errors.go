@@ -12,3 +12,7 @@ const (
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
 	ErrUnexpectedResourceType   = "Unexpected Resource Configure Type"
 )
+
+const (
+	DebugCreate = "create-contract"
+)

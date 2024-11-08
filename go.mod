@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
-	github.com/wundergraph/cosmo/connect-go v0.0.0-20240916094337-a4c4cae55557
+	github.com/wundergraph/cosmo/connect-go v0.0.0-20241104193239-b78c5917d64b
 )
 
 require (
