@@ -40,6 +40,7 @@ resource "cosmo_contract" "test" {
 - `admission_webhook_secret` (String)
 - `admission_webhook_url` (String)
 - `exclude_tags` (List of String)
+- `include_tags` (List of String)
 - `readme` (String)
 
 ### Read-Only
