@@ -39,11 +39,11 @@ type FederatedGraphResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	Namespace              types.String `tfsdk:"namespace"`
-	Readme                 types.String `tfsdk:"readme"`
 	RoutingURL             types.String `tfsdk:"routing_url"`
+	LabelMatchers          types.List   `tfsdk:"label_matchers"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
-	LabelMatchers          types.List   `tfsdk:"label_matchers"`
+	Readme                 types.String `tfsdk:"readme"`
 }
 
 func (r *FederatedGraphResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -138,10 +138,6 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 	response, apiError := r.createFederatedGraph(ctx, data, resp)
 	if apiError != nil {
 		if !api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticError(resp,
-				ErrCreatingGraph,
-				apiError.Error(),
-			)
 			return
 		}
 	}
@@ -151,6 +147,20 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var responseLabelMatchers []attr.Value
+	for _, matcher := range graph.LabelMatchers {
+		responseLabelMatchers = append(responseLabelMatchers, types.StringValue(matcher))
+	}
+	data.LabelMatchers = types.ListValueMust(types.StringType, responseLabelMatchers)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
 
 	utils.LogAction(ctx, DebugCreate, data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -190,11 +200,19 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 
-	var labelMatchers []attr.Value
+	var responseLabelMatchers []attr.Value
 	for _, matcher := range graph.LabelMatchers {
-		labelMatchers = append(labelMatchers, types.StringValue(matcher))
+		responseLabelMatchers = append(responseLabelMatchers, types.StringValue(matcher))
 	}
-	data.LabelMatchers = types.ListValueMust(types.StringType, labelMatchers)
+	data.LabelMatchers = types.ListValueMust(types.StringType, responseLabelMatchers)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
 
 	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -219,7 +237,7 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	graph := platformv1.FederatedGraph{
+	updatedGraph := platformv1.FederatedGraph{
 		Name:                data.Name.ValueString(),
 		Namespace:           data.Namespace.ValueString(),
 		RoutingURL:          data.RoutingURL.ValueString(),
@@ -233,23 +251,45 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		admissionWebhookSecret = data.AdmissionWebhookSecret.ValueStringPointer()
 	}
 
-	_, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &graph)
+	_, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &updatedGraph)
 	if apiError != nil {
-		if api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp,
-				ErrCompositionError,
-				apiError.Error(),
-			)
-		} else {
-			utils.AddDiagnosticError(resp,
-				ErrUpdatingGraph,
-				apiError.Error(),
-			)
-			return
-		}
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingGraph,
+			apiError.Error(),
+		)
+		return
 	}
 
-	utils.LogAction(ctx, "updated", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "updated federated graph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+
+	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingGraph,
+			apiError.Error(),
+		)
+		return
+	}
+
+	graph := response.Graph
+	data.Id = types.StringValue(graph.GetId())
+	data.Name = types.StringValue(graph.GetName())
+	data.Namespace = types.StringValue(graph.GetNamespace())
+	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var responseLabelMatchers []attr.Value
+	for _, matcher := range graph.LabelMatchers {
+		responseLabelMatchers = append(responseLabelMatchers, types.StringValue(matcher))
+	}
+	data.LabelMatchers = types.ListValueMust(types.StringType, responseLabelMatchers)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -270,14 +310,22 @@ func (r *FederatedGraphResource) Delete(ctx context.Context, req resource.Delete
 	apiError := r.client.DeleteFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 
 	if apiError != nil {
-		utils.AddDiagnosticError(resp,
-			ErrDeletingGraph,
-			apiError.Error(),
-		)
-		return
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingGraph,
+				apiError.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingGraph,
+				apiError.Error(),
+			)
+			return
+		}
 	}
 
-	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "deleted federated graph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 }
 
 func (r *FederatedGraphResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -313,8 +361,12 @@ func (r *FederatedGraphResource) createFederatedGraph(ctx context.Context, data 
 	_, apiError := r.client.CreateFederatedGraph(ctx, admissionWebhookSecret, &apiGraph)
 	if apiError != nil {
 		if api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp, ErrCompositionError, apiError.Error())
+			utils.AddDiagnosticError(resp, ErrCreatingGraph, apiError.Error())
 		} else {
+			utils.AddDiagnosticError(resp,
+				ErrCreatingGraph,
+				"Could not create federated graph: "+apiError.Error(),
+			)
 			return nil, apiError
 		}
 	}

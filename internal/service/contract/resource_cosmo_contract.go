@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"strings"
@@ -30,12 +31,12 @@ type contractResourceModel struct {
 	Name                   types.String `tfsdk:"name"`
 	SourceGraphName        types.String `tfsdk:"source"`
 	Namespace              types.String `tfsdk:"namespace"`
+	RoutingURL             types.String `tfsdk:"routing_url"`
 	ExcludeTags            types.List   `tfsdk:"exclude_tags"`
 	IncludeTags            types.List   `tfsdk:"include_tags"`
 	Readme                 types.String `tfsdk:"readme"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
-	RoutingURL             types.String `tfsdk:"routing_url"`
 }
 
 func (r *contractResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -52,6 +53,9 @@ For more information, refer to the Cosmo Documentation at https://cosmo-docs.wun
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -120,10 +124,7 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 	response, apiError := r.createAndFetchContract(ctx, data, resp)
 	if apiError != nil {
 		if !api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticError(resp,
-				ErrCreatingContract,
-				apiError.Error(),
-			)
+			// returning only for a non composition error, as the resource exists otherwise
 			return
 		}
 	}
@@ -133,6 +134,26 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var responseExcludeTags []attr.Value
+	for _, tag := range graph.Contract.GetExcludeTags() {
+		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	}
+	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
+
+	var responseIncludeTags []attr.Value
+	for _, tag := range graph.Contract.IncludeTags {
+		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	}
+	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
 
 	utils.LogAction(ctx, DebugCreate, data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -148,7 +169,7 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	apiResponse, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
@@ -165,11 +186,31 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	graph := apiResponse.Graph
+	graph := response.Graph
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var responseExcludeTags []attr.Value
+	for _, tag := range graph.Contract.GetExcludeTags() {
+		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	}
+	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
+
+	var responseIncludeTags []attr.Value
+	for _, tag := range graph.Contract.IncludeTags {
+		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	}
+	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
 
 	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -202,20 +243,53 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	if len(includeTags) > 0 && len(excludeTags) > 0 {
+		utils.AddDiagnosticError(resp, ErrUpdatingContract, "a contract cannot have both the include and exclude tags")
+		return
+	}
+
 	_, apiError := r.client.UpdateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), excludeTags, includeTags)
 	if apiError != nil {
-		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp,
-				ErrUpdatingContract,
-				apiError.Error(),
-			)
-		} else {
-			utils.AddDiagnosticError(resp,
-				ErrUpdatingContract,
-				apiError.Error(),
-			)
-			return
-		}
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingContract,
+			apiError.Error(),
+		)
+		return
+	}
+
+	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrRetrievingContract,
+			apiError.Error(),
+		)
+		return
+	}
+
+	graph := response.Graph
+	data.Id = types.StringValue(graph.GetId())
+	data.Name = types.StringValue(graph.GetName())
+	data.Namespace = types.StringValue(graph.GetNamespace())
+	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+
+	var responseExcludeTags []attr.Value
+	for _, tag := range graph.Contract.GetExcludeTags() {
+		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	}
+	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
+
+	var responseIncludeTags []attr.Value
+	for _, tag := range graph.Contract.IncludeTags {
+		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	}
+	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
+
+	if graph.Readme != nil {
+		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.AdmissionWebhookUrl != nil {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -231,13 +305,8 @@ func (r *contractResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	apiError := r.client.DeleteContract(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiError != nil {
-		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp,
-				ErrDeletingContract,
-				apiError.Error(),
-			)
-		} else if api.IsNotFoundError(apiError) {
-			utils.AddDiagnosticWarning(resp,
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticError(resp,
 				ErrDeletingContract,
 				apiError.Error(),
 			)
@@ -250,6 +319,8 @@ func (r *contractResource) Delete(ctx context.Context, req resource.DeleteReques
 			return
 		}
 	}
+
+	utils.LogAction(ctx, "deleted contract", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 }
 
 func (r *contractResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -275,6 +346,11 @@ func (r *contractResource) createAndFetchContract(ctx context.Context, data cont
 		return nil, &api.ApiError{Err: err, Reason: "CreateContract", Status: common.EnumStatusCode_ERR}
 	}
 
+	if len(includeTags) > 0 && len(excludeTags) > 0 {
+		utils.AddDiagnosticError(resp, ErrCreatingContract, "a contract cannot have both the include and exclude tags")
+		return nil, &api.ApiError{Err: err, Reason: "CreateContract", Status: common.EnumStatusCode_ERR}
+	}
+
 	utils.DebugAction(ctx, DebugCreate, data.Name.ValueString(), data.Namespace.ValueString(), map[string]interface{}{
 		"routing_url": data.RoutingURL.ValueString(),
 		"excludeTags": strings.Join(excludeTags, ","),
@@ -284,7 +360,7 @@ func (r *contractResource) createAndFetchContract(ctx context.Context, data cont
 	_, apiError := r.client.CreateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.SourceGraphName.ValueString(), data.RoutingURL.ValueString(), data.AdmissionWebhookUrl.ValueString(), data.AdmissionWebhookSecret.ValueString(), excludeTags, includeTags, data.Readme.ValueString())
 	if apiError != nil {
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp,
+			utils.AddDiagnosticError(resp,
 				ErrCreatingContract,
 				"Contract composition failed: "+apiError.Error(),
 			)

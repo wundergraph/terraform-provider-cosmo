@@ -54,6 +54,9 @@ For more information on monographs, please refer to the [Cosmo Documentation](ht
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The unique identifier of the monograph resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -181,7 +184,7 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		data.Readme = types.StringValue(*monograph.Readme)
 	}
 
-	utils.LogAction(ctx, "created", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "created monograph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -220,7 +223,7 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		data.Readme = types.StringValue(*monograph.Readme)
 	}
 
-	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "read monograph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -254,6 +257,8 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	utils.LogAction(ctx, "updated monograph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+
 	monograph, err := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp,
@@ -265,8 +270,6 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 
 	data.Id = types.StringValue(monograph.GetId())
 	data.Name = types.StringValue(monograph.GetName())
-
-	utils.LogAction(ctx, "updated", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -281,14 +284,22 @@ func (r *MonographResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	apiError := r.client.DeleteMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiError != nil {
-		utils.AddDiagnosticError(resp,
-			ErrDeletingMonograph,
-			apiError.Error(),
-		)
-		return
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingMonograph,
+				apiError.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingMonograph,
+				apiError.Error(),
+			)
+			return
+		}
 	}
 
-	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "deleted monograph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 }
 
 func (r *MonographResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
