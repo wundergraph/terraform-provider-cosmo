@@ -355,7 +355,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	if data.Schema.ValueString() != "" {
-		_, apiError := r.publishSubgraphSchema(ctx, data)
+		apiError := r.publishSubgraphSchema(ctx, data)
 		if apiError != nil {
 			if api.IsNotFoundError(apiErr) {
 				utils.AddDiagnosticError(resp,
@@ -482,7 +482,7 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 	}
 
 	if data.Schema.ValueString() != "" {
-		_, apiError := r.publishSubgraphSchema(ctx, data)
+		apiError := r.publishSubgraphSchema(ctx, data)
 		if apiError != nil {
 			if api.IsSubgraphCompositionFailedError(apiError) {
 				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, apiError.Error())
@@ -504,15 +504,15 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 	return subgraph, nil
 }
 
-func (r *SubgraphResource) publishSubgraphSchema(ctx context.Context, data SubgraphResourceModel) (bool, *api.ApiError) {
+func (r *SubgraphResource) publishSubgraphSchema(ctx context.Context, data SubgraphResourceModel) *api.ApiError {
 	apiResponse, apiError := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
 	if apiError != nil {
-		return false, apiError
+		return apiError
 	}
 
 	if apiResponse != nil && apiResponse.HasChanged != nil && *apiResponse.HasChanged {
-		return true, nil
+		return nil
 	}
 
-	return false, nil
+	return nil
 }
