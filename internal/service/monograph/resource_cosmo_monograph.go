@@ -33,6 +33,7 @@ type MonographResourceModel struct {
 	Readme                 types.String `tfsdk:"readme"`
 	AdmissionWebhookURL    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
+	Schema                 types.String `tfsdk:"schema"`
 }
 
 func NewMonographResource() resource.Resource {
@@ -112,6 +113,10 @@ For more information on monographs, please refer to the [Cosmo Documentation](ht
 					stringvalidator.OneOf(api.GraphQLSubscriptionProtocolWS, api.GraphQLSubscriptionProtocolSSE, api.GraphQLSubscriptionProtocolSSEPost),
 				},
 			},
+			"schema": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The schema for the subgraph.",
+			},
 		},
 	}
 }
@@ -168,6 +173,26 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 			apiError.Error(),
 		)
 		return
+	}
+
+	if data.Schema.ValueString() != "" {
+		err := r.client.PublishMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			if api.IsNotFoundError(err) {
+				utils.AddDiagnosticError(resp,
+					ErrPublishingMonograph,
+					err.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			} else {
+				utils.AddDiagnosticError(resp,
+					ErrPublishingMonograph,
+					err.Error(),
+				)
+				return
+			}
+		}
 	}
 
 	monograph, apiError := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
@@ -250,11 +275,40 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 		data.AdmissionWebhookSecret.ValueString(),
 	)
 	if err != nil {
-		utils.AddDiagnosticError(resp,
-			ErrUpdatingMonograph,
-			err.Error(),
-		)
-		return
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingMonograph,
+				err.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingMonograph,
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	if data.Schema.ValueString() != "" {
+		err := r.client.PublishMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
+		if err != nil {
+			if api.IsNotFoundError(err) {
+				utils.AddDiagnosticError(resp,
+					ErrUpdatingMonograph,
+					err.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			} else {
+				utils.AddDiagnosticError(resp,
+					ErrUpdatingMonograph,
+					err.Error(),
+				)
+				return
+			}
+		}
 	}
 
 	utils.LogAction(ctx, "updated monograph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
