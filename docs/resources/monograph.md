@@ -21,6 +21,7 @@ resource "cosmo_monograph" "example" {
   namespace   = var.monograph_namespace
   graph_url   = var.monograph_graph_url
   routing_url = var.monograph_routing_url
+  schema      = var.monograph_schema
 }
 ```
 
@@ -39,6 +40,7 @@ resource "cosmo_monograph" "example" {
 - `admission_webhook_url` (String) The admission webhook URL for the monograph.
 - `namespace` (String) The namespace in which the monograph is located.
 - `readme` (String) The readme for the subgraph.
+- `schema` (String) The schema for the subgraph.
 - `subscription_protocol` (String) The subscription protocol for the subgraph.
 - `subscription_url` (String) The subscription URL for the subgraph.
 - `websocket_subprotocol` (String) The websocket subprotocol for the subgraph.
