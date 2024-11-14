@@ -31,6 +31,7 @@ type contractDataSourceModel struct {
 	LabelMatchers          types.Map    `tfsdk:"label_matchers"`
 	ExcludeTags            types.List   `tfsdk:"exclude_tags"`
 	IncludeTags            types.List   `tfsdk:"include_tags"`
+	SupportsFederation     types.Bool   `tfsdk:"supports_federation"`
 }
 
 func (d *contractDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -81,6 +82,10 @@ func (d *contractDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"include_tags": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
+			},
+			"supports_federation": schema.BoolAttribute{
+				MarkdownDescription: "SupportFederation defines if this contract's source graph is a federated graph or a monograph..",
+				Computed:            true,
 			},
 		},
 	}
@@ -138,6 +143,7 @@ func (d *contractDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value

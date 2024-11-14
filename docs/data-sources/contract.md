@@ -37,3 +37,4 @@ data "cosmo_subgraph" "test" {
 - `label_matchers` (Map of String) A list of label matchers used to select the services that will form the federated graph.
 - `readme` (String) Readme content for the federated graph.
 - `routing_url` (String) The URL for the federated graph.
+- `supports_federation` (Boolean) SupportFederation defines if this contract's source graph is a federated graph or a monograph..

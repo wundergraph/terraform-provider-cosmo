@@ -42,6 +42,18 @@ func TestAccContractResource(t *testing.T) {
 				Config:  testAccContractResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, subgraphRoutingURL, subgraphSchema, name, readme),
 				Destroy: true,
 			},
+			{
+				Config: testAccContractOfMonographResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphRoutingURL, subgraphSchema, name, readme),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_contract.test_mono", "name", name),
+					resource.TestCheckResourceAttr("cosmo_contract.test_mono", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_contract.test_mono", "readme", readme),
+				),
+			},
+			{
+				Config:  testAccContractOfMonographResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphRoutingURL, subgraphSchema, name, readme),
+				Destroy: true,
+			},
 		},
 	})
 }
@@ -77,4 +89,30 @@ resource "cosmo_contract" "test" {
   readme    	= "%s"
 }
 `, namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, subgraphRoutingURL, subgraphSchema, contractName, contractReadme)
+}
+
+func testAccContractOfMonographResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, graphUrl, schema, contractName, contractReadme string) string {
+	return fmt.Sprintf(`
+resource "cosmo_namespace" "test_mono" {
+  name = "%s"
+}
+
+resource "cosmo_monograph" "test_mono" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test_mono.name
+  routing_url 	= "%s"
+  graph_url 	= "%s"
+  schema              = <<-EOT
+  %s
+  EOT
+}
+
+resource "cosmo_contract" "test_mono" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test_mono.name
+  source     	= cosmo_monograph.test_mono.name
+  routing_url 	= "http://localhost:3003"
+  readme    	= "%s"
+}
+`, namespace, federatedGraphName, federatedGraphRoutingURL, graphUrl, schema, contractName, contractReadme)
 }

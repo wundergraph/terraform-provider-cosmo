@@ -42,6 +42,7 @@ resource "cosmo_contract" "test" {
 - `exclude_tags` (List of String)
 - `include_tags` (List of String)
 - `readme` (String)
+- `supports_federation` (Boolean)
 
 ### Read-Only
 

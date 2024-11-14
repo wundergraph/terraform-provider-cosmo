@@ -63,8 +63,12 @@ func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace str
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) DeleteContract(ctx context.Context, name, namespace string) *ApiError {
-	return p.DeleteFederatedGraph(ctx, name, namespace)
+func (p *PlatformClient) DeleteContract(ctx context.Context, name, namespace string, supportsFederation bool) *ApiError {
+	if supportsFederation {
+		return p.DeleteFederatedGraph(ctx, name, namespace)
+	} else {
+		return p.DeleteMonograph(ctx, name, namespace)
+	}
 }
 
 func (p *PlatformClient) GetContract(ctx context.Context, name, namespace string) (*platformv1.GetFederatedGraphByNameResponse, *ApiError) {

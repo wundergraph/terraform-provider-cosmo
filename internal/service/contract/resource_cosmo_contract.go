@@ -37,6 +37,7 @@ type contractResourceModel struct {
 	Readme                 types.String `tfsdk:"readme"`
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
+	SupportsFederation     types.Bool   `tfsdk:"supports_federation"`
 }
 
 func (r *contractResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -92,6 +93,10 @@ For more information, refer to the Cosmo Documentation at https://cosmo-docs.wun
 			"routing_url": schema.StringAttribute{
 				Required: true,
 			},
+			"supports_federation": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -134,6 +139,7 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value
@@ -195,6 +201,7 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value
@@ -286,6 +293,7 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
+	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value
@@ -322,7 +330,7 @@ func (r *contractResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	apiError := r.client.DeleteContract(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	apiError := r.client.DeleteContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.SupportsFederation.ValueBool())
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticError(resp,
