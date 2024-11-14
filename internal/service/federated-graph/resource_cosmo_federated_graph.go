@@ -158,7 +158,7 @@ func (r *FederatedGraphResource) Create(ctx context.Context, req resource.Create
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
@@ -210,7 +210,7 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
@@ -253,11 +253,18 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 
 	_, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &updatedGraph)
 	if apiError != nil {
-		utils.AddDiagnosticError(resp,
-			ErrUpdatingGraph,
-			apiError.Error(),
-		)
-		return
+		if api.IsSubgraphCompositionFailedError(apiError) {
+			utils.AddDiagnosticError(resp,
+				ErrCompositionError,
+				apiError.Error(),
+			)
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingGraph,
+				apiError.Error(),
+			)
+			return
+		}
 	}
 
 	utils.LogAction(ctx, "updated federated graph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
@@ -287,7 +294,7 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 

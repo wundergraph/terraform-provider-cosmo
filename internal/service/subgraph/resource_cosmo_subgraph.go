@@ -3,6 +3,7 @@ package subgraph
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -110,6 +111,8 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Validators: []validator.String{
 					stringvalidator.OneOf(api.GraphQLSubscriptionProtocolWS, api.GraphQLSubscriptionProtocolSSE, api.GraphQLSubscriptionProtocolSSEPost),
 				},
+				Computed: true,
+				Default:  stringdefault.StaticString(api.GraphQLSubscriptionProtocolWS),
 			},
 			"readme": schema.StringAttribute{
 				Optional:            true,
@@ -121,10 +124,14 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Validators: []validator.String{
 					stringvalidator.OneOf(api.GraphQLWebsocketSubprotocolDefault, api.GraphQLWebsocketSubprotocolGraphQLWS, api.GraphQLWebsocketSubprotocolGraphQLTransportWS),
 				},
+				Computed: true,
+				Default:  stringdefault.StaticString(api.GraphQLWebsocketSubprotocolDefault),
 			},
 			"is_event_driven_graph": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Indicates if the subgraph is event-driven.",
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"is_feature_subgraph": schema.BoolAttribute{
 				Optional:            true,
@@ -190,7 +197,6 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
-	data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
@@ -202,6 +208,11 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	mapValue, _ := types.MapValueFrom(ctx, types.StringType, labels)
 	data.Labels = mapValue
+
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
+
 	if subgraph.Readme != nil {
 		data.Readme = types.StringValue(subgraph.GetReadme())
 	}
@@ -287,11 +298,14 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
-	data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
 	data.Labels = mapValue
+
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
 
 	if subgraph.Readme != nil {
 		data.Readme = types.StringValue(subgraph.GetReadme())
@@ -355,16 +369,19 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	if data.Schema.ValueString() != "" {
-		apiError := r.publishSubgraphSchema(ctx, data)
-		if apiError != nil {
-			if api.IsNotFoundError(apiErr) {
+		err := r.publishSubgraphSchema(ctx, data)
+		if err != nil {
+			if api.IsNotFoundError(err) {
 				utils.AddDiagnosticError(resp,
 					ErrUpdatingSubgraph,
-					apiErr.Error(),
+					err.Error(),
 				)
 				resp.State.RemoveResource(ctx)
 				return
-			} else if !api.IsSubgraphCompositionFailedError(apiError) {
+			} else if api.IsSubgraphCompositionFailedError(err) {
+				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, err.Error())
+			} else {
+				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, err.Error())
 				return
 			}
 		}
@@ -405,11 +422,14 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
-	data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
 	data.Labels = mapValue
+
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
 
 	if subgraph.Readme != nil {
 		data.Readme = types.StringValue(subgraph.GetReadme())
@@ -484,11 +504,15 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 	if data.Schema.ValueString() != "" {
 		apiError := r.publishSubgraphSchema(ctx, data)
 		if apiError != nil {
-			if api.IsSubgraphCompositionFailedError(apiError) {
-				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, apiError.Error())
-			} else if api.IsInvalidSubgraphSchemaError(apiError) {
-				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticError(resp,
+					ErrUpdatingSubgraph,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
 				return nil, apiError
+			} else if api.IsSubgraphCompositionFailedError(apiError) {
+				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, apiError.Error())
 			} else {
 				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
 				return nil, apiError

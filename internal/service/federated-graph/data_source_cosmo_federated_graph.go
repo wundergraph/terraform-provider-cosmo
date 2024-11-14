@@ -131,6 +131,10 @@ func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.Read
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
+	if graph.GetAdmissionWebhookUrl() != "" {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
+	}
+
 	tflog.Trace(ctx, "Read federated graph data source", map[string]interface{}{
 		"id": data.Id.ValueString(),
 	})

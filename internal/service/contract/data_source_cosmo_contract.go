@@ -29,6 +29,8 @@ type contractDataSourceModel struct {
 	AdmissionWebhookUrl    types.String `tfsdk:"admission_webhook_url"`
 	AdmissionWebhookSecret types.String `tfsdk:"admission_webhook_secret"`
 	LabelMatchers          types.Map    `tfsdk:"label_matchers"`
+	ExcludeTags            types.List   `tfsdk:"exclude_tags"`
+	IncludeTags            types.List   `tfsdk:"include_tags"`
 }
 
 func (d *contractDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -71,6 +73,14 @@ func (d *contractDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"routing_url": schema.StringAttribute{
 				MarkdownDescription: "The URL for the federated graph.",
 				Computed:            true,
+			},
+			"exclude_tags": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"include_tags": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -124,20 +134,33 @@ func (d *contractDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	graph := apiResponse.Graph
-
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 
-	labelMatchers := make(map[string]attr.Value)
-	for _, labelMatcher := range graph.GetLabelMatchers() {
-		labelMatchers[labelMatcher] = types.StringValue(labelMatcher)
+	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
+		var responseExcludeTags []attr.Value
+		for _, tag := range graph.Contract.GetExcludeTags() {
+			responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+		}
+		data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 	}
-	data.LabelMatchers = types.MapValueMust(types.StringType, labelMatchers)
+
+	if graph.Contract != nil && len(graph.Contract.GetIncludeTags()) > 0 {
+		var responseIncludeTags []attr.Value
+		for _, tag := range graph.Contract.IncludeTags {
+			responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+		}
+		data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
+	}
 
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)
+	}
+
+	if graph.GetAdmissionWebhookUrl() != "" {
+		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
 	tflog.Trace(ctx, "Read contract data source", map[string]interface{}{

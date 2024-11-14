@@ -62,7 +62,6 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 	federatedGraphRoutingURL := "https://federated-graph-standalone-subgraph-example.com"
 
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
-
 	routingURL := "https://subgraph-standalone-example.com"
 	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 

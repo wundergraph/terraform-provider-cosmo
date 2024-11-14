@@ -135,23 +135,27 @@ func (r *contractResource) Create(ctx context.Context, req resource.CreateReques
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 
-	var responseExcludeTags []attr.Value
-	for _, tag := range graph.Contract.GetExcludeTags() {
-		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
+		var responseExcludeTags []attr.Value
+		for _, tag := range graph.Contract.GetExcludeTags() {
+			responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+		}
+		data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 	}
-	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 
-	var responseIncludeTags []attr.Value
-	for _, tag := range graph.Contract.IncludeTags {
-		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetIncludeTags()) > 0 {
+		var responseIncludeTags []attr.Value
+		for _, tag := range graph.Contract.IncludeTags {
+			responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+		}
+		data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 	}
-	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
@@ -192,23 +196,27 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 
-	var responseExcludeTags []attr.Value
-	for _, tag := range graph.Contract.GetExcludeTags() {
-		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
+		var responseExcludeTags []attr.Value
+		for _, tag := range graph.Contract.GetExcludeTags() {
+			responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+		}
+		data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 	}
-	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 
-	var responseIncludeTags []attr.Value
-	for _, tag := range graph.Contract.IncludeTags {
-		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetIncludeTags()) > 0 {
+		var responseIncludeTags []attr.Value
+		for _, tag := range graph.Contract.IncludeTags {
+			responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+		}
+		data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 	}
-	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 
@@ -250,11 +258,18 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 
 	_, apiError := r.client.UpdateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), excludeTags, includeTags)
 	if apiError != nil {
-		utils.AddDiagnosticError(resp,
-			ErrUpdatingContract,
-			apiError.Error(),
-		)
-		return
+		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingContract,
+				apiError.Error(),
+			)
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingContract,
+				apiError.Error(),
+			)
+			return
+		}
 	}
 
 	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
@@ -272,23 +287,27 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 
-	var responseExcludeTags []attr.Value
-	for _, tag := range graph.Contract.GetExcludeTags() {
-		responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
+		var responseExcludeTags []attr.Value
+		for _, tag := range graph.Contract.GetExcludeTags() {
+			responseExcludeTags = append(responseExcludeTags, types.StringValue(tag))
+		}
+		data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 	}
-	data.ExcludeTags = types.ListValueMust(types.StringType, responseExcludeTags)
 
-	var responseIncludeTags []attr.Value
-	for _, tag := range graph.Contract.IncludeTags {
-		responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+	if graph.Contract != nil && len(graph.Contract.GetIncludeTags()) > 0 {
+		var responseIncludeTags []attr.Value
+		for _, tag := range graph.Contract.IncludeTags {
+			responseIncludeTags = append(responseIncludeTags, types.StringValue(tag))
+		}
+		data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 	}
-	data.IncludeTags = types.ListValueMust(types.StringType, responseIncludeTags)
 
 	if graph.Readme != nil {
 		data.Readme = types.StringValue(*graph.Readme)
 	}
 
-	if graph.AdmissionWebhookUrl != nil {
+	if graph.GetAdmissionWebhookUrl() != "" {
 		data.AdmissionWebhookUrl = types.StringValue(*graph.AdmissionWebhookUrl)
 	}
 

@@ -28,6 +28,10 @@ func TestAccFederatedGraphDataSource(t *testing.T) {
 				ResourceName: "data.cosmo_federated_graph.test",
 				RefreshState: true,
 			},
+			{
+				Config:  testAccFederatedGraphDataSourceConfig(namespace, name),
+				Destroy: true,
+			},
 		},
 	})
 }
