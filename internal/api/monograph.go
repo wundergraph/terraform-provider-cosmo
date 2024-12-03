@@ -16,8 +16,8 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 		GraphUrl:               graphUrl,
 		SubscriptionUrl:        subscriptionUrl,
 		Readme:                 readme,
-		WebsocketSubprotocol:   resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol:   resolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
 		AdmissionWebhookURL:    admissionWebhookUrl,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})
@@ -46,8 +46,8 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 		GraphUrl:               graphUrl,
 		SubscriptionUrl:        subscriptionUrl,
 		Readme:                 readme,
-		WebsocketSubprotocol:   resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol:   resolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
 		AdmissionWebhookURL:    &admissionWebhookUrl,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})

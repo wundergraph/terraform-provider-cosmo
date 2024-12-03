@@ -363,9 +363,23 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		websocketSubprotocol = *data.WebsocketSubprotocol.ValueStringPointer()
 	}
 
+	routingUrl := data.RoutingURL.ValueString()
+	requestData := &platformv1.UpdateSubgraphRequest{
+		Name:                 data.Name.ValueString(),
+		RoutingUrl:           &routingUrl,
+		Namespace:            data.Namespace.ValueString(),
+		Labels:               labels,
+		UnsetLabels:          unsetLabels,
+		SubscriptionUrl:      &subscriptionUrl,
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(websocketSubprotocol),
+		Readme:               &readme,
+		Headers:              []string{},
+	}
+
 	// TBD: This is only used in the update subgraph method and not used atm
 	// headers := utils.ConvertHeadersToStringList(data.Headers)
-	apiErr := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, subscriptionUrl, readme, unsetLabels, subscriptionProtocol, websocketSubprotocol)
+	apiErr := r.client.UpdateSubgraph(ctx, requestData)
 	if apiErr != nil {
 		if api.IsSubgraphCompositionFailedError(apiErr) {
 			utils.AddDiagnosticWarning(resp,
@@ -512,7 +526,20 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 		}
 	}
 
-	apiErr := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	routingUrl := data.RoutingURL.ValueString()
+	requestData := &platformv1.CreateFederatedSubgraphRequest{
+		Name:                 data.Name.ValueString(),
+		Namespace:            data.Namespace.ValueString(),
+		RoutingUrl:           &routingUrl,
+		Labels:               labels,
+		SubscriptionUrl:      data.SubscriptionUrl.ValueStringPointer(),
+		Readme:               data.Readme.ValueStringPointer(),
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueString()),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueString()),
+		IsEventDrivenGraph:   data.IsEventDrivenGraph.ValueBoolPointer(),
+	}
+
+	apiErr := r.client.CreateSubgraph(ctx, requestData)
 	if apiErr != nil {
 		utils.AddDiagnosticError(resp,
 			ErrCreatingSubgraph,
