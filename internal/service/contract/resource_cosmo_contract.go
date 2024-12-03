@@ -278,7 +278,19 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 		readme = *data.Readme.ValueStringPointer()
 	}
 
-	_, apiError := r.client.UpdateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), excludeTags, includeTags, data.RoutingURL.ValueString(), admissionWebhookUrl, admissionWebhookSecret, readme)
+	routingUrl := data.RoutingURL.ValueString()
+	requestData := &platformv1.UpdateContractRequest{
+		Name:                   data.Name.ValueString(),
+		Namespace:              data.Namespace.ValueString(),
+		ExcludeTags:            excludeTags,
+		IncludeTags:            includeTags,
+		RoutingUrl:             &routingUrl,
+		AdmissionWebhookUrl:    &admissionWebhookUrl,
+		AdmissionWebhookSecret: &admissionWebhookSecret,
+		Readme:                 &readme,
+	}
+
+	_, apiError := r.client.UpdateContract(ctx, requestData)
 	if apiError != nil {
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticError(resp,
@@ -399,7 +411,20 @@ func (r *contractResource) createAndFetchContract(ctx context.Context, data cont
 		"includeTags": strings.Join(includeTags, ","),
 	})
 
-	_, apiError := r.client.CreateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.SourceGraphName.ValueString(), data.RoutingURL.ValueString(), data.AdmissionWebhookUrl.ValueString(), data.AdmissionWebhookSecret.ValueString(), excludeTags, includeTags, data.Readme.ValueString())
+	readme := data.Readme.ValueString()
+	requestData := &platformv1.CreateContractRequest{
+		Name:                   data.Name.ValueString(),
+		Namespace:              data.Namespace.ValueString(),
+		SourceGraphName:        data.SourceGraphName.ValueString(),
+		RoutingUrl:             data.RoutingURL.ValueString(),
+		AdmissionWebhookUrl:    data.AdmissionWebhookUrl.ValueString(),
+		ExcludeTags:            excludeTags,
+		Readme:                 &readme,
+		AdmissionWebhookSecret: data.AdmissionWebhookSecret.ValueStringPointer(),
+		IncludeTags:            includeTags,
+	}
+
+	_, apiError := r.client.CreateContract(ctx, requestData)
 	if apiError != nil {
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticError(resp,
