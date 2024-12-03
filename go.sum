@@ -196,10 +196,6 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/wundergraph/cosmo/connect-go v0.0.0-20241104193239-b78c5917d64b h1:N6CQBlWN7B8cOIVPNxZxkmgOUrSeaZebdhmdGxmg3/8=
-github.com/wundergraph/cosmo/connect-go v0.0.0-20241104193239-b78c5917d64b/go.mod h1:RLepGeaXdENMlePq4geGzaDV895QuJZ+mUFLzG5ra9E=
-github.com/wundergraph/cosmo/connect-go v0.0.0-20241127080034-0681d60a5f89 h1:JnLcb7QijyHR8LoulHw+jiBqM5Z9RNU7/7co3MTgxTY=
-github.com/wundergraph/cosmo/connect-go v0.0.0-20241127080034-0681d60a5f89/go.mod h1:RLepGeaXdENMlePq4geGzaDV895QuJZ+mUFLzG5ra9E=
 github.com/wundergraph/cosmo/connect-go v0.0.0-20241203152720-979e5a780c8e h1:XFEGOGnBWR6cfW3gV+24An3lNoesWOxTH71D09Tuph4=
 github.com/wundergraph/cosmo/connect-go v0.0.0-20241203152720-979e5a780c8e/go.mod h1:RLepGeaXdENMlePq4geGzaDV895QuJZ+mUFLzG5ra9E=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
