@@ -18,14 +18,13 @@ func TestAccContractResource(t *testing.T) {
 	federatedGraphName := acctest.RandomWithPrefix("test-federated-graph")
 
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
-	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, name, "internal", &readme),
+				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, name, "internal", &readme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_contract.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_contract.test", "namespace", namespace),
@@ -35,7 +34,7 @@ func TestAccContractResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, name, "external", &readme),
+				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, name, "external", &readme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_contract.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_contract.test", "namespace", namespace),
@@ -48,11 +47,11 @@ func TestAccContractResource(t *testing.T) {
 				RefreshState: true,
 			},
 			{
-				Config:  testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, name, "external", &readme),
+				Config:  testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, name, "external", &readme),
 				Destroy: true,
 			},
 			{
-				Config: testAccContractOfMonographResourceConfig(namespace, federatedGraphName, subgraphSchema, name, readme),
+				Config: testAccContractOfMonographResourceConfig(namespace, federatedGraphName, name, readme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_contract.test_mono", "name", name),
 					resource.TestCheckResourceAttr("cosmo_contract.test_mono", "namespace", namespace),
@@ -60,7 +59,7 @@ func TestAccContractResource(t *testing.T) {
 				),
 			},
 			{
-				Config:  testAccContractOfMonographResourceConfig(namespace, federatedGraphName, subgraphSchema, name, readme),
+				Config:  testAccContractOfMonographResourceConfig(namespace, federatedGraphName, name, readme),
 				Destroy: true,
 			},
 		},
@@ -74,7 +73,6 @@ func TestOptionalValuesOfContractResource(t *testing.T) {
 	federatedGraphName := acctest.RandomWithPrefix("test-federated-graph")
 
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
-	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
 	readme := "Initial readme content"
 
@@ -83,7 +81,7 @@ func TestOptionalValuesOfContractResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, name, "internal", &readme),
+				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, name, "internal", &readme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_contract.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_contract.test", "namespace", namespace),
@@ -92,7 +90,7 @@ func TestOptionalValuesOfContractResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, name, "external", nil),
+				Config: testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, name, "external", nil),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_contract.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_contract.test", "namespace", namespace),
@@ -104,11 +102,12 @@ func TestOptionalValuesOfContractResource(t *testing.T) {
 	})
 }
 
-func testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, subgraphSchema, contractName, contractExcludeTag string, contractReadme *string) string {
+func testAccContractResourceConfig(namespace, federatedGraphName, subgraphName, contractName, contractExcludeTag string, contractReadme *string) string {
 	var readmePart string
 	if contractReadme != nil {
 		readmePart = fmt.Sprintf(`readme = "%s"`, *contractReadme)
 	}
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
 
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
@@ -143,7 +142,8 @@ resource "cosmo_contract" "test" {
 `, namespace, federatedGraphName, subgraphName, subgraphSchema, contractName, contractExcludeTag, readmePart)
 }
 
-func testAccContractOfMonographResourceConfig(namespace, federatedGraphName, schema, contractName, contractReadme string) string {
+func testAccContractOfMonographResourceConfig(namespace, federatedGraphName, contractName, contractReadme string) string {
+	schema := acceptance.TestAccValidSubgraphSchema
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test_mono" {
   name = "%s"
