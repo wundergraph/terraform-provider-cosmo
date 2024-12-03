@@ -237,21 +237,31 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	readme := ""
+	if data.Readme.ValueStringPointer() != nil {
+		readme = *data.Readme.ValueStringPointer()
+	}
+
+	admissionWebhookUrl := ""
+	if data.AdmissionWebhookUrl.ValueStringPointer() != nil {
+		admissionWebhookUrl = *data.AdmissionWebhookUrl.ValueStringPointer()
+	}
+
+	admissionWebhookSecret := ""
+	if !data.AdmissionWebhookSecret.IsNull() {
+		admissionWebhookSecret = *data.AdmissionWebhookSecret.ValueStringPointer()
+	}
+
 	updatedGraph := platformv1.FederatedGraph{
 		Name:                data.Name.ValueString(),
 		Namespace:           data.Namespace.ValueString(),
 		RoutingURL:          data.RoutingURL.ValueString(),
-		AdmissionWebhookUrl: data.AdmissionWebhookUrl.ValueStringPointer(),
+		AdmissionWebhookUrl: &admissionWebhookUrl,
 		LabelMatchers:       labelMatchers,
-		Readme:              data.Readme.ValueStringPointer(),
+		Readme:              &readme,
 	}
 
-	var admissionWebhookSecret *string
-	if !data.AdmissionWebhookSecret.IsNull() {
-		admissionWebhookSecret = data.AdmissionWebhookSecret.ValueStringPointer()
-	}
-
-	_, apiError := r.client.UpdateFederatedGraph(ctx, admissionWebhookSecret, &updatedGraph)
+	_, apiError := r.client.UpdateFederatedGraph(ctx, &admissionWebhookSecret, &updatedGraph)
 	if apiError != nil {
 		if api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticError(resp,

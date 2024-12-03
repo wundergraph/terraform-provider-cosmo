@@ -38,12 +38,16 @@ func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, so
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace string, excludeTags []string, includeTags []string) (*platformv1.UpdateContractResponse, *ApiError) {
+func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace string, excludeTags []string, includeTags []string, routingUrl, admissionWebhookUrl, admissionWebhookSecret, readme string) (*platformv1.UpdateContractResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.UpdateContractRequest{
-		Name:        name,
-		Namespace:   namespace,
-		ExcludeTags: excludeTags,
-		IncludeTags: includeTags,
+		Name:                   name,
+		Namespace:              namespace,
+		ExcludeTags:            excludeTags,
+		IncludeTags:            includeTags,
+		RoutingUrl:             &routingUrl,
+		AdmissionWebhookUrl:    &admissionWebhookUrl,
+		AdmissionWebhookSecret: &admissionWebhookSecret,
+		Readme:                 &readme,
 	})
 
 	response, err := p.Client.UpdateContract(ctx, request)

@@ -343,9 +343,29 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		unsetLabels = &[]bool{true}[0]
 	}
 
+	readme := ""
+	if data.Readme.ValueStringPointer() != nil {
+		readme = *data.Readme.ValueStringPointer()
+	}
+
+	subscriptionUrl := ""
+	if data.SubscriptionUrl.ValueStringPointer() != nil {
+		subscriptionUrl = *data.SubscriptionUrl.ValueStringPointer()
+	}
+
+	subscriptionProtocol := api.GraphQLSubscriptionProtocolWS
+	if data.SubscriptionProtocol.ValueStringPointer() != nil {
+		subscriptionProtocol = *data.SubscriptionProtocol.ValueStringPointer()
+	}
+
+	websocketSubprotocol := api.GraphQLWebsocketSubprotocolDefault
+	if data.WebsocketSubprotocol.ValueStringPointer() != nil {
+		websocketSubprotocol = *data.WebsocketSubprotocol.ValueStringPointer()
+	}
+
 	// TBD: This is only used in the update subgraph method and not used atm
 	// headers := utils.ConvertHeadersToStringList(data.Headers)
-	apiErr := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	apiErr := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, subscriptionUrl, readme, unsetLabels, subscriptionProtocol, websocketSubprotocol)
 	if apiErr != nil {
 		if api.IsSubgraphCompositionFailedError(apiErr) {
 			utils.AddDiagnosticWarning(resp,

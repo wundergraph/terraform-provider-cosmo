@@ -263,7 +263,22 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	_, apiError := r.client.UpdateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), excludeTags, includeTags)
+	admissionWebhookUrl := ""
+	if data.AdmissionWebhookUrl.ValueStringPointer() != nil {
+		admissionWebhookUrl = *data.AdmissionWebhookUrl.ValueStringPointer()
+	}
+
+	admissionWebhookSecret := ""
+	if data.AdmissionWebhookSecret.ValueStringPointer() != nil {
+		admissionWebhookSecret = *data.AdmissionWebhookSecret.ValueStringPointer()
+	}
+
+	readme := ""
+	if data.Readme.ValueStringPointer() != nil {
+		readme = *data.Readme.ValueStringPointer()
+	}
+
+	_, apiError := r.client.UpdateContract(ctx, data.Name.ValueString(), data.Namespace.ValueString(), excludeTags, includeTags, data.RoutingURL.ValueString(), admissionWebhookUrl, admissionWebhookSecret, readme)
 	if apiError != nil {
 		if api.IsContractCompositionFailedError(apiError) || api.IsSubgraphCompositionFailedError(apiError) {
 			utils.AddDiagnosticError(resp,

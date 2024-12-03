@@ -39,14 +39,14 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 	return nil
 }
 
-func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) *ApiError {
+func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme string, unsetLabels *bool, subscriptionProtocol string, websocketSubprotocol string) *ApiError {
 	request := connect.NewRequest(&platformv1.UpdateSubgraphRequest{
 		Name:                 name,
 		RoutingUrl:           &routingUrl,
 		Labels:               labels,
 		Headers:              headers,
-		SubscriptionUrl:      subscriptionUrl,
-		Readme:               readme,
+		SubscriptionUrl:      &subscriptionUrl,
+		Readme:               &readme,
 		Namespace:            namespace,
 		UnsetLabels:          unsetLabels,
 		WebsocketSubprotocol: resolveWebsocketSubprotocol(websocketSubprotocol),
