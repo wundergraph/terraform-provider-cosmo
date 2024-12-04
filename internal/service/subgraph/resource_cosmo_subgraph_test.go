@@ -101,7 +101,7 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil),
+				Config: testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -115,7 +115,7 @@ func TestAccStandaloneSubgraphResource(t *testing.T) {
 				RefreshState: true,
 			},
 			{
-				Config:  testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil),
+				Config:  testStandaloneSubgraph(namespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil, false),
 				Destroy: true,
 			},
 		},
@@ -157,7 +157,7 @@ func TestAccStandaloneSubgraphResourcePublishSchema(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, nil, nil, nil, nil),
+				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, nil, nil, nil, nil, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -167,7 +167,7 @@ func TestAccStandaloneSubgraphResourcePublishSchema(t *testing.T) {
 				),
 			},
 			{
-				Config:      testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, updatedSubgraphSchema, nil, nil, nil, nil),
+				Config:      testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, updatedSubgraphSchema, nil, nil, nil, nil, false),
 				ExpectError: regexp.MustCompile(`.*ERR_INVALID_SUBGRAPH_SCHEMA*`),
 			},
 		},
@@ -191,7 +191,20 @@ func TestOptionalValuesOfSubgraphResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, &readme, &subgraphSubscriptionURL, &subscriptionProtocol, &websocketSubprotocol),
+				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, &readme, &subgraphSubscriptionURL, &subscriptionProtocol, &websocketSubprotocol, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", subgraphRoutingURL),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "readme", readme),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_url", subgraphSubscriptionURL),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_protocol", subscriptionProtocol),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "websocket_subprotocol", websocketSubprotocol),
+					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "labels"),
+				),
+			},
+			{
+				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, &readme, &subgraphSubscriptionURL, &subscriptionProtocol, &websocketSubprotocol, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
@@ -205,15 +218,14 @@ func TestOptionalValuesOfSubgraphResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, nil, nil, nil, nil),
+				Config: testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema, nil, nil, nil, nil, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", subgraphRoutingURL),
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.team", "backend"),
-					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.stage", "dev"),
 					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "readme"),
 					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "subscription_url"),
+					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "labels"),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_protocol", api.GraphQLSubscriptionProtocolWS),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "websocket_subprotocol", api.GraphQLWebsocketSubprotocolDefault),
 				),
@@ -253,7 +265,7 @@ resource "cosmo_subgraph" "test" {
 `, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL, subgraphSchema, readme)
 }
 
-func testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema string, readme, subscriptionUrl, subscriptionProtocol, websocketSubprotocol *string) string {
+func testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgraphSchema string, readme, subscriptionUrl, subscriptionProtocol, websocketSubprotocol *string, unsetLabels bool) string {
 	var readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart string
 	if readme != nil {
 		readmePart = fmt.Sprintf(`readme = "%s"`, *readme)
@@ -269,6 +281,27 @@ func testStandaloneSubgraph(namespace, subgraphName, subgraphRoutingURL, subgrap
 
 	if websocketSubprotocol != nil {
 		websocketSubprotocolPart = fmt.Sprintf(`websocket_subprotocol = "%s"`, *websocketSubprotocol)
+	}
+
+	if unsetLabels {
+		return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  routing_url         = "%s"
+  schema              = <<-EOT
+  %s
+  EOT
+  %s
+  %s
+  %s
+  %s
+}
+`, namespace, subgraphName, subgraphRoutingURL, subgraphSchema, readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart)
 	}
 
 	return fmt.Sprintf(`

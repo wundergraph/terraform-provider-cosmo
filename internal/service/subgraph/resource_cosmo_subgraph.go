@@ -207,7 +207,9 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 	mapValue, _ := types.MapValueFrom(ctx, types.StringType, labels)
-	data.Labels = mapValue
+	if len(labels) != 0 {
+		data.Labels = mapValue
+	}
 
 	if subgraph.GetSubscriptionUrl() != "" {
 		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
@@ -301,7 +303,11 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
-	data.Labels = mapValue
+	if len(labels) != 0 {
+		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapNull(types.StringType)
+	}
 
 	if subgraph.GetSubscriptionUrl() != "" {
 		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
@@ -339,7 +345,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	var unsetLabels *bool
-	if data.UnsetLabels.ValueBool() {
+	if len(labels) == 0 || data.UnsetLabels.ValueBool() {
 		unsetLabels = &[]bool{true}[0]
 	}
 
@@ -459,7 +465,11 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
-	data.Labels = mapValue
+	if len(responseLabels) != 0 {
+		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapNull(types.StringType)
+	}
 
 	if subgraph.GetSubscriptionUrl() != "" {
 		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
