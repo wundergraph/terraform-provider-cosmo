@@ -150,6 +150,7 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Optional:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
+				Computed:            true,
 			},
 			"schema": schema.StringAttribute{
 				Optional:            true,
@@ -209,6 +210,8 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	mapValue, _ := types.MapValueFrom(ctx, types.StringType, labels)
 	if len(labels) != 0 {
 		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
 	}
 
 	if subgraph.GetSubscriptionUrl() != "" {
@@ -306,7 +309,7 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if len(labels) != 0 {
 		data.Labels = mapValue
 	} else {
-		data.Labels = types.MapNull(types.StringType)
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
 	}
 
 	if subgraph.GetSubscriptionUrl() != "" {
@@ -468,7 +471,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	if len(responseLabels) != 0 {
 		data.Labels = mapValue
 	} else {
-		data.Labels = types.MapNull(types.StringType)
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
 	}
 
 	if subgraph.GetSubscriptionUrl() != "" {

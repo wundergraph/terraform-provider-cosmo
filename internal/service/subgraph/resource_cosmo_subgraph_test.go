@@ -200,7 +200,8 @@ func TestOptionalValuesOfSubgraphResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_url", subgraphSubscriptionURL),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_protocol", subscriptionProtocol),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "websocket_subprotocol", websocketSubprotocol),
-					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "labels"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "websocket_subprotocol", websocketSubprotocol),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.%", "0"),
 				),
 			},
 			{
@@ -225,7 +226,7 @@ func TestOptionalValuesOfSubgraphResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", subgraphRoutingURL),
 					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "readme"),
 					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "subscription_url"),
-					resource.TestCheckNoResourceAttr("cosmo_subgraph.test", "labels"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "labels.%", "0"),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "subscription_protocol", api.GraphQLSubscriptionProtocolWS),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "websocket_subprotocol", api.GraphQLWebsocketSubprotocolDefault),
 				),
