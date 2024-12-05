@@ -21,3 +21,10 @@ func ConvertHeadersToStringList(headersList types.List) []string {
 	}
 	return headers
 }
+
+func GetValueOrDefault[T any](value *T, defaultValue T) T {
+	if value == nil {
+		return defaultValue
+	}
+	return *value
+}

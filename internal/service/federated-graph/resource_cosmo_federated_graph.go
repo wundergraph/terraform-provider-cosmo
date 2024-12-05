@@ -237,20 +237,9 @@ func (r *FederatedGraphResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	readme := ""
-	if data.Readme.ValueStringPointer() != nil {
-		readme = *data.Readme.ValueStringPointer()
-	}
-
-	admissionWebhookUrl := ""
-	if data.AdmissionWebhookUrl.ValueStringPointer() != nil {
-		admissionWebhookUrl = *data.AdmissionWebhookUrl.ValueStringPointer()
-	}
-
-	admissionWebhookSecret := ""
-	if !data.AdmissionWebhookSecret.IsNull() {
-		admissionWebhookSecret = *data.AdmissionWebhookSecret.ValueStringPointer()
-	}
+	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
+	admissionWebhookUrl := utils.GetValueOrDefault(data.AdmissionWebhookUrl.ValueStringPointer(), "")
+	admissionWebhookSecret := utils.GetValueOrDefault(data.AdmissionWebhookSecret.ValueStringPointer(), "")
 
 	updatedGraph := platformv1.FederatedGraph{
 		Name:                data.Name.ValueString(),

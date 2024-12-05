@@ -263,20 +263,9 @@ func (r *contractResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	admissionWebhookUrl := ""
-	if data.AdmissionWebhookUrl.ValueStringPointer() != nil {
-		admissionWebhookUrl = *data.AdmissionWebhookUrl.ValueStringPointer()
-	}
-
-	admissionWebhookSecret := ""
-	if data.AdmissionWebhookSecret.ValueStringPointer() != nil {
-		admissionWebhookSecret = *data.AdmissionWebhookSecret.ValueStringPointer()
-	}
-
-	readme := ""
-	if data.Readme.ValueStringPointer() != nil {
-		readme = *data.Readme.ValueStringPointer()
-	}
+	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
+	admissionWebhookUrl := utils.GetValueOrDefault(data.AdmissionWebhookUrl.ValueStringPointer(), "")
+	admissionWebhookSecret := utils.GetValueOrDefault(data.AdmissionWebhookSecret.ValueStringPointer(), "")
 
 	routingUrl := data.RoutingURL.ValueString()
 	requestData := &platformv1.UpdateContractRequest{

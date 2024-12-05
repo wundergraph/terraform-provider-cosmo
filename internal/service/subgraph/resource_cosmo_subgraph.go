@@ -352,25 +352,10 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		unsetLabels = &[]bool{true}[0]
 	}
 
-	readme := ""
-	if data.Readme.ValueStringPointer() != nil {
-		readme = *data.Readme.ValueStringPointer()
-	}
-
-	subscriptionUrl := ""
-	if data.SubscriptionUrl.ValueStringPointer() != nil {
-		subscriptionUrl = *data.SubscriptionUrl.ValueStringPointer()
-	}
-
-	subscriptionProtocol := api.GraphQLSubscriptionProtocolWS
-	if data.SubscriptionProtocol.ValueStringPointer() != nil {
-		subscriptionProtocol = *data.SubscriptionProtocol.ValueStringPointer()
-	}
-
-	websocketSubprotocol := api.GraphQLWebsocketSubprotocolDefault
-	if data.WebsocketSubprotocol.ValueStringPointer() != nil {
-		websocketSubprotocol = *data.WebsocketSubprotocol.ValueStringPointer()
-	}
+	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
+	subscriptionUrl := utils.GetValueOrDefault(data.SubscriptionUrl.ValueStringPointer(), "")
+	subscriptionProtocol := utils.GetValueOrDefault(data.SubscriptionProtocol.ValueStringPointer(), api.GraphQLSubscriptionProtocolWS)
+	websocketSubprotocol := utils.GetValueOrDefault(data.WebsocketSubprotocol.ValueStringPointer(), api.GraphQLWebsocketSubprotocolDefault)
 
 	routingUrl := data.RoutingURL.ValueString()
 	requestData := &platformv1.UpdateSubgraphRequest{
