@@ -3,6 +3,7 @@ package monograph
 const (
 	ErrInvalidMonographName     = "Invalid Monograph Name"
 	ErrCreatingMonograph        = "Error Creating Monograph"
+	ErrPublishingMonograph      = "Error Publishing Monograph"
 	ErrCompositionError         = "Composition Error"
 	ErrRetrievingMonograph      = "Error Retrieving Monograph"
 	ErrInvalidResourceID        = "Invalid Resource ID"

@@ -8,17 +8,8 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, sourceGraphName, routingUrl, admissionWebhookUrl, admissionWebhookSecret string, excludeTags []string, readme string) (*platformv1.CreateContractResponse, *ApiError) {
-	request := connect.NewRequest(&platformv1.CreateContractRequest{
-		Name:                   name,
-		Namespace:              namespace,
-		SourceGraphName:        sourceGraphName,
-		RoutingUrl:             routingUrl,
-		AdmissionWebhookUrl:    admissionWebhookUrl,
-		ExcludeTags:            excludeTags,
-		Readme:                 &readme,
-		AdmissionWebhookSecret: &admissionWebhookSecret,
-	})
+func (p *PlatformClient) CreateContract(ctx context.Context, data *platformv1.CreateContractRequest) (*platformv1.CreateContractResponse, *ApiError) {
+	request := connect.NewRequest(data)
 
 	response, err := p.Client.CreateContract(ctx, request)
 	if err != nil {
@@ -37,12 +28,8 @@ func (p *PlatformClient) CreateContract(ctx context.Context, name, namespace, so
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace string, excludeTags []string) (*platformv1.UpdateContractResponse, *ApiError) {
-	request := connect.NewRequest(&platformv1.UpdateContractRequest{
-		Name:        name,
-		Namespace:   namespace,
-		ExcludeTags: excludeTags,
-	})
+func (p *PlatformClient) UpdateContract(ctx context.Context, data *platformv1.UpdateContractRequest) (*platformv1.UpdateContractResponse, *ApiError) {
+	request := connect.NewRequest(data)
 
 	response, err := p.Client.UpdateContract(ctx, request)
 	if err != nil {
@@ -61,8 +48,12 @@ func (p *PlatformClient) UpdateContract(ctx context.Context, name, namespace str
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) DeleteContract(ctx context.Context, name, namespace string) *ApiError {
-	return p.DeleteFederatedGraph(ctx, name, namespace)
+func (p *PlatformClient) DeleteContract(ctx context.Context, name, namespace string, supportsFederation bool) *ApiError {
+	if supportsFederation {
+		return p.DeleteFederatedGraph(ctx, name, namespace)
+	} else {
+		return p.DeleteMonograph(ctx, name, namespace)
+	}
 }
 
 func (p *PlatformClient) GetContract(ctx context.Context, name, namespace string) (*platformv1.GetFederatedGraphByNameResponse, *ApiError) {

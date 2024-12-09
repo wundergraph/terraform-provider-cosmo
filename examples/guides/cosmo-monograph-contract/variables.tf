@@ -14,6 +14,10 @@ variable "monograph_routing_url" {
   default = "http://example.com/routing"
 }
 
+variable "monograph_schema" {
+  default = "type Query{ a: String }"
+}
+
 variable "contract_name" {
   type    = string
   default = "test"

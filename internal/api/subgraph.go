@@ -8,20 +8,8 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespace string, routingUrl string, baseSubgraphName *string, labels []*platformv1.Label, subscriptionUrl *string, readme *string, isEventDrivenGraph *bool, isFeatureSubgraph *bool, subscriptionProtocol string, websocketSubprotocol string) *ApiError {
-	request := connect.NewRequest(&platformv1.CreateFederatedSubgraphRequest{
-		Name:                 name,
-		Namespace:            namespace,
-		RoutingUrl:           &routingUrl,
-		Labels:               labels,
-		SubscriptionUrl:      subscriptionUrl,
-		Readme:               readme,
-		WebsocketSubprotocol: resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol: resolveSubscriptionProtocol(subscriptionProtocol),
-		IsEventDrivenGraph:   isEventDrivenGraph,
-		BaseSubgraphName:     baseSubgraphName,
-		IsFeatureSubgraph:    isFeatureSubgraph,
-	})
+func (p PlatformClient) CreateSubgraph(ctx context.Context, data *platformv1.CreateFederatedSubgraphRequest) *ApiError {
+	request := connect.NewRequest(data)
 	response, err := p.Client.CreateFederatedSubgraph(ctx, request)
 	if err != nil {
 		return &ApiError{Err: err, Reason: "CreateSubgraph", Status: common.EnumStatusCode_ERR}
@@ -39,19 +27,8 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, name string, namespa
 	return nil
 }
 
-func (p PlatformClient) UpdateSubgraph(ctx context.Context, name, namespace, routingUrl string, labels []*platformv1.Label, headers []string, subscriptionUrl, readme *string, unsetLabels *bool, websocketSubprotocol string, subscriptionProtocol string) *ApiError {
-	request := connect.NewRequest(&platformv1.UpdateSubgraphRequest{
-		Name:                 name,
-		RoutingUrl:           &routingUrl,
-		Labels:               labels,
-		Headers:              headers,
-		SubscriptionUrl:      subscriptionUrl,
-		Readme:               readme,
-		Namespace:            namespace,
-		UnsetLabels:          unsetLabels,
-		WebsocketSubprotocol: resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol: resolveSubscriptionProtocol(subscriptionProtocol),
-	})
+func (p PlatformClient) UpdateSubgraph(ctx context.Context, data *platformv1.UpdateSubgraphRequest) *ApiError {
+	request := connect.NewRequest(data)
 
 	response, err := p.Client.UpdateSubgraph(ctx, request)
 	if err != nil {

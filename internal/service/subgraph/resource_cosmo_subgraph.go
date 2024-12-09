@@ -3,6 +3,7 @@ package subgraph
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -79,6 +80,9 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The unique identifier of the subgraph resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -107,6 +111,8 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Validators: []validator.String{
 					stringvalidator.OneOf(api.GraphQLSubscriptionProtocolWS, api.GraphQLSubscriptionProtocolSSE, api.GraphQLSubscriptionProtocolSSEPost),
 				},
+				Computed: true,
+				Default:  stringdefault.StaticString(api.GraphQLSubscriptionProtocolWS),
 			},
 			"readme": schema.StringAttribute{
 				Optional:            true,
@@ -118,10 +124,14 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Validators: []validator.String{
 					stringvalidator.OneOf(api.GraphQLWebsocketSubprotocolDefault, api.GraphQLWebsocketSubprotocolGraphQLWS, api.GraphQLWebsocketSubprotocolGraphQLTransportWS),
 				},
+				Computed: true,
+				Default:  stringdefault.StaticString(api.GraphQLWebsocketSubprotocolDefault),
 			},
 			"is_event_driven_graph": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Indicates if the subgraph is event-driven.",
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"is_feature_subgraph": schema.BoolAttribute{
 				Optional:            true,
@@ -140,6 +150,7 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Optional:            true,
 				MarkdownDescription: "Labels for the subgraph.",
 				ElementType:         types.StringType,
+				Computed:            true,
 			},
 			"schema": schema.StringAttribute{
 				Optional:            true,
@@ -164,15 +175,22 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 
 	subgraph, apiError := r.createAndPublishSubgraph(ctx, data, resp)
 	if apiError != nil {
-		if api.IsSubgraphCompositionFailedError(apiError) {
-			utils.AddDiagnosticWarning(resp, ErrSubgraphCompositionFailed, apiError.Error())
-		} else if api.IsInvalidSubgraphSchemaError(apiError) {
-			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
-			return
-		} else {
-			utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
+		if !api.IsSubgraphCompositionFailedError(apiError) {
 			return
 		}
+	}
+
+	subgraphSchema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			utils.AddDiagnosticWarning(resp,
+				ErrSubgraphNotFound,
+				fmt.Sprintf("Subgraph '%s' not found will be recreated %s", data.Name.ValueString(), apiError.Error()),
+			)
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
 		return
 	}
 
@@ -180,8 +198,35 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
+	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
+	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
+	labels := map[string]attr.Value{}
+	for _, label := range subgraph.GetLabels() {
+		if label != nil {
+			labels[label.GetKey()] = types.StringValue(label.GetValue())
+		}
+	}
+	mapValue, _ := types.MapValueFrom(ctx, types.StringType, labels)
+	if len(labels) != 0 {
+		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
+	}
 
-	utils.LogAction(ctx, "created", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
+
+	if subgraph.Readme != nil {
+		data.Readme = types.StringValue(subgraph.GetReadme())
+	}
+
+	if len(subgraphSchema) > 0 {
+		data.Schema = types.StringValue(subgraphSchema)
+	}
+
+	utils.LogAction(ctx, "created subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -232,7 +277,7 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
-	schema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
+	subgraphSchema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
@@ -258,12 +303,28 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
-	if len(schema) > 0 {
-		data.Schema = types.StringValue(schema)
+	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
+	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
+	if len(labels) != 0 {
+		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
 	}
-	data.Labels = mapValue
 
-	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
+
+	if subgraph.Readme != nil {
+		data.Readme = types.StringValue(subgraph.GetReadme())
+	}
+
+	if len(subgraphSchema) > 0 {
+		data.Schema = types.StringValue(subgraphSchema)
+	}
+
+	utils.LogAction(ctx, "read subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -287,25 +348,70 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	var unsetLabels *bool
-	if data.UnsetLabels.ValueBool() {
+	if len(labels) == 0 || data.UnsetLabels.ValueBool() {
 		unsetLabels = &[]bool{true}[0]
+	}
+
+	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
+	subscriptionUrl := utils.GetValueOrDefault(data.SubscriptionUrl.ValueStringPointer(), "")
+	subscriptionProtocol := utils.GetValueOrDefault(data.SubscriptionProtocol.ValueStringPointer(), api.GraphQLSubscriptionProtocolWS)
+	websocketSubprotocol := utils.GetValueOrDefault(data.WebsocketSubprotocol.ValueStringPointer(), api.GraphQLWebsocketSubprotocolDefault)
+
+	routingUrl := data.RoutingURL.ValueString()
+	requestData := &platformv1.UpdateSubgraphRequest{
+		Name:                 data.Name.ValueString(),
+		RoutingUrl:           &routingUrl,
+		Namespace:            data.Namespace.ValueString(),
+		Labels:               labels,
+		UnsetLabels:          unsetLabels,
+		SubscriptionUrl:      &subscriptionUrl,
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(websocketSubprotocol),
+		Readme:               &readme,
+		Headers:              []string{},
 	}
 
 	// TBD: This is only used in the update subgraph method and not used atm
 	// headers := utils.ConvertHeadersToStringList(data.Headers)
-	apiErr := r.client.UpdateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), labels, []string{}, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), unsetLabels, data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	apiErr := r.client.UpdateSubgraph(ctx, requestData)
 	if apiErr != nil {
 		if api.IsSubgraphCompositionFailedError(apiErr) {
 			utils.AddDiagnosticWarning(resp,
 				ErrSubgraphCompositionFailed,
 				apiErr.Error(),
 			)
+		} else if api.IsNotFoundError(apiErr) {
+			utils.AddDiagnosticError(resp,
+				ErrUpdatingSubgraph,
+				apiErr.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+			return
 		} else {
 			utils.AddDiagnosticError(resp,
 				ErrUpdatingSubgraph,
 				apiErr.Error(),
 			)
 			return
+		}
+	}
+
+	if data.Schema.ValueString() != "" {
+		err := r.publishSubgraphSchema(ctx, data)
+		if err != nil {
+			if api.IsNotFoundError(err) {
+				utils.AddDiagnosticError(resp,
+					ErrUpdatingSubgraph,
+					err.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			} else if api.IsSubgraphCompositionFailedError(err) {
+				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, err.Error())
+			} else {
+				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, err.Error())
+				return
+			}
 		}
 	}
 
@@ -318,32 +424,52 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	if data.Schema.ValueString() != "" {
-		hasChanged, apiError := r.publishSubgraphSchema(ctx, data)
-		if apiError != nil {
-			if api.IsSubgraphCompositionFailedError(apiError) {
-				utils.AddDiagnosticWarning(resp, ErrPublishingSubgraph, apiError.Error())
-			} else if api.IsInvalidSubgraphSchemaError(apiError) {
-				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
-				return
-			} else {
-				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
-				return
-			}
-		}
-
-		if hasChanged {
+	subgraphSchema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
 			utils.AddDiagnosticWarning(resp,
-				ErrSubgraphSchemaChanged,
-				"The schema has changed",
+				ErrSubgraphNotFound,
+				fmt.Sprintf("Subgraph '%s' not found will be recreated %s", data.Name.ValueString(), apiError.Error()),
 			)
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
+		return
+	}
+	responseLabels := map[string]attr.Value{}
+	for _, label := range subgraph.GetLabels() {
+		if label != nil {
+			responseLabels[label.GetKey()] = types.StringValue(label.GetValue())
 		}
 	}
+	mapValue, diags := types.MapValueFrom(ctx, types.StringType, responseLabels)
+	resp.Diagnostics.Append(diags...)
 
 	data.Id = types.StringValue(subgraph.GetId())
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
+	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
+	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
+	if len(responseLabels) != 0 {
+		data.Labels = mapValue
+	} else {
+		data.Labels = types.MapValueMust(types.StringType, map[string]attr.Value{})
+	}
+
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
+
+	if subgraph.Readme != nil {
+		data.Readme = types.StringValue(subgraph.GetReadme())
+	}
+
+	if len(subgraphSchema) > 0 {
+		data.Schema = types.StringValue(subgraphSchema)
+	}
 
 	utils.LogAction(ctx, "updated", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -365,7 +491,12 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 				ErrDeletingSubgraph,
 				apiErr.Error(),
 			)
-			return
+		} else if api.IsNotFoundError(apiErr) {
+			utils.AddDiagnosticError(resp,
+				ErrDeletingSubgraph,
+				apiErr.Error(),
+			)
+			resp.State.RemoveResource(ctx)
 		} else {
 			utils.AddDiagnosticError(resp,
 				ErrDeletingSubgraph,
@@ -375,7 +506,7 @@ func (r *SubgraphResource) Delete(ctx context.Context, req resource.DeleteReques
 		}
 	}
 
-	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "deleted subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 }
 
 func (r *SubgraphResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -393,7 +524,20 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 		}
 	}
 
-	apiErr := r.client.CreateSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.RoutingURL.ValueString(), nil, labels, data.SubscriptionUrl.ValueStringPointer(), data.Readme.ValueStringPointer(), data.IsEventDrivenGraph.ValueBoolPointer(), data.IsFeatureSubgraph.ValueBoolPointer(), data.SubscriptionProtocol.ValueString(), data.WebsocketSubprotocol.ValueString())
+	routingUrl := data.RoutingURL.ValueString()
+	requestData := &platformv1.CreateFederatedSubgraphRequest{
+		Name:                 data.Name.ValueString(),
+		Namespace:            data.Namespace.ValueString(),
+		RoutingUrl:           &routingUrl,
+		Labels:               labels,
+		SubscriptionUrl:      data.SubscriptionUrl.ValueStringPointer(),
+		Readme:               data.Readme.ValueStringPointer(),
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueString()),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueString()),
+		IsEventDrivenGraph:   data.IsEventDrivenGraph.ValueBoolPointer(),
+	}
+
+	apiErr := r.client.CreateSubgraph(ctx, requestData)
 	if apiErr != nil {
 		utils.AddDiagnosticError(resp,
 			ErrCreatingSubgraph,
@@ -402,45 +546,42 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 		return nil, apiErr
 	}
 
-	subgraph, apiErr := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if apiErr != nil {
-		return nil, apiErr
-	}
-
 	if data.Schema.ValueString() != "" {
-		hasChanged, apiError := r.publishSubgraphSchema(ctx, data)
+		apiError := r.publishSubgraphSchema(ctx, data)
 		if apiError != nil {
-			if api.IsSubgraphCompositionFailedError(apiError) {
-				utils.AddDiagnosticWarning(resp, ErrSubgraphCompositionFailed, apiError.Error())
-			} else if api.IsInvalidSubgraphSchemaError(apiError) {
-				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticError(resp,
+					ErrUpdatingSubgraph,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
 				return nil, apiError
+			} else if api.IsSubgraphCompositionFailedError(apiError) {
+				utils.AddDiagnosticError(resp, ErrSubgraphCompositionFailed, apiError.Error())
 			} else {
 				utils.AddDiagnosticError(resp, ErrPublishingSubgraph, apiError.Error())
 				return nil, apiError
 			}
 		}
+	}
 
-		if hasChanged {
-			utils.AddDiagnosticWarning(resp,
-				ErrSubgraphSchemaChanged,
-				"The schema has changed",
-			)
-		}
+	subgraph, apiErr := r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	return subgraph, nil
 }
 
-func (r *SubgraphResource) publishSubgraphSchema(ctx context.Context, data SubgraphResourceModel) (bool, *api.ApiError) {
+func (r *SubgraphResource) publishSubgraphSchema(ctx context.Context, data SubgraphResourceModel) *api.ApiError {
 	apiResponse, apiError := r.client.PublishSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString(), data.Schema.ValueString())
 	if apiError != nil {
-		return false, apiError
+		return apiError
 	}
 
 	if apiResponse != nil && apiResponse.HasChanged != nil && *apiResponse.HasChanged {
-		return true, nil
+		return nil
 	}
 
-	return false, nil
+	return nil
 }

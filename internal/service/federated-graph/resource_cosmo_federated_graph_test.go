@@ -25,7 +25,7 @@ func TestAccFederatedGraphResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, readme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, &readme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "name", name),
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "namespace", namespace),
@@ -34,20 +34,25 @@ func TestAccFederatedGraphResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, newReadme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, routingURL, &newReadme),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "readme", newReadme),
 				),
 			},
 			{
-				Config: testAccFederatedGraphResourceConfig(namespace, name, updatedRoutingURL, newReadme),
+				Config: testAccFederatedGraphResourceConfig(namespace, name, updatedRoutingURL, nil),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_federated_graph.test", "routing_url", updatedRoutingURL),
+					resource.TestCheckNoResourceAttr("cosmo_federated_graph.test", "readme"),
 				),
 			},
 			{
 				ResourceName: "cosmo_federated_graph.test",
 				RefreshState: true,
+			},
+			{
+				Config:  testAccFederatedGraphResourceConfig(namespace, name, updatedRoutingURL, nil),
+				Destroy: true,
 			},
 		},
 	})
@@ -56,20 +61,26 @@ func TestAccFederatedGraphResource(t *testing.T) {
 func TestAccFederatedGraphResourceInvalidConfig(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-federated-graph")
 	namespace := acctest.RandomWithPrefix("test-namespace")
+	readme := "Initial readme content"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFederatedGraphResourceConfig(name, namespace, "invalid-url", ""),
+				Config:      testAccFederatedGraphResourceConfig(name, namespace, "invalid-url", &readme),
 				ExpectError: regexp.MustCompile(`.*Routing URL is not a valid URL*`),
 			},
 		},
 	})
 }
 
-func testAccFederatedGraphResourceConfig(namespace, name, routingURL, readme string) string {
+func testAccFederatedGraphResourceConfig(namespace, name, routingURL string, readme *string) string {
+	var readmePart string
+	if readme != nil {
+		readmePart = fmt.Sprintf(`readme = "%s"`, *readme)
+	}
+
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
   name = "%s"
@@ -79,7 +90,7 @@ resource "cosmo_federated_graph" "test" {
   name      	= "%s"
   namespace 	= cosmo_namespace.test.name
   routing_url 	= "%s"
-  readme    	= "%s"
+  %s
 }
-`, namespace, name, routingURL, readme)
+`, namespace, name, routingURL, readmePart)
 }

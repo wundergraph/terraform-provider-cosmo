@@ -11,6 +11,7 @@ module "cosmo_monograph" {
   monograph_namespace   = module.cosmo_namespace.name
   monograph_graph_url   = var.monograph_graph_url
   monograph_routing_url = var.monograph_routing_url
+  monograph_schema      = var.monograph_schema
 }
 
 module "cosmo_contract" {

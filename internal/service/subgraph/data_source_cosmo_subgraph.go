@@ -179,6 +179,11 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data.IsFeatureSubgraph = types.BoolValue(subgraph.GetIsFeatureSubgraph())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
+
+	if subgraph.GetSubscriptionUrl() != "" {
+		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+	}
 
 	tflog.Trace(ctx, "Read subgraph data source", map[string]interface{}{
 		"id": data.Id.ValueString(),

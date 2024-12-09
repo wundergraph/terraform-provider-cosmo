@@ -16,8 +16,8 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 		GraphUrl:               graphUrl,
 		SubscriptionUrl:        subscriptionUrl,
 		Readme:                 readme,
-		WebsocketSubprotocol:   resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol:   resolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
 		AdmissionWebhookURL:    admissionWebhookUrl,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})
@@ -46,8 +46,8 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 		GraphUrl:               graphUrl,
 		SubscriptionUrl:        subscriptionUrl,
 		Readme:                 readme,
-		WebsocketSubprotocol:   resolveWebsocketSubprotocol(websocketSubprotocol),
-		SubscriptionProtocol:   resolveSubscriptionProtocol(subscriptionProtocol),
+		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
 		AdmissionWebhookURL:    &admissionWebhookUrl,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})
@@ -110,4 +110,27 @@ func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace
 	}
 
 	return response.Msg.Graph, nil
+}
+
+func (p PlatformClient) PublishMonograph(ctx context.Context, name string, namespace string, schema string) *ApiError {
+	request := connect.NewRequest(&platformv1.PublishMonographRequest{
+		Name:      name,
+		Namespace: namespace,
+		Schema:    schema,
+	})
+	response, err := p.Client.PublishMonograph(ctx, request)
+	if err != nil {
+		return &ApiError{Err: err, Reason: "PublishMonograph", Status: common.EnumStatusCode_ERR}
+	}
+
+	if response.Msg == nil {
+		return &ApiError{Err: ErrEmptyMsg, Reason: "PublishMonograph", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return apiError
+	}
+
+	return nil
 }
