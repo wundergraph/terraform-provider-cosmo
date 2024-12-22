@@ -91,12 +91,11 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 	return response.Msg.GetGraph(), nil
 }
 
-func (p PlatformClient) GetSubgraphs(ctx context.Context, namespace string) ([]*platformv1.Subgraph, *ApiError) {
-	request := connect.NewRequest(&platformv1.GetSubgraphsRequest{
-		Namespace: namespace,
+func (p PlatformClient) GetSubgraphById(ctx context.Context, id string) (*platformv1.Subgraph, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetSubgraphByIdRequest{
+		Id: id,
 	})
-
-	response, err := p.Client.GetSubgraphs(ctx, request)
+	response, err := p.Client.GetSubgraphById(ctx, request)
 	if err != nil {
 		return nil, &ApiError{Err: err, Reason: "GetSubgraph", Status: common.EnumStatusCode_ERR}
 	}
@@ -110,7 +109,7 @@ func (p PlatformClient) GetSubgraphs(ctx context.Context, namespace string) ([]*
 		return nil, apiError
 	}
 
-	return response.Msg.GetGraphs(), nil
+	return response.Msg.GetGraph(), nil
 }
 
 func (p PlatformClient) GetSubgraphSchema(ctx context.Context, name, namespace string) (string, *ApiError) {

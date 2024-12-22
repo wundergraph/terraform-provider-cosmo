@@ -179,24 +179,43 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if apiError != nil {
-		if api.IsNotFoundError(apiError) {
-			utils.AddDiagnosticWarning(resp,
+	var graph *platformv1.FederatedGraph
+
+	if data.Name.ValueString() == "" {
+		response, apiError := r.client.GetFederatedGraphById(ctx, data.Id.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrContractNotFound,
+					apiError.Error(),
+				)
+				return
+			}
+			utils.AddDiagnosticError(resp, ErrReadingContract, apiError.Error())
+			return
+		}
+
+		graph = response.Graph
+	} else {
+		response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrReadingContract,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp,
 				ErrReadingContract,
 				apiError.Error(),
 			)
-			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp,
-			ErrReadingContract,
-			apiError.Error(),
-		)
-		return
+		graph = response.Graph
 	}
 
-	graph := response.Graph
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())

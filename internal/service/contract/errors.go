@@ -11,6 +11,7 @@ const (
 	ErrDeletingContract         = "Error Deleting Contract"
 	ErrUnexpectedDataSourceType = "Unexpected Data Source Configure Type"
 	ErrUnexpectedResourceType   = "Unexpected Resource Configure Type"
+	ErrContractNotFound         = "Contract Not Found"
 )
 
 const (

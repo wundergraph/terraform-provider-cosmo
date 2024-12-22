@@ -121,3 +121,25 @@ func (p *PlatformClient) GetFederatedGraph(ctx context.Context, name, namespace 
 
 	return response.Msg, nil
 }
+
+func (p *PlatformClient) GetFederatedGraphById(ctx context.Context, id string) (*platformv1.GetFederatedGraphByIdResponse, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetFederatedGraphByIdRequest{
+		Id: id,
+	})
+
+	response, err := p.Client.GetFederatedGraphById(ctx, request)
+	if err != nil {
+		return nil, &ApiError{Err: err, Reason: "GetFederatedGraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	if response.Msg == nil {
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetFederatedGraph", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
+	}
+
+	return response.Msg, nil
+}
