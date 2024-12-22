@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
@@ -79,7 +78,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	namespaceData, apiError := d.client.ListNamespaces(ctx)
+	namespace, apiError := d.client.GetNamespace(ctx, data.Id.ValueString(), data.Name.ValueString())
 	if apiError != nil {
 		utils.AddDiagnosticError(resp,
 			ErrReadingNamespace,
@@ -88,21 +87,8 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	var foundNamespace *platformv1.Namespace
-	for _, ns := range namespaceData {
-		if ns.Name == data.Name.ValueString() {
-			foundNamespace = ns
-			break
-		}
-	}
-
-	if foundNamespace == nil {
-		utils.AddDiagnosticError(resp, ErrRetrievingNamespace, fmt.Sprintf("Namespace with name '%s' not found", data.Name.ValueString()))
-		return
-	}
-
-	data.Id = types.StringValue(foundNamespace.Name)
-	data.Name = types.StringValue(foundNamespace.Name)
+	data.Id = types.StringValue(namespace.Id)
+	data.Name = types.StringValue(namespace.Name)
 
 	tflog.Trace(ctx, "Read namespace data source", map[string]interface{}{
 		"id": data.Id.ValueString(),
