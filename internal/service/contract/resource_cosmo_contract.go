@@ -189,6 +189,7 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 					ErrContractNotFound,
 					apiError.Error(),
 				)
+				resp.State.RemoveResource(ctx)
 				return
 			}
 			utils.AddDiagnosticError(resp, ErrReadingContract, apiError.Error())
@@ -200,7 +201,7 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 		if apiError != nil {
 			if api.IsNotFoundError(apiError) {
-				utils.AddDiagnosticWarning(resp,
+				utils.AddDiagnosticError(resp,
 					ErrReadingContract,
 					apiError.Error(),
 				)
@@ -216,11 +217,29 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		graph = response.Graph
 	}
 
+	if graph.GetContract() == nil {
+		utils.AddDiagnosticError(resp,
+			ErrReadingContract,
+			"Contract not found",
+		)
+		return
+	}
+
+	sourceGraphRes, err := r.client.GetFederatedGraphById(ctx, graph.GetContract().GetSourceFederatedGraphId())
+	if err != nil {
+		utils.AddDiagnosticError(resp,
+			ErrReadingContract,
+			err.Error(),
+		)
+		return
+	}
+
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
+	data.SourceGraphName = types.StringValue(sourceGraphRes.Graph.GetName())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value
