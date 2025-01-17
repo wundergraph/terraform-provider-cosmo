@@ -190,6 +190,7 @@ func (r *FederatedGraphResource) Read(ctx context.Context, req resource.ReadRequ
 					ErrGraphNotFound,
 					apiError.Error(),
 				)
+				resp.State.RemoveResource(ctx)
 				return
 			}
 			utils.AddDiagnosticError(resp, ErrReadingGraph, apiError.Error())
