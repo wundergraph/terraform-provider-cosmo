@@ -49,6 +49,7 @@ func TestAccMonographResource(t *testing.T) {
 	})
 }
 
+// nolint: unparam
 func testAccMonographResourceConfig(namespace, name, graphUrl, routingURL string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
