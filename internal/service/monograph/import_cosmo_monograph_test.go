@@ -29,10 +29,9 @@ func TestAccCosmoMonographGraphImportBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "cosmo_monograph.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"graph_url"}, // TODO we currently don't get this value from the API
+				ResourceName:      "cosmo_monograph.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

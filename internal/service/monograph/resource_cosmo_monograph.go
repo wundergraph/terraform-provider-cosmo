@@ -260,11 +260,28 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		monograph = graph
 	}
 
+	subGraph, err := r.client.GetSubgraph(ctx, monograph.GetName(), monograph.GetNamespace())
+	if err != nil {
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticError(resp,
+				ErrRetrievingMonograph,
+				err.Error(),
+			)
+			return
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrRetrievingMonograph,
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	data.Id = types.StringValue(monograph.GetId())
 	data.Name = types.StringValue(monograph.GetName())
 	data.Namespace = types.StringValue(monograph.GetNamespace())
 	data.RoutingURL = types.StringValue(monograph.GetRoutingURL())
-	// TODO graphURL for import needed, requires update to API
+	data.GraphUrl = types.StringValue(subGraph.GetRoutingURL())
 
 	if monograph.Readme != nil {
 		data.Readme = types.StringValue(*monograph.Readme)
