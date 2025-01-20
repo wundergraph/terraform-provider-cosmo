@@ -21,22 +21,22 @@ resource "cosmo_namespace" "test" {
 
 resource "cosmo_federated_graph" "test" {
 
-  name = "import-test"
+  name      = "import-test"
   namespace = cosmo_namespace.test.name
 
-  routing_url = "http://localhost:9999"
+  routing_url    = "http://localhost:9999"
   label_matchers = ["team=backend", "stage=import-test"]
-  depends_on = [cosmo_subgraph.test]
+  depends_on     = [cosmo_subgraph.test]
 }
 
 // create each stages subgraph
 resource "cosmo_subgraph" "test" {
-  name = "import-test-sg"
+  name   = "import-test-sg"
   schema = local.schema
 
   namespace = cosmo_namespace.test.name
   labels = {
-    "team" = "backend"
+    "team"  = "backend"
     "stage" = "import-test"
   }
 
@@ -44,10 +44,10 @@ resource "cosmo_subgraph" "test" {
 }
 
 resource "cosmo_contract" "test" {
-  name = "import-test-contract"
+  name      = "import-test-contract"
   namespace = cosmo_namespace.test.name
-  source = cosmo_federated_graph.test.name
+  source    = cosmo_federated_graph.test.name
 
-  routing_url = "http://localhost:9998"
+  routing_url  = "http://localhost:9998"
   exclude_tags = ["backend"]
 }
