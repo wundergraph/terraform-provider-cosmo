@@ -179,29 +179,67 @@ func (r *contractResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if apiError != nil {
-		if api.IsNotFoundError(apiError) {
-			utils.AddDiagnosticWarning(resp,
+	var graph *platformv1.FederatedGraph
+
+	if data.Name.ValueString() == "" {
+		response, apiError := r.client.GetFederatedGraphById(ctx, data.Id.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrContractNotFound,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp, ErrReadingContract, apiError.Error())
+			return
+		}
+
+		graph = response.Graph
+	} else {
+		response, apiError := r.client.GetFederatedGraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticError(resp,
+					ErrReadingContract,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp,
 				ErrReadingContract,
 				apiError.Error(),
 			)
-			resp.State.RemoveResource(ctx)
 			return
 		}
+		graph = response.Graph
+	}
+
+	if graph.GetContract() == nil {
 		utils.AddDiagnosticError(resp,
 			ErrReadingContract,
-			apiError.Error(),
+			"Contract not found",
 		)
 		return
 	}
 
-	graph := response.Graph
+	sourceGraphRes, err := r.client.GetFederatedGraphById(ctx, graph.GetContract().GetSourceFederatedGraphId())
+	if err != nil {
+		utils.AddDiagnosticError(resp,
+			ErrReadingContract,
+			err.Error(),
+		)
+		return
+	}
+
 	data.Id = types.StringValue(graph.GetId())
 	data.Name = types.StringValue(graph.GetName())
 	data.Namespace = types.StringValue(graph.GetNamespace())
 	data.RoutingURL = types.StringValue(graph.GetRoutingURL())
 	data.SupportsFederation = types.BoolValue(graph.GetSupportsFederation())
+	data.SourceGraphName = types.StringValue(sourceGraphRes.Graph.GetName())
 
 	if graph.Contract != nil && len(graph.Contract.GetExcludeTags()) > 0 {
 		var responseExcludeTags []attr.Value

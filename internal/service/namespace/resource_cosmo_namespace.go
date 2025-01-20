@@ -3,15 +3,18 @@ package namespace
 import (
 	"context"
 	"fmt"
-
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	common "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
+)
+
+var (
+	_ resource.Resource                = (*NamespaceResource)(nil)
+	_ resource.ResourceWithImportState = (*NamespaceResource)(nil)
 )
 
 type NamespaceResource struct {
@@ -86,7 +89,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
+	namespace, err := getNamespace(ctx, *r.client, data.Id.ValueString(), data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp,
 			ErrReadingNamespace,
@@ -111,7 +114,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	namespace, apiError := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
+	namespace, apiError := getNamespace(ctx, *r.client, data.Id.ValueString(), data.Name.ValueString())
 	if apiError != nil {
 		if api.IsNotFoundError(apiError) {
 			resp.State.RemoveResource(ctx)
@@ -144,7 +147,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	namespace, err := getNamespaceByName(ctx, *r.client, data.Name.ValueString())
+	namespace, err := getNamespace(ctx, *r.client, data.Id.ValueString(), data.Name.ValueString())
 	if err != nil {
 		utils.AddDiagnosticError(resp,
 			ErrReadingNamespace,
@@ -187,20 +190,24 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), "")
 }
 
-func getNamespaceByName(ctx context.Context, client api.PlatformClient, name string) (*platformv1.Namespace, *api.ApiError) {
-	namespaces, err := client.ListNamespaces(ctx)
+func getNamespace(ctx context.Context, client api.PlatformClient, id, name string) (*platformv1.Namespace, *api.ApiError) {
+	namespace, err := client.GetNamespace(ctx, id, name)
 	if err != nil {
 		return nil, err
 	}
+	return namespace, nil
+}
 
-	for _, namespace := range namespaces {
-		if namespace.Name == name {
-			return namespace, nil
-		}
+func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	var data NamespaceResourceModel
+
+	id := req.ID
+
+	if err := uuid.Validate(id); err != nil {
+		data.Name = types.StringValue(id) // We assume this is the namespace name
+	} else {
+		data.Id = types.StringValue(id)
 	}
 
-	return nil, api.NewApiErrorWithErr(common.EnumStatusCode_ERR_NOT_FOUND, fmt.Sprintf("namespace with name '%s' not found", name), fmt.Errorf("namespace with name '%s' not found", name))
-}
-func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

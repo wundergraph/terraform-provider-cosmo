@@ -1,6 +1,6 @@
 # Cosmo Terraform Provider
 
-This repository is for the [Cosmo](https://registry.terraform.io/wundergraph/cosmo) Terraform provider, designed to manage Cosmo resources within Terraform. It includes a resource and a data source, examples, and generated documentation.
+This repository is for the [Cosmo](https://registry.terraform.io/providers/wundergraph/cosmo/latest) Terraform provider, designed to manage Cosmo resources within Terraform. It includes a resource and a data source, examples, and generated documentation.
 
 ## Requirements
 
@@ -116,6 +116,18 @@ output "router_token" {
 ```
 
 Further in depth examples can be found in the [examples](examples) directory.
+
+## Importing resources
+
+Resources can be imported into Terraform using the `terraform import` command. The following resources are supported for import:
+
+- `cosmo_namespace`
+- `cosmo_federated_graph`
+- `cosmo_subgraph`
+- `cosmo_contract`
+- `cosmo_monograph`
+
+For detailed instructions on how to import each resource, refer to the corresponding resource documentation in the corresponding [docs](docs/resources).
 
 ## Cosmo Local Example
 

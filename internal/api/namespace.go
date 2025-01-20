@@ -69,15 +69,18 @@ func (p PlatformClient) DeleteNamespace(ctx context.Context, name string) error 
 	return nil
 }
 
-func (p PlatformClient) ListNamespaces(ctx context.Context) ([]*platformv1.Namespace, *ApiError) {
-	request := connect.NewRequest(&platformv1.GetNamespacesRequest{})
-	response, err := p.Client.GetNamespaces(ctx, request)
+func (p PlatformClient) GetNamespace(ctx context.Context, id, name string) (*platformv1.Namespace, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetNamespaceRequest{
+		Name: name,
+		Id:   id,
+	})
+	response, err := p.Client.GetNamespace(ctx, request)
 	if err != nil {
-		return nil, &ApiError{Err: err, Reason: "ListNamespaces", Status: common.EnumStatusCode_ERR}
+		return nil, &ApiError{Err: err, Reason: "GetNamespace", Status: common.EnumStatusCode_ERR}
 	}
 
 	if response.Msg == nil {
-		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "ListNamespaces", Status: common.EnumStatusCode_ERR}
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetNamespace", Status: common.EnumStatusCode_ERR}
 	}
 
 	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
@@ -85,5 +88,5 @@ func (p PlatformClient) ListNamespaces(ctx context.Context) ([]*platformv1.Names
 		return nil, apiError
 	}
 
-	return response.Msg.Namespaces, nil
+	return response.Msg.Namespace, nil
 }

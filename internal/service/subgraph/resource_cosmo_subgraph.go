@@ -244,23 +244,15 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 	// We're doing an import if the name isn't provided and therefore we need
 	// to fetch the subgraph by ID and namespace.
 	if data.Name.ValueString() == "" {
-		subgraphs, apiError := r.client.GetSubgraphs(ctx, data.Namespace.ValueString())
+		subgraph, apiError = r.client.GetSubgraphById(ctx, data.Id.ValueString())
 		if apiError != nil {
-			utils.AddDiagnosticError(resp, ErrRetrievingSubgraphs, fmt.Sprintf("Could not fetch subgraphs: %s", apiError.Error()))
-			return
-		}
-		for _, sg := range subgraphs {
-			if sg.Id == data.Id.ValueString() {
-				subgraph = sg
-				break
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticError(resp, ErrSubgraphNotFound, fmt.Sprintf("Subgraph with ID '%s' not found", data.Id.ValueString()))
+				return
 			}
-		}
-
-		if subgraph == nil {
-			utils.AddDiagnosticError(resp, ErrSubgraphNotFound, fmt.Sprintf("Subgraph with ID '%s' not found", data.Id.ValueString()))
+			utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Id.ValueString(), apiError.Error()))
 			return
 		}
-
 	} else {
 		subgraph, apiError = r.client.GetSubgraph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 		if apiError != nil {

@@ -3,6 +3,7 @@ package monograph
 import (
 	"context"
 	"fmt"
+	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -222,27 +223,65 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	monograph, apiError := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if apiError != nil {
-		if api.IsNotFoundError(apiError) {
-			utils.AddDiagnosticWarning(resp,
-				ErrMonographNotFound,
-				apiError.Error(),
-			)
-			resp.State.RemoveResource(ctx)
+	var monograph *platformv1.FederatedGraph
+	if data.Name.ValueString() == "" {
+		graph, apiError := r.client.GetMonographByID(ctx, data.Id.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrMonographNotFound,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp, ErrReadingMonograph, apiError.Error())
 			return
 		}
-		utils.AddDiagnosticError(resp,
-			ErrRetrievingMonograph,
-			apiError.Error(),
-		)
-		return
+		monograph = graph
+	} else {
+		graph, apiError := r.client.GetMonograph(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+		if apiError != nil {
+			if api.IsNotFoundError(apiError) {
+				utils.AddDiagnosticWarning(resp,
+					ErrMonographNotFound,
+					apiError.Error(),
+				)
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			utils.AddDiagnosticError(resp,
+				ErrRetrievingMonograph,
+				apiError.Error(),
+			)
+			return
+		}
+
+		monograph = graph
+	}
+
+	subGraph, err := r.client.GetSubgraph(ctx, monograph.GetName(), monograph.GetNamespace())
+	if err != nil {
+		if api.IsNotFoundError(err) {
+			utils.AddDiagnosticError(resp,
+				ErrRetrievingMonograph,
+				err.Error(),
+			)
+			return
+		} else {
+			utils.AddDiagnosticError(resp,
+				ErrRetrievingMonograph,
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	data.Id = types.StringValue(monograph.GetId())
 	data.Name = types.StringValue(monograph.GetName())
 	data.Namespace = types.StringValue(monograph.GetNamespace())
 	data.RoutingURL = types.StringValue(monograph.GetRoutingURL())
+	data.GraphUrl = types.StringValue(subGraph.GetRoutingURL())
 
 	if monograph.Readme != nil {
 		data.Readme = types.StringValue(*monograph.Readme)

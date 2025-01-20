@@ -112,6 +112,28 @@ func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace
 	return response.Msg.Graph, nil
 }
 
+func (p PlatformClient) GetMonographByID(ctx context.Context, id string) (*platformv1.FederatedGraph, *ApiError) {
+	request := connect.NewRequest(&platformv1.GetFederatedGraphByIdRequest{
+		Id: id,
+	})
+
+	response, err := p.Client.GetFederatedGraphById(ctx, request)
+	if err != nil {
+		return nil, &ApiError{Err: err, Reason: "GetMonographByID", Status: common.EnumStatusCode_ERR}
+	}
+
+	if response.Msg == nil {
+		return nil, &ApiError{Err: ErrEmptyMsg, Reason: "GetMonographByID", Status: common.EnumStatusCode_ERR}
+	}
+
+	apiError := handleErrorCodes(response.Msg.GetResponse().Code, response.Msg.String())
+	if apiError != nil {
+		return nil, apiError
+	}
+
+	return response.Msg.Graph, nil
+}
+
 func (p PlatformClient) PublishMonograph(ctx context.Context, name string, namespace string, schema string) *ApiError {
 	request := connect.NewRequest(&platformv1.PublishMonographRequest{
 		Name:      name,
