@@ -16,4 +16,10 @@ variable "source_graph_name" {
 
 variable "exclude_tags" {
   type = list(string)
+  default = []
+}
+
+variable "include_tags" {
+  type = list(string)
+  default = []
 }

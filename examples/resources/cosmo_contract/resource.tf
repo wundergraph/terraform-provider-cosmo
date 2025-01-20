@@ -4,4 +4,5 @@ resource "cosmo_contract" "test" {
   source       = var.source_graph_name
   routing_url  = var.routing_url
   exclude_tags = var.exclude_tags
+  include_tags = var.include_tags
 }

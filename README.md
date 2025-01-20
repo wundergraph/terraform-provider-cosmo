@@ -1,6 +1,6 @@
 # Cosmo Terraform Provider
 
-This repository is for the [Cosmo](https://registry.terraform.io/wundergraph/cosmo) Terraform provider, designed to manage Cosmo resources within Terraform. It includes a resource and a data source, examples, and generated documentation.
+This repository is for the [Cosmo](https://registry.terraform.io/providers/wundergraph/cosmo/latest) Terraform provider, designed to manage Cosmo resources within Terraform. It includes a resource and a data source, examples, and generated documentation.
 
 ## Requirements
 
