@@ -49,3 +49,12 @@ resource "cosmo_subgraph" "test" {
 ### Read-Only
 
 - `id` (String) The unique identifier of the subgraph resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Subgraphs can be imported using the UUID of the subgraph, e.g.
+terraform import cosmo_subgraph.example 0b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b
+```

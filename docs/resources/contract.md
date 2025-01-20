@@ -48,3 +48,12 @@ resource "cosmo_contract" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Contracts can be imported using the UUID of the contract, e.g.
+terraform import cosmo_contract.example 0b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b
+```

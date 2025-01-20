@@ -117,6 +117,18 @@ output "router_token" {
 
 Further in depth examples can be found in the [examples](examples) directory.
 
+## Importing resources
+
+Resources can be imported into Terraform using the `terraform import` command. The following resources are supported for import:
+
+- `cosmo_namespace`
+- `cosmo_federated_graph`
+- `cosmo_subgraph`
+- `cosmo_contract`
+- `cosmo_monograph`
+
+For detailed instructions on how to import each resource, refer to the corresponding resource documentation in the corresponding [docs](docs/resources).
+
 ## Cosmo Local Example
 
 The module [cosmo-local](examples/cosmo-local) contains an example of how to use the provider to manage a local cosmo setup on minikube.

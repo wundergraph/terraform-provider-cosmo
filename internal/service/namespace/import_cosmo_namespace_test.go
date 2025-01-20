@@ -18,8 +18,16 @@ func TestAccCosmoNamespaceImportBasic(t *testing.T) {
 				Config: testAccNamespaceResourceConfig(name),
 			},
 			{
+				// import via ID
 				ResourceName:      "cosmo_namespace.test",
 				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// import via name
+				ResourceName:      "cosmo_namespace.test",
+				ImportState:       true,
+				ImportStateId:     name,
 				ImportStateVerify: true,
 			},
 		},

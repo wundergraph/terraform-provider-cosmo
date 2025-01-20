@@ -31,3 +31,14 @@ resource "cosmo_namespace" "test" {
 ### Read-Only
 
 - `id` (String) The unique identifier of the namespace resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Namespaces can be imported using the name of the namespace
+terraform import cosmo_namespace.example my-namespace
+# or alternatively, the UUID of the namespace
+terraform import cosmo_namespace.example 0b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b
+```

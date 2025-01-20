@@ -3,14 +3,18 @@ package namespace
 import (
 	"context"
 	"fmt"
-
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
+)
+
+var (
+	_ resource.Resource                = (*NamespaceResource)(nil)
+	_ resource.ResourceWithImportState = (*NamespaceResource)(nil)
 )
 
 type NamespaceResource struct {
@@ -195,5 +199,15 @@ func getNamespace(ctx context.Context, client api.PlatformClient, id, name strin
 }
 
 func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	var data NamespaceResourceModel
+
+	id := req.ID
+
+	if err := uuid.Validate(id); err != nil {
+		data.Name = types.StringValue(id) // We assume this is the namespace name
+	} else {
+		data.Id = types.StringValue(id)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
