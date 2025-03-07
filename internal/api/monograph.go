@@ -8,7 +8,7 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) (*platformv1.CreateMonographResponse, *ApiError) {
+func (p *PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) (*platformv1.CreateMonographResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
@@ -38,7 +38,7 @@ func (p PlatformClient) CreateMonograph(ctx context.Context, name string, namesp
 	return response.Msg, nil
 }
 
-func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) *ApiError {
+func (p *PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) *ApiError {
 	request := connect.NewRequest(&platformv1.UpdateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
@@ -68,7 +68,7 @@ func (p PlatformClient) UpdateMonograph(ctx context.Context, name string, namesp
 	return nil
 }
 
-func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namespace string) *ApiError {
+func (p *PlatformClient) DeleteMonograph(ctx context.Context, name string, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteMonographRequest{
 		Name:      name,
 		Namespace: namespace,
@@ -90,7 +90,7 @@ func (p PlatformClient) DeleteMonograph(ctx context.Context, name string, namesp
 	return nil
 }
 
-func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace string) (*platformv1.FederatedGraph, *ApiError) {
+func (p *PlatformClient) GetMonograph(ctx context.Context, name string, namespace string) (*platformv1.FederatedGraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetFederatedGraphByNameRequest{
 		Name:      name,
 		Namespace: namespace,
@@ -112,7 +112,7 @@ func (p PlatformClient) GetMonograph(ctx context.Context, name string, namespace
 	return response.Msg.Graph, nil
 }
 
-func (p PlatformClient) GetMonographByID(ctx context.Context, id string) (*platformv1.FederatedGraph, *ApiError) {
+func (p *PlatformClient) GetMonographByID(ctx context.Context, id string) (*platformv1.FederatedGraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetFederatedGraphByIdRequest{
 		Id: id,
 	})
@@ -134,7 +134,7 @@ func (p PlatformClient) GetMonographByID(ctx context.Context, id string) (*platf
 	return response.Msg.Graph, nil
 }
 
-func (p PlatformClient) PublishMonograph(ctx context.Context, name string, namespace string, schema string) *ApiError {
+func (p *PlatformClient) PublishMonograph(ctx context.Context, name string, namespace string, schema string) *ApiError {
 	request := connect.NewRequest(&platformv1.PublishMonographRequest{
 		Name:      name,
 		Namespace: namespace,

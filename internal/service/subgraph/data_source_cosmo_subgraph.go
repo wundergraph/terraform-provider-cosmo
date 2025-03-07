@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
@@ -156,6 +157,11 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 			ErrRetrievingSubgraph,
 			apiError.Error(),
 		)
+		return
+	}
+
+	if subgraph.IsFeatureSubgraph {
+		utils.AddDiagnosticError(resp, ErrInvalidSubgraphType, fmt.Sprintf("Subgraph '%s' is a feature subgraph and cannot be managed", data.Name.ValueString()))
 		return
 	}
 

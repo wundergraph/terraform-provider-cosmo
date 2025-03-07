@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+
 	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateSubgraph(ctx context.Context, data *platformv1.CreateFederatedSubgraphRequest) *ApiError {
+func (p *PlatformClient) CreateSubgraph(ctx context.Context, data *platformv1.CreateFederatedSubgraphRequest) *ApiError {
 	request := connect.NewRequest(data)
 	response, err := p.Client.CreateFederatedSubgraph(ctx, request)
 	if err != nil {
@@ -27,7 +28,7 @@ func (p PlatformClient) CreateSubgraph(ctx context.Context, data *platformv1.Cre
 	return nil
 }
 
-func (p PlatformClient) UpdateSubgraph(ctx context.Context, data *platformv1.UpdateSubgraphRequest) *ApiError {
+func (p *PlatformClient) UpdateSubgraph(ctx context.Context, data *platformv1.UpdateSubgraphRequest) *ApiError {
 	request := connect.NewRequest(data)
 
 	response, err := p.Client.UpdateSubgraph(ctx, request)
@@ -47,7 +48,7 @@ func (p PlatformClient) UpdateSubgraph(ctx context.Context, data *platformv1.Upd
 	return nil
 }
 
-func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace string) *ApiError {
+func (p *PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteFederatedSubgraphRequest{
 		SubgraphName: name,
 		Namespace:    namespace,
@@ -69,7 +70,7 @@ func (p PlatformClient) DeleteSubgraph(ctx context.Context, name, namespace stri
 	return nil
 }
 
-func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string) (*platformv1.Subgraph, *ApiError) {
+func (p *PlatformClient) GetSubgraph(ctx context.Context, name, namespace string) (*platformv1.Subgraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetSubgraphByNameRequest{
 		Name:      name,
 		Namespace: namespace,
@@ -91,7 +92,7 @@ func (p PlatformClient) GetSubgraph(ctx context.Context, name, namespace string)
 	return response.Msg.GetGraph(), nil
 }
 
-func (p PlatformClient) GetSubgraphById(ctx context.Context, id string) (*platformv1.Subgraph, *ApiError) {
+func (p *PlatformClient) GetSubgraphById(ctx context.Context, id string) (*platformv1.Subgraph, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetSubgraphByIdRequest{
 		Id: id,
 	})
@@ -112,7 +113,7 @@ func (p PlatformClient) GetSubgraphById(ctx context.Context, id string) (*platfo
 	return response.Msg.GetGraph(), nil
 }
 
-func (p PlatformClient) GetSubgraphSchema(ctx context.Context, name, namespace string) (string, *ApiError) {
+func (p *PlatformClient) GetSubgraphSchema(ctx context.Context, name, namespace string) (string, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetLatestSubgraphSDLRequest{
 		Name:      name,
 		Namespace: namespace,
@@ -135,7 +136,7 @@ func (p PlatformClient) GetSubgraphSchema(ctx context.Context, name, namespace s
 	return response.Msg.GetSdl(), nil
 }
 
-func (p PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, *ApiError) {
+func (p *PlatformClient) PublishSubgraph(ctx context.Context, name, namespace, schema string) (*platformv1.PublishFederatedSubgraphResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.PublishFederatedSubgraphRequest{
 		Name:      name,
 		Namespace: namespace,

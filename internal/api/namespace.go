@@ -9,7 +9,7 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateNamespace(ctx context.Context, name string) *ApiError {
+func (p *PlatformClient) CreateNamespace(ctx context.Context, name string) *ApiError {
 	request := connect.NewRequest(&platformv1.CreateNamespaceRequest{Name: name})
 	response, err := p.Client.CreateNamespace(ctx, request)
 	if err != nil {
@@ -28,7 +28,7 @@ func (p PlatformClient) CreateNamespace(ctx context.Context, name string) *ApiEr
 	return nil
 }
 
-func (p PlatformClient) RenameNamespace(ctx context.Context, oldName, newName string) *ApiError {
+func (p *PlatformClient) RenameNamespace(ctx context.Context, oldName, newName string) *ApiError {
 	request := connect.NewRequest(&platformv1.RenameNamespaceRequest{
 		Name:    oldName,
 		NewName: newName,
@@ -50,7 +50,7 @@ func (p PlatformClient) RenameNamespace(ctx context.Context, oldName, newName st
 	return nil
 }
 
-func (p PlatformClient) DeleteNamespace(ctx context.Context, name string) error {
+func (p *PlatformClient) DeleteNamespace(ctx context.Context, name string) error {
 	request := connect.NewRequest(&platformv1.DeleteNamespaceRequest{Name: name})
 	response, err := p.Client.DeleteNamespace(ctx, request)
 	if err != nil {
@@ -69,7 +69,7 @@ func (p PlatformClient) DeleteNamespace(ctx context.Context, name string) error 
 	return nil
 }
 
-func (p PlatformClient) GetNamespace(ctx context.Context, id, name string) (*platformv1.Namespace, *ApiError) {
+func (p *PlatformClient) GetNamespace(ctx context.Context, id, name string) (*platformv1.Namespace, *ApiError) {
 	request := connect.NewRequest(&platformv1.GetNamespaceRequest{
 		Name: name,
 		Id:   id,

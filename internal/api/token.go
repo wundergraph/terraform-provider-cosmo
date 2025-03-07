@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
+
 	"github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/common"
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namespace string) (string, *ApiError) {
+func (p *PlatformClient) CreateToken(ctx context.Context, name, graphName, namespace string) (string, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateFederatedGraphTokenRequest{
 		GraphName: graphName,
 		Namespace: namespace,
@@ -32,7 +33,7 @@ func (p PlatformClient) CreateToken(ctx context.Context, name, graphName, namesp
 	return response.Msg.Token, nil
 }
 
-func (p PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, namespace string) *ApiError {
+func (p *PlatformClient) DeleteToken(ctx context.Context, tokenName, graphName, namespace string) *ApiError {
 	request := connect.NewRequest(&platformv1.DeleteRouterTokenRequest{
 		TokenName: tokenName,
 		Namespace: namespace,

@@ -3,18 +3,19 @@ package subgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -25,18 +26,15 @@ type SubgraphResource struct {
 }
 
 type SubgraphResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Name       types.String `tfsdk:"name"`
-	Namespace  types.String `tfsdk:"namespace"`
-	RoutingURL types.String `tfsdk:"routing_url"`
-	// TODO: re-enable this once Graph Feature Flags are implementd
-	// BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
+	Id                   types.String `tfsdk:"id"`
+	Name                 types.String `tfsdk:"name"`
+	Namespace            types.String `tfsdk:"namespace"`
+	RoutingURL           types.String `tfsdk:"routing_url"`
 	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
 	Readme               types.String `tfsdk:"readme"`
 	IsEventDrivenGraph   types.Bool   `tfsdk:"is_event_driven_graph"`
-	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	UnsetLabels          types.Bool   `tfsdk:"unset_labels"`
 	// TBD: This is only used in the update subgraph method and not used atm
 	// Headers              types.List   `tfsdk:"headers"`
@@ -57,7 +55,7 @@ func (r *SubgraphResource) Configure(ctx context.Context, req resource.Configure
 	if !ok {
 		utils.AddDiagnosticError(resp,
 			ErrUnexpectedDataSourceType,
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -133,15 +131,6 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 			},
-			"is_feature_subgraph": schema.BoolAttribute{
-				Optional:            true,
-				MarkdownDescription: "Indicates if the subgraph is a feature subgraph.",
-			},
-			// "headers": schema.ListAttribute{
-			// 	Optional:            true,
-			// 	MarkdownDescription: "Headers for the subgraph.",
-			// 	ElementType:         types.StringType,
-			// },
 			"unset_labels": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Unset labels for the subgraph.",
@@ -156,11 +145,6 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Optional:            true,
 				MarkdownDescription: "The schema for the subgraph.",
 			},
-			// TODO: re-enable this once Graph Feature Flags are implementd
-			// "base_subgraph_name": schema.StringAttribute{
-			// 	Optional:            true,
-			// 	MarkdownDescription: "The base subgraph name.",
-			// },
 		},
 	}
 }
@@ -267,6 +251,12 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 			utils.AddDiagnosticError(resp, ErrRetrievingSubgraph, fmt.Sprintf("Could not fetch subgraph '%s': %s", data.Name.ValueString(), apiError.Error()))
 			return
 		}
+	}
+
+	if subgraph.IsFeatureSubgraph {
+		utils.AddDiagnosticError(resp, ErrInvalidSubgraphType, fmt.Sprintf("Subgraph '%s' is a feature subgraph and cannot be managed", data.Name.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
 	subgraphSchema, apiError := r.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)

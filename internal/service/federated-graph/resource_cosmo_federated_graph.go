@@ -120,7 +120,7 @@ func (r *FederatedGraphResource) Configure(ctx context.Context, req resource.Con
 
 	client, ok := req.ProviderData.(*api.PlatformClient)
 	if !ok {
-		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
+		utils.AddDiagnosticError(resp, ErrUnexpectedDataSourceType, fmt.Sprintf("Expected *api.PlatformClient, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
