@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
@@ -204,6 +206,25 @@ func (r *FeatureFlagResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
+	if apiErr != nil {
+		if api.IsNotFoundError(apiErr) {
+			utils.AddDiagnosticWarning(resp, ErrFeatureFlagGet, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
+		utils.AddDiagnosticError(resp, ErrFeatureFlagGet, apiErr.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(mapFeatureFlagToResourceModel(ff, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	tflog.Trace(ctx, "Read feature flag resource", map[string]interface{}{
+		"name":      data.Name.ValueString(),
+		"namespace": data.Namespace.ValueString(),
+	})
 }
 
 func (r *FeatureFlagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -282,6 +303,11 @@ func (r *FeatureFlagResource) Update(ctx context.Context, req resource.UpdateReq
 
 	resp.Diagnostics.Append(mapFeatureFlagToResourceModel(ff, &data)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	tflog.Trace(ctx, "Updated feature flag resource", map[string]interface{}{
+		"name":      data.Name.ValueString(),
+		"namespace": data.Namespace.ValueString(),
+	})
 }
 
 func (r *FeatureFlagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -303,6 +329,11 @@ func (r *FeatureFlagResource) Delete(ctx context.Context, req resource.DeleteReq
 		utils.AddDiagnosticError(resp, ErrFeatureFlagDelete, apiErr.Error())
 		return
 	}
+
+	tflog.Trace(ctx, "Deleted feature flag resource", map[string]interface{}{
+		"name":      data.Name.ValueString(),
+		"namespace": data.Namespace.ValueString(),
+	})
 }
 
 func (r *FeatureFlagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -321,7 +352,10 @@ func (r *FeatureFlagResource) ImportState(ctx context.Context, req resource.Impo
 	data.Name = types.StringValue(after)
 	data.Namespace = types.StringValue(before)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// We can't use SetState here as we need to initialize sub-typed fields like Set and Map
+	// Therefore we need to set the individual fields
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), data.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("namespace"), data.Namespace)...)
 }
 
 func mapFeatureFlagToResourceModel(ff *api.FeatureFlag, res *FeatureFlagResourceModel) diag.Diagnostics {

@@ -2,6 +2,7 @@ package feature_flag_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -11,23 +12,20 @@ import (
 )
 
 func TestAccFeatureFlags(t *testing.T) {
-	name := acctest.RandomWithPrefix("test-feature-subgraph")
-	fgName := acctest.RandomWithPrefix("test-feature-subgraph")
+	fgName, sgName, fsgName :=
+		acctest.RandomWithPrefix("test-feature-flag"),
+		acctest.RandomWithPrefix("test-subgraph"),
+		acctest.RandomWithPrefix("test-feature-subgraph")
+
 	namespace := acctest.RandomWithPrefix("test-namespace")
-
-	routingURL := "https://example.com"
-
-	subgraphSchema := acceptance.TestAccValidSubgraphSchema
-	readme := "Initial readme content"
-
 	ffName := acctest.RandomWithPrefix("test-feature-flag")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFeatureFlagResourceConfig(namespace, name, routingURL, name, routingURL, subgraphSchema, readme, fgName, routingURL, subgraphSchema, readme, ffName, false),
+				Config: testAccFeatureFlagResourceConfig(namespace, fgName, sgName, fsgName, ffName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "name", ffName),
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "namespace", namespace),
@@ -38,13 +36,13 @@ func TestAccFeatureFlags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFeatureFlagResourceConfig(namespace, name, routingURL, name, routingURL, subgraphSchema, readme, fgName, routingURL, subgraphSchema, readme, ffName, true),
+				Config: testAccFeatureFlagResourceConfig(namespace, fgName, sgName, fsgName, ffName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "is_enabled", "true"),
 				),
 			},
 			{
-				Config: testAccFeatureFlagResourceConfig(namespace, name, routingURL, name, routingURL, subgraphSchema, readme, fgName, routingURL, subgraphSchema, readme, "newName", false),
+				Config: testAccFeatureFlagResourceConfig(namespace, fgName, sgName, fsgName, "newName", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "name", "newName"),
 				),
@@ -54,55 +52,63 @@ func TestAccFeatureFlags(t *testing.T) {
 				RefreshState: true,
 			},
 			{
-				Config:  testAccFeatureFlagResourceConfig(namespace, name, routingURL, name, routingURL, subgraphSchema, readme, fgName, routingURL, subgraphSchema, readme, ffName, false),
+				Config:  testAccFeatureFlagResourceConfig(namespace, fgName, sgName, fsgName, ffName, false),
 				Destroy: true,
 			},
 		},
 	})
+}
+
+func TestAccFeatureFlagFeatureSubgraphs(t *testing.T) {
+	t.Run("Should raise an error when feature_subgraphs is omitted", func(t *testing.T) {
+		namespace := acctest.RandomWithPrefix("test-namespace")
+		ffName := acctest.RandomWithPrefix("test-feature-flag")
+
+		fgName, sgName, fsgName :=
+			acctest.RandomWithPrefix("test-feature-flag"),
+			acctest.RandomWithPrefix("test-subgraph"),
+			acctest.RandomWithPrefix("test-feature-subgraph")
+
+		resource.ParallelTest(t, resource.TestCase{
+			PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+			ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config:      testAccFeatureFlagResourceConfigNoFeatureSubgraphs(namespace, fgName, sgName, fsgName, ffName, false),
+					ExpectError: regexp.MustCompile(`.*The argument "feature_subgraphs" is required, but no definition was found.*`),
+				},
+			},
+		})
+	})
+
+	t.Run("Should raise an error when feature_subgraphs is empty", func(t *testing.T) {
+		namespace := acctest.RandomWithPrefix("test-namespace")
+		ffName := acctest.RandomWithPrefix("test-feature-flag")
+
+		fgName, sgName, fsgName :=
+			acctest.RandomWithPrefix("test-feature-flag"),
+			acctest.RandomWithPrefix("test-subgraph"),
+			acctest.RandomWithPrefix("test-feature-subgraph")
+
+		resource.ParallelTest(t, resource.TestCase{
+			PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+			ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config:      testAccFeatureFlagResourceConfigEmptyFeatureSubgraphs(namespace, fgName, sgName, fsgName, ffName, false),
+					ExpectError: regexp.MustCompile(`.*Attribute feature_subgraphs set must contain at least 1 elements, got: 0.*`),
+				},
+			},
+		})
+	})
 
 }
 
+//nolint:unparam
 func testAccFeatureFlagResourceConfig(
-	namespace, federatedGraphName, federatedGraphroutingURL,
-	subgraphName, subgraphRoutingURL, subgraphSchema, readme,
-	fgName, fgRoutingURL, fgSchema, fgReadme,
-	ffName string, isEnabled bool) string {
+	namespace, fgName, sgName, fsgName, ffName string, isEnabled bool) string {
 	return fmt.Sprintf(`
-resource "cosmo_namespace" "test" {
-  name = "%s"
-}
-
-resource "cosmo_federated_graph" "test" {
-  name      	= "%s"
-  namespace 	= cosmo_namespace.test.name
-  routing_url 	= "%s"
-  label_matchers = ["team=backend"]
-
-  depends_on = [cosmo_subgraph.test]
-}
-
-resource "cosmo_subgraph" "test" {
-  name                = "%s"
-  namespace           = cosmo_namespace.test.name
-  routing_url         = "%s"
-  schema              = <<-EOT
-%sEOT
-  labels              = { 
-  	"team"	= "backend", 
-	"stage" = "dev" 
-  }
-  readme              =  "%s"
-}
-
-resource "cosmo_feature_subgraph" "test" {
-  name                = "%s"
-  namespace           = cosmo_namespace.test.name
-  routing_url         = "%s"
-  base_subgraph_name  = cosmo_subgraph.test.name
-  schema              = <<-EOT
-%sEOT
-  readme              = "%s"
-}
+%s
 
 resource "cosmo_feature_flag" "test" {
   name                = "%s"
@@ -115,7 +121,86 @@ resource "cosmo_feature_flag" "test" {
   is_enabled		  = %t
   depends_on = [cosmo_federated_graph.test, cosmo_feature_subgraph.test]
 }
-`, namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL,
-		subgraphSchema, readme, fgName, fgRoutingURL, fgSchema, fgReadme,
-		ffName, isEnabled)
+`, formatBaseResources(namespace, fgName, sgName, fsgName), ffName, isEnabled)
+}
+
+//nolint:unparam
+func testAccFeatureFlagResourceConfigNoFeatureSubgraphs(
+	namespace, fgName, sgName, fsgName, ffName string, isEnabled bool) string {
+	return fmt.Sprintf(`
+%s
+
+resource "cosmo_feature_flag" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  labels			  = {
+	"team"	= "backend",
+	"stage" = "dev"
+  }
+  is_enabled		  = %t
+  depends_on = [cosmo_federated_graph.test, cosmo_feature_subgraph.test]
+}
+`, formatBaseResources(namespace, fgName, sgName, fsgName), ffName, isEnabled)
+}
+
+func testAccFeatureFlagResourceConfigEmptyFeatureSubgraphs(namespace, fgName, sgName, fsgName, ffName string, isEnabled bool) string {
+	return fmt.Sprintf(`
+%s
+
+resource "cosmo_feature_flag" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  feature_subgraphs   = []
+  labels			  = {
+	"team"	= "backend",
+	"stage" = "dev"
+  }
+  is_enabled		  = %t
+  depends_on = [cosmo_federated_graph.test, cosmo_feature_subgraph.test]
+}`, formatBaseResources(namespace, fgName, sgName, fsgName), ffName, isEnabled)
+
+}
+
+func formatBaseResources(namespace, fgName, sgName, fsgName string) string {
+	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_federated_graph" "test" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test.name
+  routing_url 	= "http://localhost:3000"
+  label_matchers = ["team=backend"]
+
+  depends_on = [cosmo_subgraph.test]
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  routing_url         = "http://localhost:3000"
+  schema              = <<-EOT
+%sEOT
+  labels              = { 
+  	"team"	= "backend", 
+	"stage" = "dev" 
+  }
+  readme              =  "test readme"
+}
+
+resource "cosmo_feature_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  routing_url         = "http://localhost:3000"
+  base_subgraph_name  = cosmo_subgraph.test.name
+  schema              = <<-EOT
+%sEOT
+  readme              = "test readme"
+}
+`, namespace, fgName, sgName,
+		acceptance.TestAccValidSubgraphSchema,
+		fsgName,
+		acceptance.TestAccValidSubgraphSchema,
+	)
 }

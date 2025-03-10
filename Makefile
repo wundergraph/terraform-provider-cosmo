@@ -35,6 +35,9 @@ fmt:
 	go fmt ./...
 	terraform fmt -recursive 
 
+lint:
+	golangci-lint run
+
 build:
 	go build -o bin/${BINARY}
 

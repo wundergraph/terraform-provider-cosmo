@@ -94,6 +94,7 @@ For more information on feature subgraphs, please refer to the [Cosmo Documentat
 			},
 			"routing_url": schema.StringAttribute{
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{},
 				MarkdownDescription: "The routing URL of the feature subgraph.",
 			},
 			"base_subgraph_name": schema.StringAttribute{
@@ -169,6 +170,7 @@ func (r *FeatureSubgraphResource) Create(ctx context.Context, req resource.Creat
 	data.RoutingURL = types.StringValue(featureSubgraph.GetRoutingURL())
 	data.SubscriptionProtocol = types.StringValue(featureSubgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(featureSubgraph.GetWebsocketSubprotocol())
+	data.BaseSubgraphName = types.StringValue(featureSubgraph.GetBaseSubgraphName())
 
 	if featureSubgraph.GetSubscriptionUrl() != "" {
 		data.SubscriptionUrl = types.StringValue(featureSubgraph.GetSubscriptionUrl())
@@ -257,6 +259,7 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	data.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
 	if subgraph.GetSubscriptionUrl() != "" {
 		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
@@ -371,6 +374,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 	planData.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
 	planData.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	planData.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
+	planData.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
 	if subgraph.GetSubscriptionUrl() != "" {
 		planData.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
@@ -428,13 +432,13 @@ func (r *FeatureSubgraphResource) ImportState(ctx context.Context, req resource.
 }
 
 func (r *FeatureSubgraphResource) createAndPublishFeatureSubgraph(ctx context.Context, data FeatureSubgraphResourceModel, resp *resource.CreateResponse) (*platformv1.Subgraph, *api.ApiError) {
-	routingUrl := data.RoutingURL.ValueString()
+	routingURL := data.RoutingURL.ValueString()
 	isFeatureSubgraph := true
 
 	requestData := &platformv1.CreateFederatedSubgraphRequest{
 		Name:                 data.Name.ValueString(),
 		Namespace:            data.Namespace.ValueString(),
-		RoutingUrl:           &routingUrl,
+		RoutingUrl:           &routingURL,
 		BaseSubgraphName:     data.BaseSubgraphName.ValueStringPointer(),
 		IsFeatureSubgraph:    &isFeatureSubgraph,
 		SubscriptionUrl:      data.SubscriptionUrl.ValueStringPointer(),
