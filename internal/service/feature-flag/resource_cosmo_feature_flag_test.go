@@ -42,6 +42,7 @@ func TestAccFeatureFlags(t *testing.T) {
 				),
 			},
 			{
+				// Recreate the namespace with a new name
 				Config: testAccFeatureFlagResourceConfig(namespace, fgName, sgName, fsgName, "newName", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "name", "newName"),
