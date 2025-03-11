@@ -33,6 +33,7 @@ func TestAccFeatureFlags(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "labels.stage", "dev"),
 					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "is_enabled", "false"),
 					resource.TestCheckResourceAttrSet("cosmo_feature_flag.test", "feature_subgraphs.0"),
+					resource.TestCheckResourceAttr("cosmo_feature_flag.test", "created_by", "foo@wundergraph.com"),
 				),
 			},
 			{
