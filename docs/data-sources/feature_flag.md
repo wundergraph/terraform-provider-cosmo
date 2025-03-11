@@ -13,7 +13,7 @@ Cosmo Feature Flag Data Source
 ## Example Usage
 
 ```terraform
-data "cosmo_feature_flag" "test" {
+data "cosmo_feature_flag" "example" {
   name      = var.name
   namespace = var.namespace
 }

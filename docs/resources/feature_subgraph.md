@@ -20,7 +20,7 @@ For more information on feature subgraphs, please refer to the [Cosmo Documentat
 ## Example Usage
 
 ```terraform
-resource "cosmo_feature_subgraph" "test" {
+resource "cosmo_feature_subgraph" "example" {
   name                  = var.name
   namespace             = var.namespace
   routing_url           = var.routing_url

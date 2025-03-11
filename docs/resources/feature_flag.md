@@ -22,7 +22,7 @@ For more information on feature flags, please refer to the [Cosmo Documentation]
 ## Example Usage
 
 ```terraform
-resource "cosmo_feature_flag" "test" {
+resource "cosmo_feature_flag" "example" {
   name              = var.name
   namespace         = var.namespace
   feature_subgraphs = var.feature_subgraphs

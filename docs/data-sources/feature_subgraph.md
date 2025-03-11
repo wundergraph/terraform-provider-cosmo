@@ -20,7 +20,7 @@ For more information on feature subgraphs, please refer to the [Cosmo Documentat
 ## Example Usage
 
 ```terraform
-data "cosmo_feature_subgraph" "test" {
+data "cosmo_feature_subgraph" "example" {
   name      = var.name
   namespace = var.namespace
 }
