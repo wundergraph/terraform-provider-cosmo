@@ -180,12 +180,12 @@ func (r *FeatureFlagResource) Create(ctx context.Context, req resource.CreateReq
 	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiErr != nil {
 		if api.IsNotFoundError(apiErr) {
-			utils.AddDiagnosticWarning(resp, ErrFeatureFlagGet, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		utils.AddDiagnosticError(resp, ErrFeatureFlagGet, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
 		return
 	}
 
@@ -209,12 +209,12 @@ func (r *FeatureFlagResource) Read(ctx context.Context, req resource.ReadRequest
 	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiErr != nil {
 		if api.IsNotFoundError(apiErr) {
-			utils.AddDiagnosticWarning(resp, ErrFeatureFlagGet, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		utils.AddDiagnosticError(resp, ErrFeatureFlagGet, apiErr.Error())
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, apiErr.Error())
 		return
 	}
 
@@ -276,12 +276,12 @@ func (r *FeatureFlagResource) Update(ctx context.Context, req resource.UpdateReq
 	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiErr != nil {
 		if api.IsNotFoundError(apiErr) {
-			utils.AddDiagnosticWarning(resp, ErrFeatureFlagGet, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		utils.AddDiagnosticError(resp, ErrFeatureFlagGet, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
 		return
 	}
 

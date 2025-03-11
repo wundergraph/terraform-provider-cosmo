@@ -109,6 +109,7 @@ func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resourc
 func (p *CosmoProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		federated_graph.NewFederatedGraphDataSource,
+		feature_flag.NewFeatureFlagDataSource,
 		subgraph.NewSubgraphDataSource,
 		namespace.NewNamespaceDataSource,
 		monograph.NewMonographDataSource,
