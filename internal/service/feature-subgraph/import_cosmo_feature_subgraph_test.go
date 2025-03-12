@@ -1,10 +1,13 @@
 package feature_subgraph_test
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
@@ -45,6 +48,16 @@ func TestAccImportFeatureSubgraph(t *testing.T) {
 				ResourceName:      "cosmo_feature_subgraph.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				// Attempt to import non feature subgraph to feature subgraph resource
+				ResourceName: "cosmo_feature_subgraph.test",
+				ImportState:  true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return state.RootModule().Resources["cosmo_subgraph.test"].Primary.ID, nil
+				},
+				ImportStateVerify: true,
+				ExpectError:       regexp.MustCompile(fmt.Sprintf(".*Subgraph '%s' is not a feature subgraph", sgName)),
 			},
 			{
 				Config:  testAccFeatureSubgraphResourceConfig(namespace, fgName, sgName, fsgName, routingURL, subgraphSchema, readme),

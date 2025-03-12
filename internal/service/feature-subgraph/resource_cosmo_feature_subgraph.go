@@ -234,7 +234,7 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 
 	// Feature subgraphs are a subset of subgraphs, so we need to check if the subgraph is a feature subgraph
 	if !subgraph.IsFeatureSubgraph {
-		utils.AddDiagnosticError(resp, ErrReadingFeatureSubgraph, fmt.Sprintf("Subgraph '%s' is not a feature subgraph", data.Name.ValueString()))
+		utils.AddDiagnosticError(resp, ErrReadingFeatureSubgraph, fmt.Sprintf("Subgraph '%s' is not a feature subgraph", subgraph.Name))
 		resp.State.RemoveResource(ctx)
 
 		return
