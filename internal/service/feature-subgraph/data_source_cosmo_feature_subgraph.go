@@ -58,13 +58,7 @@ func (d *FeatureSubgraphDataSource) Metadata(_ context.Context, req datasource.M
 
 func (d *FeatureSubgraphDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `
-This data source handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
-They require a base subgraph to be specified and can be used to add additional functionality to the base subgraph based on a specialized schema, that is published
-to this subgraph.
-
-For more information on feature subgraphs, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/feature-subgraph).
-`,
+		MarkdownDescription: "Cosmo Feature Subgraph Data Source",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
