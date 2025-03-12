@@ -2,6 +2,7 @@ package feature_subgraph_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -81,7 +82,60 @@ func TestAccFeatureSubgraphDataSource(t *testing.T) {
 			},
 		})
 	})
+}
 
+func TestAccFeatureSubgraphNoFeatureSubgraph(t *testing.T) {
+	t.Run("Should fail to read feature subgraph data source when attempting to read a non feature subgraph", func(t *testing.T) {
+		fgName := acctest.RandomWithPrefix("test-federated-graph")
+		sgName := acctest.RandomWithPrefix("test-subgraph")
+		namespace := acctest.RandomWithPrefix("test-namespace")
+
+		resource.ParallelTest(t, resource.TestCase{
+			PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+			ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config:      testAccFeatureSubgraphDataSourceNoFeatureSubgraph(namespace, fgName, sgName),
+					ExpectError: regexp.MustCompile(`.*The subgraph is not a feature subgraph.*`),
+				},
+			},
+		})
+	})
+}
+
+func testAccFeatureSubgraphDataSourceNoFeatureSubgraph(namespace, fgName, sgName string) string {
+	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_federated_graph" "test" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test.name
+  routing_url 	= "http://localhost:3000"
+  label_matchers = ["team=backend"]
+
+  depends_on = [cosmo_subgraph.test]
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test.name
+  routing_url         = "http://localhost:3000"
+  schema              = <<-EOT
+%sEOT
+  labels              = { 
+  	"team"	= "backend", 
+	"stage" = "dev" 
+  }
+  readme              =  "Test Readme"
+}
+
+data "cosmo_feature_subgraph" "test" {
+  name      = cosmo_subgraph.test.name
+  namespace = cosmo_subgraph.test.namespace
+}
+`, namespace, fgName, sgName, acceptance.TestAccValidSubgraphSchema)
 }
 
 func testAccFeatureSubgraphDataSourceConfigNoNamespace(fgName, sgName, fsgName string) string {
