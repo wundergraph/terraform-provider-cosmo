@@ -8,6 +8,7 @@ description: |-
   Feature flags define labels that dictate the federated graphs to which they will apply when enabled.
   Setting the corresponding feature-flag header or cookie value allows different graph constellations to be served to clients.
   For more information on feature flags, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/cli/feature-flags.
+  To learn more about the concept of feature flags, please refer to the concept https://cosmo-docs.wundergraph.com/concepts/feature-flags.
 ---
 
 # cosmo_feature_flag (Resource)
@@ -18,6 +19,7 @@ Feature flags define labels that dictate the federated graphs to which they will
 Setting the corresponding feature-flag header or cookie value allows different graph constellations to be served to clients.
 
 For more information on feature flags, please refer to the [Cosmo Documentation](https://cosmo-docs.wundergraph.com/cli/feature-flags).
+To learn more about the concept of feature flags, please refer to the [concept](https://cosmo-docs.wundergraph.com/concepts/feature-flags).
 
 ## Example Usage
 

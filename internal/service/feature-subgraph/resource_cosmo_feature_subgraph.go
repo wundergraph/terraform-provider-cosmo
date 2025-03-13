@@ -65,7 +65,7 @@ func (r *FeatureSubgraphResource) Metadata(ctx context.Context, req resource.Met
 func (r *FeatureSubgraphResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
-this resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
+This resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
 They require a base subgraph to be specified and can be used to add additional functionality to the base subgraph based on a specialized schema, that is published
 to this subgraph.
 

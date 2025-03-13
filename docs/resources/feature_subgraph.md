@@ -3,7 +3,7 @@
 page_title: "cosmo_feature_subgraph Resource - cosmo"
 subcategory: ""
 description: |-
-  this resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
+  This resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
   They require a base subgraph to be specified and can be used to add additional functionality to the base subgraph based on a specialized schema, that is published
   to this subgraph.
   For more information on feature subgraphs, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/cli/feature-subgraph.
@@ -11,7 +11,7 @@ description: |-
 
 # cosmo_feature_subgraph (Resource)
 
-this resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
+This resource handles feature subgraphs. Feature subgraphs are a special type of subgraph that can be used to extend the functionality of the platform.
 They require a base subgraph to be specified and can be used to add additional functionality to the base subgraph based on a specialized schema, that is published
 to this subgraph.
 
