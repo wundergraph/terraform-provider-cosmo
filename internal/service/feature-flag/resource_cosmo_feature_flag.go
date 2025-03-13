@@ -275,6 +275,12 @@ func (r *FeatureFlagResource) Update(ctx context.Context, req resource.UpdateReq
 
 	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiErr != nil {
+		if api.IsSubgraphCompositionFailedError(apiErr) {
+			utils.AddDiagnosticWarning(resp,
+				ErrFeatureFlagUpdate,
+				apiErr.Error(),
+			)
+		}
 		if api.IsNotFoundError(apiErr) {
 			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
 			resp.State.RemoveResource(ctx)
@@ -318,7 +324,13 @@ func (r *FeatureFlagResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	apiErr := r.client.DeleteFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
-	if apiErr != nil {
+	if apiErr != nil && !api.IsSubgraphCompositionFailedError(apiErr) {
+		if api.IsSubgraphCompositionFailedError(apiErr) {
+			utils.AddDiagnosticWarning(resp,
+				ErrFeatureFlagDelete,
+				apiErr.Error(),
+			)
+		}
 
 		if api.IsNotFoundError(apiErr) {
 			utils.AddDiagnosticWarning(resp, ErrFeatureFlagDelete, apiErr.Error())
