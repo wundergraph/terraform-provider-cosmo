@@ -364,7 +364,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utils.AddDiagnosticError(resp, ErrRetrievingFeatureSubgraphSchema, fmt.Sprintf("Could not fetch sceham from subgraph '%s': %s", planData.Name.ValueString(), apiError.Error()))
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureSubgraphSchema, fmt.Sprintf("Could not fetch schema from subgraph '%s': %s", planData.Name.ValueString(), apiError.Error()))
 		return
 	}
 
