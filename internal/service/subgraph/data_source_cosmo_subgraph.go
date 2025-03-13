@@ -36,7 +36,6 @@ type SubgraphDataSourceModel struct {
 	Readme               types.String `tfsdk:"readme"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
 	IsEventDrivenGraph   types.Bool   `tfsdk:"is_event_driven_graph"`
-	IsFeatureSubgraph    types.Bool   `tfsdk:"is_feature_subgraph"`
 	Headers              types.List   `tfsdk:"headers"`
 	Schema               types.String `tfsdk:"schema"`
 }
@@ -88,10 +87,6 @@ func (d *SubgraphDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"is_event_driven_graph": schema.BoolAttribute{
 				Computed:            true,
 				MarkdownDescription: "Indicates if the subgraph is event-driven.",
-			},
-			"is_feature_subgraph": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Indicates if the subgraph is a feature subgraph.",
 			},
 			"headers": schema.ListAttribute{
 				Computed:            true,
@@ -182,7 +177,6 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 	data.Labels = types.MapValueMust(types.StringType, labels)
 	data.Readme = types.StringValue(subgraph.GetReadme())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())
-	data.IsFeatureSubgraph = types.BoolValue(subgraph.GetIsFeatureSubgraph())
 	data.SubscriptionProtocol = types.StringValue(subgraph.GetSubscriptionProtocol())
 	data.WebsocketSubprotocol = types.StringValue(subgraph.GetWebsocketSubprotocol())
 	data.IsEventDrivenGraph = types.BoolValue(subgraph.GetIsEventDrivenGraph())

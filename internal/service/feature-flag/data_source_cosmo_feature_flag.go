@@ -53,10 +53,9 @@ func (d *FeatureFlagDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 				Optional:            true,
 			},
 			"feature_subgraphs": schema.SetAttribute{
-				MarkdownDescription: `The list of feature subgraphs associated with the feature flag. 
-At least one feature subgraph must be provided.`,
-				ElementType: types.StringType,
-				Computed:    true,
+				MarkdownDescription: "The list of feature subgraphs associated with the feature flag.",
+				ElementType:         types.StringType,
+				Computed:            true,
 			},
 			"labels": schema.MapAttribute{
 				MarkdownDescription: `The labels associated with the feature flag. These labels indicate which 

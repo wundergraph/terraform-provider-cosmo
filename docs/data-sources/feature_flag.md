@@ -34,8 +34,7 @@ data "cosmo_feature_flag" "example" {
 
 - `created_at` (String) The timestamp when the feature flag was created.
 - `created_by` (String) The user who created the feature flag.
-- `feature_subgraphs` (Set of String) The list of feature subgraphs associated with the feature flag. 
-At least one feature subgraph must be provided.
+- `feature_subgraphs` (Set of String) The list of feature subgraphs associated with the feature flag.
 - `id` (String) The unique identifier of the feature flag.
 - `is_enabled` (Boolean) Indicates whether the feature flag is enabled.
 - `labels` (Map of String) The labels associated with the feature flag. These labels indicate which 
