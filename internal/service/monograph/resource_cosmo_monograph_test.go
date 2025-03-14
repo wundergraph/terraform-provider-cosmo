@@ -16,7 +16,7 @@ func TestAccMonographResource(t *testing.T) {
 	graphUrl := "http://example.com/graphql"
 	rRoutingURL := "http://example.com/routing"
 	updatedRoutingURL := "http://example.com/updated-routing"
-
+	updatedGraphURL := "http://example.com/updated-graphql"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
@@ -32,9 +32,10 @@ func TestAccMonographResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMonographResourceConfig(namespace, name, graphUrl, updatedRoutingURL),
+				Config: testAccMonographResourceConfig(namespace, name, updatedGraphURL, updatedRoutingURL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_monograph.test", "routing_url", updatedRoutingURL),
+					resource.TestCheckResourceAttr("cosmo_monograph.test", "graph_url", updatedGraphURL),
 				),
 			},
 			{
@@ -49,8 +50,7 @@ func TestAccMonographResource(t *testing.T) {
 	})
 }
 
-// nolint: unparam
-func testAccMonographResourceConfig(namespace, name, graphUrl, routingURL string) string {
+func testAccMonographResourceConfig(namespace, name, graphURL, routingURL string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
   name = "%s"
@@ -62,5 +62,5 @@ resource "cosmo_monograph" "test" {
 	graph_url  = "%s"
 	routing_url = "%s"
 }
-`, namespace, name, graphUrl, routingURL)
+`, namespace, name, graphURL, routingURL)
 }

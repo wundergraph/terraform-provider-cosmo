@@ -8,17 +8,17 @@ import (
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 )
 
-func (p *PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) (*platformv1.CreateMonographResponse, *ApiError) {
+func (p *PlatformClient) CreateMonograph(ctx context.Context, name string, namespace string, routingURL string, graphURL string, subscriptionURL *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookURL string, admissionWebhookSecret string) (*platformv1.CreateMonographResponse, *ApiError) {
 	request := connect.NewRequest(&platformv1.CreateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
-		RoutingUrl:             routingUrl,
-		GraphUrl:               graphUrl,
-		SubscriptionUrl:        subscriptionUrl,
+		RoutingUrl:             routingURL,
+		GraphUrl:               graphURL,
+		SubscriptionUrl:        subscriptionURL,
 		Readme:                 readme,
 		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
 		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
-		AdmissionWebhookURL:    admissionWebhookUrl,
+		AdmissionWebhookURL:    admissionWebhookURL,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})
 	response, err := p.Client.CreateMonograph(ctx, request)
@@ -38,17 +38,17 @@ func (p *PlatformClient) CreateMonograph(ctx context.Context, name string, names
 	return response.Msg, nil
 }
 
-func (p *PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingUrl string, graphUrl string, subscriptionUrl *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookUrl string, admissionWebhookSecret string) *ApiError {
+func (p *PlatformClient) UpdateMonograph(ctx context.Context, name string, namespace string, routingURL string, graphURL string, subscriptionURL *string, readme *string, websocketSubprotocol string, subscriptionProtocol string, admissionWebhookURL string, admissionWebhookSecret string) *ApiError {
 	request := connect.NewRequest(&platformv1.UpdateMonographRequest{
 		Name:                   name,
 		Namespace:              namespace,
-		RoutingUrl:             routingUrl,
-		GraphUrl:               graphUrl,
-		SubscriptionUrl:        subscriptionUrl,
+		RoutingUrl:             routingURL,
+		GraphUrl:               graphURL,
+		SubscriptionUrl:        subscriptionURL,
 		Readme:                 readme,
 		WebsocketSubprotocol:   ResolveWebsocketSubprotocol(websocketSubprotocol),
 		SubscriptionProtocol:   ResolveSubscriptionProtocol(subscriptionProtocol),
-		AdmissionWebhookURL:    &admissionWebhookUrl,
+		AdmissionWebhookURL:    &admissionWebhookURL,
 		AdmissionWebhookSecret: &admissionWebhookSecret,
 	})
 	response, err := p.Client.UpdateMonograph(ctx, request)

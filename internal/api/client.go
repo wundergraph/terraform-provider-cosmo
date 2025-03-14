@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
 
@@ -20,7 +20,7 @@ func NewClient(apiKey, apiUrl string) (*PlatformClient, error) {
 
 	envApiKey, ok := os.LookupEnv(utils.EnvCosmoApiKey)
 	if !ok && cosmoApiKey == "" {
-		return nil, fmt.Errorf("COSMO_API_KEY environment variable not set and no apiKey provided in provider")
+		return nil, errors.New("COSMO_API_KEY environment variable not set and no apiKey provided in provider")
 	}
 
 	if ok {

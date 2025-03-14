@@ -37,7 +37,7 @@ func NewFeatureFlagResource() resource.Resource {
 }
 
 type FeatureFlagResourceModel struct {
-	Id               types.String `tfsdk:"id"`
+	ID               types.String `tfsdk:"id"`
 	Name             types.String `tfsdk:"name"`
 	Namespace        types.String `tfsdk:"namespace"`
 	FeatureSubgraphs types.Set    `tfsdk:"feature_subgraphs"`
@@ -181,12 +181,12 @@ func (r *FeatureFlagResource) Create(ctx context.Context, req resource.CreateReq
 	ff, apiErr := r.client.GetFeatureFlag(ctx, data.Name.ValueString(), data.Namespace.ValueString())
 	if apiErr != nil {
 		if api.IsNotFoundError(apiErr) {
-			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, "Feature flag "+data.Name.ValueString()+" not found: "+apiErr.Error())
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, "Failed to retrieve created feature flag after creation: "+apiErr.Error())
 		return
 	}
 
@@ -283,12 +283,12 @@ func (r *FeatureFlagResource) Update(ctx context.Context, req resource.UpdateReq
 			)
 		}
 		if api.IsNotFoundError(apiErr) {
-			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Feature flag %s not found: %s", data.Name, apiErr.Error()))
+			utils.AddDiagnosticWarning(resp, ErrRetrievingFeatureFlag, "Feature flag "+data.Name.ValueString()+" not found: "+apiErr.Error())
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, fmt.Sprintf("Failed to retrieve created feature flag after creation: %s", apiErr.Error()))
+		utils.AddDiagnosticError(resp, ErrRetrievingFeatureFlag, "Failed to retrieve created feature flag after creation: "+apiErr.Error())
 		return
 	}
 
@@ -391,7 +391,7 @@ func mapFeatureFlagToResourceModel(ff *api.FeatureFlag, res *FeatureFlagResource
 	labels, d := types.MapValue(types.StringType, labelTypeMap)
 	diags = append(diags, d...)
 
-	res.Id = types.StringValue(ff.Id)
+	res.ID = types.StringValue(ff.Id)
 	res.Name = types.StringValue(ff.Name)
 	res.Namespace = types.StringValue(ff.Namespace)
 	res.FeatureSubgraphs = fsg

@@ -25,7 +25,7 @@ func NewFeatureFlagDataSource() datasource.DataSource {
 }
 
 type FeatureFlagDataSourceModel struct {
-	Id               types.String `tfsdk:"id"`
+	ID               types.String `tfsdk:"id"`
 	Name             types.String `tfsdk:"name"`
 	Namespace        types.String `tfsdk:"namespace"`
 	FeatureSubgraphs types.Set    `tfsdk:"feature_subgraphs"`
@@ -163,7 +163,7 @@ func (d *FeatureFlagDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	data.Id = types.StringValue(ff.GetId())
+	data.ID = types.StringValue(ff.GetId())
 	data.Name = types.StringValue(ff.GetName())
 	data.Namespace = types.StringValue(ff.GetNamespace())
 	data.IsEnabled = types.BoolValue(ff.GetIsEnabled())

@@ -106,7 +106,6 @@ func TestAccFeatureFlagFeatureSubgraphs(t *testing.T) {
 
 }
 
-//nolint:unparam
 func testAccFeatureFlagResourceConfig(
 	namespace, fgName, sgName, fsgName, ffName string, isEnabled bool) string {
 	return fmt.Sprintf(`
@@ -126,7 +125,6 @@ resource "cosmo_feature_flag" "test" {
 `, formatBaseResources(namespace, fgName, sgName, fsgName), ffName, isEnabled)
 }
 
-//nolint:unparam
 func testAccFeatureFlagResourceConfigNoFeatureSubgraphs(
 	namespace, fgName, sgName, fsgName, ffName string, isEnabled bool) string {
 	return fmt.Sprintf(`

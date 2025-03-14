@@ -213,7 +213,6 @@ resource "cosmo_subgraph" "test" {
 `, namespace, fgName, sgName, acceptance.TestAccValidSubgraphSchema)
 }
 
-//nolint:unparam
 func testAccFeatureSubgraphResourceConfig(
 	namespace, fgName, sgName, fsgName, fsgRoutingURL, fsgSchema, fsgReadme string) string {
 	return fmt.Sprintf(`

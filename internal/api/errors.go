@@ -15,9 +15,9 @@ var (
 	ErrLimitReached              = errors.New("ErrLimitReached")
 	ErrInvalidLabels             = errors.New("ErrInvalidLabels")
 	ErrSubgraphCompositionFailed = errors.New("ErrSubgraphCompositionFailed")
-	ErrEmptyMsg                  = fmt.Errorf("ErrEmptyMsg")
-	ErrContractCompositionFailed = fmt.Errorf("ErrContractCompositionFailed")
-	ErrInvalidSubgraphSchema     = fmt.Errorf("ErrInvalidSubgraphSchema")
+	ErrEmptyMsg                  = errors.New("ErrEmptyMsg")
+	ErrContractCompositionFailed = errors.New("ErrContractCompositionFailed")
+	ErrInvalidSubgraphSchema     = errors.New("ErrInvalidSubgraphSchema")
 )
 
 const (

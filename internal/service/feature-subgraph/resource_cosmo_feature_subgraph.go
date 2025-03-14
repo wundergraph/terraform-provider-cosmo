@@ -24,12 +24,12 @@ type FeatureSubgraphResource struct {
 }
 
 type FeatureSubgraphResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
+	ID                   types.String `tfsdk:"id"`
 	Name                 types.String `tfsdk:"name"`
 	Namespace            types.String `tfsdk:"namespace"`
 	RoutingURL           types.String `tfsdk:"routing_url"`
 	BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
-	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
+	SubscriptionURL      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
 	Readme               types.String `tfsdk:"readme"`
@@ -164,7 +164,7 @@ func (r *FeatureSubgraphResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	data.Id = types.StringValue(featureSubgraph.GetId())
+	data.ID = types.StringValue(featureSubgraph.GetId())
 	data.Name = types.StringValue(featureSubgraph.GetName())
 	data.Namespace = types.StringValue(featureSubgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(featureSubgraph.GetRoutingURL())
@@ -173,7 +173,7 @@ func (r *FeatureSubgraphResource) Create(ctx context.Context, req resource.Creat
 	data.BaseSubgraphName = types.StringValue(featureSubgraph.GetBaseSubgraphName())
 
 	if featureSubgraph.GetSubscriptionUrl() != "" {
-		data.SubscriptionUrl = types.StringValue(featureSubgraph.GetSubscriptionUrl())
+		data.SubscriptionURL = types.StringValue(featureSubgraph.GetSubscriptionUrl())
 	}
 
 	if featureSubgraph.Readme != nil {
@@ -184,7 +184,7 @@ func (r *FeatureSubgraphResource) Create(ctx context.Context, req resource.Creat
 		data.Schema = types.StringValue(subgraphSchema)
 	}
 
-	utils.LogAction(ctx, "created subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "created subgraph", data.ID.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -204,14 +204,14 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 
 	var fetchSubgraphFunc func() (*platformv1.Subgraph, *api.ApiError)
 
-	if data.Id.ValueString() == "" && (data.Name.ValueString() == "" || data.Namespace.ValueString() == "") {
+	if data.ID.ValueString() == "" && (data.Name.ValueString() == "" || data.Namespace.ValueString() == "") {
 		utils.AddDiagnosticError(resp, ErrReadingFeatureSubgraph, "Either 'id' or 'name' and 'namespace' must be set")
 		return
 	}
 
-	if data.Id.ValueString() != "" {
+	if data.ID.ValueString() != "" {
 		fetchSubgraphFunc = func() (*platformv1.Subgraph, *api.ApiError) {
-			return r.client.GetSubgraphById(ctx, data.Id.ValueString())
+			return r.client.GetSubgraphById(ctx, data.ID.ValueString())
 		}
 	} else {
 		fetchSubgraphFunc = func() (*platformv1.Subgraph, *api.ApiError) {
@@ -253,7 +253,7 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	data.Id = types.StringValue(subgraph.GetId())
+	data.ID = types.StringValue(subgraph.GetId())
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
@@ -262,7 +262,7 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 	data.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
 	if subgraph.GetSubscriptionUrl() != "" {
-		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+		data.SubscriptionURL = types.StringValue(subgraph.GetSubscriptionUrl())
 	}
 
 	if subgraph.Readme != nil {
@@ -273,7 +273,7 @@ func (r *FeatureSubgraphResource) Read(ctx context.Context, req resource.ReadReq
 		data.Schema = types.StringValue(subgraphSchema)
 	}
 
-	utils.LogAction(ctx, "read subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "read subgraph", data.ID.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -288,7 +288,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 	readme := utils.GetValueOrDefault(planData.Readme.ValueStringPointer(), "")
-	subscriptionUrl := utils.GetValueOrDefault(planData.SubscriptionUrl.ValueStringPointer(), "")
+	subscriptionUrl := utils.GetValueOrDefault(planData.SubscriptionURL.ValueStringPointer(), "")
 	subscriptionProtocol := utils.GetValueOrDefault(planData.SubscriptionProtocol.ValueStringPointer(), api.GraphQLSubscriptionProtocolWS)
 	websocketSubprotocol := utils.GetValueOrDefault(planData.WebsocketSubprotocol.ValueStringPointer(), api.GraphQLWebsocketSubprotocolDefault)
 
@@ -368,7 +368,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	planData.Id = types.StringValue(subgraph.GetId())
+	planData.ID = types.StringValue(subgraph.GetId())
 	planData.Name = types.StringValue(subgraph.GetName())
 	planData.Namespace = types.StringValue(subgraph.GetNamespace())
 	planData.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
@@ -377,7 +377,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 	planData.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
 	if subgraph.GetSubscriptionUrl() != "" {
-		planData.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+		planData.SubscriptionURL = types.StringValue(subgraph.GetSubscriptionUrl())
 	}
 
 	if subgraph.Readme != nil {
@@ -388,7 +388,7 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 		planData.Schema = types.StringValue(subgraphSchema)
 	}
 
-	utils.LogAction(ctx, "updated", planData.Id.ValueString(), planData.Name.ValueString(), planData.Namespace.ValueString())
+	utils.LogAction(ctx, "updated", planData.ID.ValueString(), planData.Name.ValueString(), planData.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
 }
@@ -423,7 +423,7 @@ func (r *FeatureSubgraphResource) Delete(ctx context.Context, req resource.Delet
 		}
 	}
 
-	utils.LogAction(ctx, "deleted subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "deleted subgraph", data.ID.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 }
 
@@ -441,7 +441,7 @@ func (r *FeatureSubgraphResource) createAndPublishFeatureSubgraph(ctx context.Co
 		RoutingUrl:           &routingURL,
 		BaseSubgraphName:     data.BaseSubgraphName.ValueStringPointer(),
 		IsFeatureSubgraph:    &isFeatureSubgraph,
-		SubscriptionUrl:      data.SubscriptionUrl.ValueStringPointer(),
+		SubscriptionUrl:      data.SubscriptionURL.ValueStringPointer(),
 		Readme:               data.Readme.ValueStringPointer(),
 		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueString()),
 		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueString()),

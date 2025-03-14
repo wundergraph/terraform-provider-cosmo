@@ -23,12 +23,12 @@ func NewFeatureSubgraphDataSource() datasource.DataSource {
 }
 
 type FeatureSubgraphDataSourceModel struct {
-	Id                   types.String `tfsdk:"id"`
+	ID                   types.String `tfsdk:"id"`
 	Name                 types.String `tfsdk:"name"`
 	Namespace            types.String `tfsdk:"namespace"`
 	RoutingURL           types.String `tfsdk:"routing_url"`
 	BaseSubgraphName     types.String `tfsdk:"base_subgraph_name"`
-	SubscriptionUrl      types.String `tfsdk:"subscription_url"`
+	SubscriptionURL      types.String `tfsdk:"subscription_url"`
 	SubscriptionProtocol types.String `tfsdk:"subscription_protocol"`
 	WebsocketSubprotocol types.String `tfsdk:"websocket_subprotocol"`
 	Readme               types.String `tfsdk:"readme"`
@@ -149,7 +149,7 @@ func (d *FeatureSubgraphDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	data.Id = types.StringValue(subgraph.GetId())
+	data.ID = types.StringValue(subgraph.GetId())
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingURL = types.StringValue(subgraph.GetRoutingURL())
@@ -158,7 +158,7 @@ func (d *FeatureSubgraphDataSource) Read(ctx context.Context, req datasource.Rea
 	data.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
 
 	if subgraph.GetSubscriptionUrl() != "" {
-		data.SubscriptionUrl = types.StringValue(subgraph.GetSubscriptionUrl())
+		data.SubscriptionURL = types.StringValue(subgraph.GetSubscriptionUrl())
 	}
 
 	if subgraph.Readme != nil {
@@ -169,7 +169,7 @@ func (d *FeatureSubgraphDataSource) Read(ctx context.Context, req datasource.Rea
 		data.Schema = types.StringValue(subgraphSchema)
 	}
 
-	utils.LogAction(ctx, "read subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+	utils.LogAction(ctx, "read subgraph", data.ID.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
