@@ -36,7 +36,6 @@ resource "cosmo_subgraph" "test" {
 ### Optional
 
 - `is_event_driven_graph` (Boolean) Indicates if the subgraph is event-driven.
-- `is_feature_subgraph` (Boolean) Indicates if the subgraph is a feature subgraph.
 - `labels` (Map of String) Labels for the subgraph.
 - `namespace` (String) The namespace in which the subgraph is located.
 - `readme` (String) The readme for the subgraph.

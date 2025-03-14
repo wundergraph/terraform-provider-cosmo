@@ -112,7 +112,7 @@ func AddDiagnosticWarning(resp interface{}, title, message string) {
 }
 
 func LogAction(ctx context.Context, action, resourceID, name, namespace string) {
-	tflog.Trace(ctx, fmt.Sprintf("%s federated graph resource", action), map[string]interface{}{
+	tflog.Trace(ctx, action+" federated graph resource", map[string]interface{}{
 		"id":        resourceID,
 		"name":      name,
 		"namespace": namespace,
@@ -129,11 +129,11 @@ func DebugAction(ctx context.Context, action string, name string, namespace stri
 			mergedFields[k] = v
 		}
 	}
-	tflog.Debug(ctx, fmt.Sprintf("%s federated graph resource", action), mergedFields)
+	tflog.Debug(ctx, action+" federated graph resource", mergedFields)
 }
 
 func TraceAction(ctx context.Context, action, resourceID, name, namespace string) {
-	tflog.Debug(ctx, fmt.Sprintf("%s federated graph resource", action), map[string]interface{}{
+	tflog.Debug(ctx, action+" federated graph resource", map[string]interface{}{
 		"id":        resourceID,
 		"name":      name,
 		"namespace": namespace,

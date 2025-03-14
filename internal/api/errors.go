@@ -12,10 +12,12 @@ var (
 	ErrUnknown                   = errors.New("ErrUnknown")
 	ErrGeneral                   = errors.New("ErrGeneral")
 	ErrNotFound                  = errors.New("ErrNotFound")
+	ErrLimitReached              = errors.New("ErrLimitReached")
+	ErrInvalidLabels             = errors.New("ErrInvalidLabels")
 	ErrSubgraphCompositionFailed = errors.New("ErrSubgraphCompositionFailed")
-	ErrEmptyMsg                  = fmt.Errorf("ErrEmptyMsg")
-	ErrContractCompositionFailed = fmt.Errorf("ErrContractCompositionFailed")
-	ErrInvalidSubgraphSchema     = fmt.Errorf("ErrInvalidSubgraphSchema")
+	ErrEmptyMsg                  = errors.New("ErrEmptyMsg")
+	ErrContractCompositionFailed = errors.New("ErrContractCompositionFailed")
+	ErrInvalidSubgraphSchema     = errors.New("ErrInvalidSubgraphSchema")
 )
 
 const (
@@ -68,6 +70,10 @@ func handleErrorCodes(statusCode common.EnumStatusCode, reason string) *ApiError
 		return &ApiError{Err: ErrInvalidSubgraphSchema, Reason: reason, Status: statusCode}
 	case common.EnumStatusCode_ERR:
 		return &ApiError{Err: ErrGeneral, Reason: reason, Status: statusCode}
+	case common.EnumStatusCode_ERR_LIMIT_REACHED:
+		return &ApiError{Err: ErrLimitReached, Reason: reason, Status: statusCode}
+	case common.EnumStatusCode_ERR_INVALID_LABELS:
+		return &ApiError{Err: ErrInvalidLabels, Reason: reason, Status: statusCode}
 	default:
 		return &ApiError{Err: ErrUnknown, Reason: reason, Status: statusCode}
 	}

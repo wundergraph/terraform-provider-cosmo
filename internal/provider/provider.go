@@ -10,15 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	contract "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/contract"
+	feature_flag "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/feature-flag"
+	feature_subgraph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/feature-subgraph"
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
 	monograph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/monograph"
 	namespace "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/namespace"
 	router_token "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/router-token"
 	subgraph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/subgraph"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
 )
 
 // Ensure CosmoProvider satisfies various provider interfaces.
@@ -93,6 +95,8 @@ func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		feature_subgraph.NewSubgraphResource,
+		feature_flag.NewFeatureFlagResource,
 		federated_graph.NewFederatedGraphResource,
 		namespace.NewNamespaceResource,
 		subgraph.NewSubgraphResource,
@@ -104,6 +108,8 @@ func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resourc
 
 func (p *CosmoProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		feature_subgraph.NewFeatureSubgraphDataSource,
+		feature_flag.NewFeatureFlagDataSource,
 		federated_graph.NewFederatedGraphDataSource,
 		subgraph.NewSubgraphDataSource,
 		namespace.NewNamespaceDataSource,

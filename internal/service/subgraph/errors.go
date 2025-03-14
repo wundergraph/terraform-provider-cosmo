@@ -13,4 +13,5 @@ const (
 	ErrSubgraphSchemaChanged     = "Subgraph Schema Changed"
 	ErrInvalidNamespace          = "Invalid Namespace"
 	ErrSubgraphCompositionFailed = "Subgraph Composition Failed"
+	ErrInvalidSubgraphType       = "Invalid Subgraph Type"
 )
