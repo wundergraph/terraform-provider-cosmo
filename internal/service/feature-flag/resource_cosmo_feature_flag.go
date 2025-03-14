@@ -373,7 +373,7 @@ func (r *FeatureFlagResource) ImportState(ctx context.Context, req resource.Impo
 
 func mapFeatureFlagToResourceModel(ff *api.FeatureFlag, res *FeatureFlagResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var tt []attr.Value
+	tt := make([]attr.Value, 0, len(ff.FeatureSubgraphNames))
 
 	for _, subgraphName := range ff.FeatureSubgraphNames {
 		tt = append(tt, types.StringValue(subgraphName))

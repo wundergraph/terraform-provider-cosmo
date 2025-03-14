@@ -56,7 +56,7 @@ func (p *PlatformClient) GetFeatureFlag(ctx context.Context, name, namespace str
 		return nil, apiError
 	}
 
-	var featureSubgraphNames []string
+	featureSubgraphNames := make([]string, 0, len(resp.Msg.GetFeatureSubgraphs()))
 	for _, sg := range resp.Msg.GetFeatureSubgraphs() {
 		featureSubgraphNames = append(featureSubgraphNames, sg.GetName())
 	}
