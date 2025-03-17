@@ -3,6 +3,7 @@ package monograph
 import (
 	"context"
 	"fmt"
+
 	platformv1 "github.com/wundergraph/cosmo/connect-go/gen/proto/wg/cosmo/platform/v1"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -205,6 +206,15 @@ func (r *MonographResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
+	if monograph.SupportsFederation {
+		utils.AddDiagnosticError(resp,
+			ErrCreatingMonograph,
+			ErrFederatedGraphNotMonographMessage,
+		)
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	data.Id = types.StringValue(monograph.GetId())
 	if monograph.Readme != nil {
 		data.Readme = types.StringValue(*monograph.Readme)
@@ -258,6 +268,15 @@ func (r *MonographResource) Read(ctx context.Context, req resource.ReadRequest, 
 		}
 
 		monograph = graph
+	}
+
+	if monograph.SupportsFederation {
+		utils.AddDiagnosticError(resp,
+			ErrReadingMonograph,
+			ErrFederatedGraphNotMonographMessage,
+		)
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
 	subGraph, err := r.client.GetSubgraph(ctx, monograph.GetName(), monograph.GetNamespace())
@@ -358,6 +377,15 @@ func (r *MonographResource) Update(ctx context.Context, req resource.UpdateReque
 			ErrRetrievingMonograph,
 			err.Error(),
 		)
+		return
+	}
+
+	if monograph.SupportsFederation {
+		utils.AddDiagnosticError(resp,
+			ErrUpdatingMonograph,
+			ErrFederatedGraphNotMonographMessage,
+		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
