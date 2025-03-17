@@ -1,6 +1,7 @@
 package monograph_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -72,7 +73,7 @@ func TestAccImportCosmoMonographByProvidingFederatedGraphId(t *testing.T) {
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					federatedGraph, ok := s.RootModule().Resources["cosmo_federated_graph.test"]
 					if !ok {
-						return "", fmt.Errorf("federated graph not found")
+						return "", errors.New("federated graph not found")
 					}
 
 					return federatedGraph.Primary.ID, nil
