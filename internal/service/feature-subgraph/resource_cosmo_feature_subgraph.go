@@ -91,6 +91,9 @@ For more information on feature subgraphs, please refer to the [Cosmo Documentat
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"routing_url": schema.StringAttribute{
 				Required:            true,
