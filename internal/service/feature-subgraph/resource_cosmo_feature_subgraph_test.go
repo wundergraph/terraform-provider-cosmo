@@ -250,3 +250,87 @@ resource "cosmo_feature_subgraph" "test" {
 }
 `, formatBaseResource(namespace, fgName, sgName), fsgName, fsgRoutingURL, fsgSchema, fsgReadme)
 }
+
+func TestAccFeatureSubgraphNamespaceChangeForceNew(t *testing.T) {
+	initialNamespace := acctest.RandomWithPrefix("test-namespace-1")
+	newNamespace := acctest.RandomWithPrefix("test-namespace-2")
+
+	fgName, sgName, fsgName :=
+		acctest.RandomWithPrefix("test-federated-graph"),
+		acctest.RandomWithPrefix("test-subgraph"),
+		acctest.RandomWithPrefix("test-feature-subgraph")
+
+	routingURL := "https://example.com"
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
+	readme := "Initial readme content"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Initial creation with the first namespace
+			{
+				Config: testAccFeatureSubgraphResourceConfig(initialNamespace, fgName, sgName, fsgName, routingURL, subgraphSchema, readme),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_namespace.test", "name", initialNamespace),
+					resource.TestCheckResourceAttr("cosmo_feature_subgraph.test", "namespace", initialNamespace),
+				),
+			},
+			// Change to the second namespace and verify recreation
+			{
+				Config: testAccFeatureSubgraphWithTwoNamespaces(initialNamespace, newNamespace, fgName, sgName, fsgName, routingURL, subgraphSchema, readme),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_namespace.test2", "name", newNamespace),
+					resource.TestCheckResourceAttr("cosmo_feature_subgraph.test", "namespace", newNamespace),
+				),
+			},
+		},
+	})
+}
+
+func testAccFeatureSubgraphWithTwoNamespaces(
+	oldNamespace, newNamespace, fgName, sgName, fsgName, fsgRoutingURL, fsgSchema, fsgReadme string) string {
+	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_namespace" "test2" {
+  name = "%s"
+}
+
+resource "cosmo_federated_graph" "test" {
+  name      	= "%s"
+  namespace 	= cosmo_namespace.test2.name
+  routing_url 	= "http://localhost:3000"
+  label_matchers = ["team=backend"]
+
+  depends_on = [cosmo_subgraph.test]
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test2.name
+  routing_url         = "http://localhost:3000"
+  schema              = <<-EOT
+%sEOT
+  labels              = { 
+  	"team"	= "backend", 
+	"stage" = "dev" 
+  }
+  readme              =  "Test Readme"
+}
+
+resource "cosmo_feature_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test2.name
+  routing_url         = "%s"
+  base_subgraph_name  = cosmo_subgraph.test.name
+  schema              = <<-EOT
+%sEOT
+  readme              = "%s"
+
+  depends_on = [cosmo_subgraph.test]
+}
+`, oldNamespace, newNamespace, fgName, sgName, acceptance.TestAccValidSubgraphSchema, fsgName, fsgRoutingURL, fsgSchema, fsgReadme)
+}
