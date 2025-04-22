@@ -2,12 +2,13 @@ package subgraph_test
 
 import (
 	"fmt"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 )
 
@@ -235,6 +236,36 @@ func TestOptionalValuesOfSubgraphResource(t *testing.T) {
 	})
 }
 
+func TestAccSubgraphResourceNamespaceChangeForceNew(t *testing.T) {
+	initialNamespace := acctest.RandomWithPrefix("test-namespace-1")
+	newNamespace := acctest.RandomWithPrefix("test-namespace-2")
+
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	routingURL := "https://subgraph-example.com"
+	subgraphSchema := acceptance.TestAccValidSubgraphSchema
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Initial creation of two namespaces
+			{
+				Config: testStandaloneSubgraph(initialNamespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_namespace.test", "name", initialNamespace),
+				),
+			},
+			{
+				Config: testSubgraphWithTwoNamespaces(initialNamespace, newNamespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_namespace.test2", "name", newNamespace),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", newNamespace),
+				),
+			},
+		},
+	})
+}
+
 func testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL, subgraphSchema, readme string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
@@ -327,4 +358,46 @@ resource "cosmo_subgraph" "test" {
   %s
 }
 `, namespace, subgraphName, subgraphRoutingURL, subgraphSchema, readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart)
+}
+
+func testSubgraphWithTwoNamespaces(oldNamespace, newNamespace, subgraphName, subgraphRoutingURL, subgraphSchema string, readme, subscriptionUrl, subscriptionProtocol, websocketSubprotocol *string) string {
+	var readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart string
+	if readme != nil {
+		readmePart = fmt.Sprintf(`readme = "%s"`, *readme)
+	}
+
+	if subscriptionUrl != nil {
+		subscriptionUrlPart = fmt.Sprintf(`subscription_url = "%s"`, *subscriptionUrl)
+	}
+
+	if subscriptionProtocol != nil {
+		subscriptionProtocolPart = fmt.Sprintf(`subscription_protocol = "%s"`, *subscriptionProtocol)
+	}
+
+	if websocketSubprotocol != nil {
+		websocketSubprotocolPart = fmt.Sprintf(`websocket_subprotocol = "%s"`, *websocketSubprotocol)
+	}
+
+	return fmt.Sprintf(`
+resource "cosmo_namespace" "test" {
+  name = "%s"
+}
+
+resource "cosmo_namespace" "test2" {
+  name = "%s"
+}
+
+resource "cosmo_subgraph" "test" {
+  name                = "%s"
+  namespace           = cosmo_namespace.test2.name
+  routing_url         = "%s"
+  schema              = <<-EOT
+  %s
+  EOT
+  %s
+  %s
+  %s
+  %s
+}
+`, oldNamespace, newNamespace, subgraphName, subgraphRoutingURL, subgraphSchema, readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart)
 }
