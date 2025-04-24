@@ -94,6 +94,9 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"routing_url": schema.StringAttribute{
 				Required:            true,
