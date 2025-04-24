@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 )
 
@@ -257,6 +258,11 @@ func TestAccSubgraphResourceNamespaceChangeForceNew(t *testing.T) {
 			},
 			{
 				Config: testSubgraphWithTwoNamespaces(initialNamespace, newNamespace, subgraphName, routingURL, subgraphSchema, nil, nil, nil, nil),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("cosmo_subgraph.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_namespace.test2", "name", newNamespace),
 					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", newNamespace),
