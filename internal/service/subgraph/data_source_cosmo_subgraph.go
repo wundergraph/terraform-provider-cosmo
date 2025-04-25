@@ -160,11 +160,18 @@ func (d *SubgraphDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	subgraphSchema, apiError := d.client.GetSubgraphSchema(ctx, subgraph.Name, subgraph.Namespace)
+	if apiError != nil {
+		utils.AddDiagnosticError(resp, ErrRetrievingSubgraphSchema, apiError.Error())
+		return
+	}
+
 	data.Id = types.StringValue(subgraph.GetBaseSubgraphId())
 	data.Name = types.StringValue(subgraph.GetName())
 	data.Namespace = types.StringValue(subgraph.GetNamespace())
 	data.RoutingUrl = types.StringValue(subgraph.GetRoutingURL())
 	data.BaseSubgraphName = types.StringValue(subgraph.GetBaseSubgraphName())
+	data.Schema = types.StringValue(subgraphSchema)
 
 	var labels map[string]attr.Value
 	for _, matcher := range subgraph.GetLabels() {

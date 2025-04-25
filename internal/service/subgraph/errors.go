@@ -5,6 +5,7 @@ const (
 	ErrCreatingSubgraph          = "Error Creating Subgraph"
 	ErrRetrievingSubgraph        = "Error Retrieving Subgraph"
 	ErrRetrievingSubgraphs       = "Error Retrieving Subgraphs"
+	ErrRetrievingSubgraphSchema  = "Error Retrieving Subgraph Schema"
 	ErrUpdatingSubgraph          = "Error Updating Subgraph"
 	ErrDeletingSubgraph          = "Error Deleting Subgraph"
 	ErrPublishingSubgraph        = "Error Publishing Subgraph"
