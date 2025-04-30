@@ -105,6 +105,7 @@ func TestAccTokenResourceUpdateRecreates(t *testing.T) {
 							return errors.New("Error configuring provider")
 						}
 						platformClient := resp.DataSourceData.(*api.PlatformClient)
+						_, errGetToken := platformClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
 							return errors.New("Token should not exists")
 						}
