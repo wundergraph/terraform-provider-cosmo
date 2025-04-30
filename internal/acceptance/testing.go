@@ -1,52 +1,26 @@
 package acceptance
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	frameworkProvider "github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/provider"
 )
 
-var (
-	TestAccProvider  frameworkProvider.Provider
-	TestAccProviders map[string]frameworkProvider.Provider
-	// TestAccProtoV6ProviderFactories are used to instantiate a provider during
-	// acceptance testing. The factory function will be invoked for every Terraform
-	// CLI command executed to create a provider server to which the CLI can
-	// reattach.
-	TestAccProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
-	TestAccProviderPlatformClient   *api.PlatformClient
-)
-
-func init() {
-	TestAccProvider = provider.New("cosmo")()
-	TestAccProviders = map[string]frameworkProvider.Provider{
-		"cosmo": TestAccProvider,
-	}
-	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"cosmo": providerserver.NewProtocol6WithError(TestAccProvider),
-	}
+// TestAccProtoV6ProviderFactories are used to instantiate a provider during
+// acceptance testing. The factory function will be invoked for every Terraform
+// CLI command executed to create a provider server to which the CLI can
+// reattach.
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"cosmo": providerserver.NewProtocol6WithError(provider.New("cosmo")()),
 }
 
 func TestAccPreCheck(t *testing.T) {
 	// You can add code here to run prior to any test case execution, for example assertions
 	// about the appropriate environment variables being set are common to see in a pre-check
 	// function.
-	resp := &frameworkProvider.ConfigureResponse{}
-	TestAccProvider.Configure(context.Background(), frameworkProvider.ConfigureRequest{}, resp)
-	if resp.Diagnostics.HasError() {
-		t.Fatal(resp.Diagnostics)
-	}
-	var ok bool
-	TestAccProviderPlatformClient, ok = resp.DataSourceData.(*api.PlatformClient)
-	if !ok {
-		t.Fatal("Provider platform client not found")
-	}
 }
 
 const (

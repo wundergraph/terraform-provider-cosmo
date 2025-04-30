@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"testing"
 
+	frameworkProvider "github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
+	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/provider"
 )
 
 func TestAccTokenResource(t *testing.T) {
@@ -43,7 +46,14 @@ func TestAccTokenResource(t *testing.T) {
 				Config: testAccNoTokenResourceConfig(namespace),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						_, errGetToken := acceptance.TestAccProviderPlatformClient.GetToken(context.Background(), name, "federated-graph", namespace)
+						cosmo := provider.New("cosmo")()
+						resp := &frameworkProvider.ConfigureResponse{}
+						cosmo.Configure(context.Background(), frameworkProvider.ConfigureRequest{}, resp)
+						if resp.Diagnostics.HasError() {
+							return errors.New("Error configuring provider")
+						}
+						platformClient := resp.DataSourceData.(*api.PlatformClient)
+						_, errGetToken := platformClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
 							return errors.New("Token should not exists")
 						}
@@ -88,7 +98,13 @@ func TestAccTokenResourceUpdateRecreates(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_router_token.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_router_token.test", "graph_name", "federated-graph"),
 					func(s *terraform.State) error {
-						_, errGetToken := acceptance.TestAccProviderPlatformClient.GetToken(context.Background(), name, "federated-graph", namespace)
+						cosmo := provider.New("cosmo")()
+						resp := &frameworkProvider.ConfigureResponse{}
+						cosmo.Configure(context.Background(), frameworkProvider.ConfigureRequest{}, resp)
+						if resp.Diagnostics.HasError() {
+							return errors.New("Error configuring provider")
+						}
+						platformClient := resp.DataSourceData.(*api.PlatformClient)
 						if errGetToken == nil {
 							return errors.New("Token should not exists")
 						}

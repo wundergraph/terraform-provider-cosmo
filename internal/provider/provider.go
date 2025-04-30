@@ -74,11 +74,9 @@ Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/)
 func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var data CosmoProviderModel
 
-	if resp.Diagnostics != nil {
-		resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	if resp.Diagnostics != nil && resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -88,9 +86,7 @@ func (p *CosmoProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	platformClient, err := api.NewClient(cosmoApiKey, cosmoApiUrl)
 
 	if err != nil {
-		if resp.Diagnostics != nil {
-			utils.AddDiagnosticError(resp, "Error configuring client", err.Error())
-		}
+		utils.AddDiagnosticError(resp, "Error configuring client", err.Error())
 		return
 	}
 	resp.DataSourceData = platformClient
