@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
-	frameworkProvider "github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/acceptance"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
-	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/provider"
 )
 
 func TestAccTokenResource(t *testing.T) {
@@ -46,17 +45,11 @@ func TestAccTokenResource(t *testing.T) {
 				Config: testAccNoTokenResourceConfig(namespace),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						cosmo := provider.New("cosmo")()
-						resp := &frameworkProvider.ConfigureResponse{}
-						cosmo.Configure(context.Background(), frameworkProvider.ConfigureRequest{}, resp)
-						if resp.Diagnostics.HasError() {
-							return errors.New("Error configuring provider")
+						apiClient, err := api.NewClient(os.Getenv("COSMO_API_KEY"), os.Getenv("COSMO_API_URL"))
+						if err != nil {
+							return errors.New("Error creating api client")
 						}
-						platformClient, ok := resp.DataSourceData.(*api.PlatformClient)
-						if !ok {
-							return errors.New("Error configuring provider")
-						}
-						_, errGetToken := platformClient.GetToken(context.Background(), name, "federated-graph", namespace)
+						_, errGetToken := apiClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
 							return errors.New("Token should not exists")
 						}
@@ -101,17 +94,11 @@ func TestAccTokenResourceUpdateRecreates(t *testing.T) {
 					resource.TestCheckResourceAttr("cosmo_router_token.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("cosmo_router_token.test", "graph_name", "federated-graph"),
 					func(s *terraform.State) error {
-						cosmo := provider.New("cosmo")()
-						resp := &frameworkProvider.ConfigureResponse{}
-						cosmo.Configure(context.Background(), frameworkProvider.ConfigureRequest{}, resp)
-						if resp.Diagnostics.HasError() {
-							return errors.New("Error configuring provider")
+						apiClient, err := api.NewClient(os.Getenv("COSMO_API_KEY"), os.Getenv("COSMO_API_URL"))
+						if err != nil {
+							return errors.New("Error creating api client")
 						}
-						platformClient, ok := resp.DataSourceData.(*api.PlatformClient)
-						if !ok {
-							return errors.New("Error configuring provider")
-						}
-						_, errGetToken := platformClient.GetToken(context.Background(), name, "federated-graph", namespace)
+						_, errGetToken := apiClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
 							return errors.New("Token should not exists")
 						}
