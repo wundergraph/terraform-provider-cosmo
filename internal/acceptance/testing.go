@@ -42,7 +42,11 @@ func TestAccPreCheck(t *testing.T) {
 	if resp.Diagnostics.HasError() {
 		t.Fatal(resp.Diagnostics)
 	}
-	TestAccProviderPlatformClient = resp.DataSourceData.(*api.PlatformClient)
+	var ok bool
+	TestAccProviderPlatformClient, ok = resp.DataSourceData.(*api.PlatformClient)
+	if !ok {
+		t.Fatal("Provider platform client not found")
+	}
 }
 
 const (

@@ -2,6 +2,7 @@ package router_token_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -44,10 +45,10 @@ func TestAccTokenResource(t *testing.T) {
 					func(s *terraform.State) error {
 						_, errGetToken := acceptance.TestAccProviderPlatformClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
-							return fmt.Errorf("Token should not exists")
+							return errors.New("Token should not exists")
 						}
 						if errGetToken.Err.Error() != "ErrNotFound" {
-							return fmt.Errorf("Error should be not found: %s", errGetToken)
+							return fmt.Errorf("Error should be not found: %s", errGetToken.Err.Error())
 						}
 
 						return nil
@@ -89,10 +90,10 @@ func TestAccTokenResourceUpdateRecreates(t *testing.T) {
 					func(s *terraform.State) error {
 						_, errGetToken := acceptance.TestAccProviderPlatformClient.GetToken(context.Background(), name, "federated-graph", namespace)
 						if errGetToken == nil {
-							return fmt.Errorf("Token should not exists")
+							return errors.New("Token should not exists")
 						}
 						if errGetToken.Err.Error() != "ErrNotFound" {
-							return fmt.Errorf("Error should be not found: %s", errGetToken)
+							return fmt.Errorf("Error should be not found: %s", errGetToken.Err.Error())
 						}
 
 						return nil
