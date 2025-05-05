@@ -120,6 +120,8 @@ func (r *TokenResource) Create(ctx context.Context, req resource.CreateRequest, 
 	data.Id = types.StringValue(fmt.Sprintf("%s-%s-%s", data.GraphName.ValueString(), data.Namespace.ValueString(), data.Name.ValueString()))
 	data.Token = types.StringValue(apiResponse)
 	data.Name = types.StringValue(data.Name.ValueString())
+	data.GraphName = types.StringValue(data.GraphName.ValueString())
+	data.Namespace = types.StringValue(data.Namespace.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -131,19 +133,39 @@ func (r *TokenResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// check if the token exists
+	_, apiError := r.client.GetToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		if api.IsNotFoundError(apiError) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utils.AddDiagnosticError(resp, ErrReadingToken, apiError.Error())
+		return
+	}
+
+	utils.LogAction(ctx, "read", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Implement update logic if necessary
-
-	// whenever the token is updated it will be deleted and recreated
+	utils.AddDiagnosticError(resp, ErrUpdatingToken, "Token update should never be called, please delete and recreate the token")
 }
 
 func (r *TokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data TokenResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	if resp.Diagnostics.HasError() {
+	apiError := r.client.DeleteToken(ctx, data.Name.ValueString(), data.GraphName.ValueString(), data.Namespace.ValueString())
+	if apiError != nil {
+		utils.AddDiagnosticError(resp,
+			ErrDeletingToken,
+			apiError.Error(),
+		)
 		return
 	}
+
+	utils.LogAction(ctx, "deleted", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 }
