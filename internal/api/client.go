@@ -18,22 +18,26 @@ func NewClient(apiKey, apiUrl string) (*PlatformClient, error) {
 	cosmoApiKey := apiKey
 	cosmoApiUrl := apiUrl
 
-	envApiKey, ok := os.LookupEnv(utils.EnvCosmoApiKey)
-	if !ok && cosmoApiKey == "" {
-		return nil, errors.New("COSMO_API_KEY environment variable not set and no apiKey provided in provider")
+	if cosmoApiKey == "" {
+		envApiKey, ok := os.LookupEnv(utils.EnvCosmoApiKey)
+		if !ok {
+			return nil, errors.New("COSMO_API_KEY environment variable not set and no apiKey provided in provider")
+		}
+
+		if ok {
+			cosmoApiKey = envApiKey
+		}
 	}
 
-	if ok {
-		cosmoApiKey = envApiKey
-	}
+	if cosmoApiUrl == "" {
+		envApiUrl, ok := os.LookupEnv(utils.EnvCosmoApiUrl)
+		if !ok {
+			cosmoApiUrl = "https://cosmo-cp.wundergraph.com"
+		}
 
-	envApiUrl, ok := os.LookupEnv(utils.EnvCosmoApiUrl)
-	if !ok && cosmoApiUrl == "" {
-		cosmoApiUrl = "https://cosmo-cp.wundergraph.com"
-	}
-
-	if ok {
-		cosmoApiUrl = envApiUrl
+		if ok {
+			cosmoApiUrl = envApiUrl
+		}
 	}
 
 	transport := &http.Transport{
