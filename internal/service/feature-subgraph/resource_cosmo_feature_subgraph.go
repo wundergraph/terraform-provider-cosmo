@@ -301,8 +301,8 @@ func (r *FeatureSubgraphResource) Update(ctx context.Context, req resource.Updat
 		RoutingUrl:           planData.RoutingURL.ValueStringPointer(),
 		Labels:               nil,
 		SubscriptionUrl:      &subscriptionUrl,
-		SubscriptionProtocol: api.ResolveSubscriptionProtocol(subscriptionProtocol),
-		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(&subscriptionProtocol),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(&websocketSubprotocol),
 		Readme:               &readme,
 		Headers:              []string{},
 	})
@@ -446,8 +446,8 @@ func (r *FeatureSubgraphResource) createAndPublishFeatureSubgraph(ctx context.Co
 		IsFeatureSubgraph:    &isFeatureSubgraph,
 		SubscriptionUrl:      data.SubscriptionURL.ValueStringPointer(),
 		Readme:               data.Readme.ValueStringPointer(),
-		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueString()),
-		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueString()),
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueStringPointer()),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueStringPointer()),
 	}
 
 	apiErr := r.client.CreateSubgraph(ctx, requestData)

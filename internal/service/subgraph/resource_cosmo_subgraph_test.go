@@ -272,6 +272,39 @@ func TestAccSubgraphResourceNamespaceChangeForceNew(t *testing.T) {
 	})
 }
 
+func TestAccSubgraphEventDrivenSubgraph(t *testing.T) {
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	subgraphSchema := acceptance.TestAccValidEventDrivenSubgraphSchema
+	readme := "Initial readme content"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testEventDrivenSubgraph(namespace, subgraphName, subgraphSchema, nil),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "is_event_driven_graph", "true"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", ""),
+				),
+			},
+			{
+				Config: testEventDrivenSubgraph(namespace, subgraphName, subgraphSchema, &readme),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "name", subgraphName),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "is_event_driven_graph", "true"),
+					resource.TestCheckResourceAttr("cosmo_subgraph.test", "routing_url", ""),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphroutingURL, subgraphName, subgraphRoutingURL, subgraphSchema, readme string) string {
 	return fmt.Sprintf(`
 resource "cosmo_namespace" "test" {
@@ -406,4 +439,31 @@ resource "cosmo_subgraph" "test" {
   %s
 }
 `, oldNamespace, newNamespace, subgraphName, subgraphRoutingURL, subgraphSchema, readmePart, subscriptionUrlPart, subscriptionProtocolPart, websocketSubprotocolPart)
+}
+
+func testEventDrivenSubgraph(namespace, subgraphName, subgraphSchema string, readme *string) string {
+	var readmePart string
+	if readme != nil {
+		readmePart = fmt.Sprintf(`readme = "%s"`, *readme)
+	}
+
+	return fmt.Sprintf(`
+	resource "cosmo_namespace" "test" {
+	  name = "%s"
+	}
+	
+	resource "cosmo_subgraph" "test" {
+	  name                  = "%s"
+	  namespace             = cosmo_namespace.test.name
+	  is_event_driven_graph = true
+	  schema                = <<-EOT
+	  %s
+	  EOT
+	  labels              = { 
+  	    "team"	= "backend", 
+	    "stage" = "dev" 
+      }
+	  %s
+	}
+	`, namespace, subgraphName, subgraphSchema, readmePart)
 }

@@ -99,8 +99,10 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				},
 			},
 			"routing_url": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The routing URL of the subgraph.",
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: `The routing URL of the subgraph. 
+				Routing URL is required for normal subgraphs but not for event driven subgraphs.`,
 			},
 			"subscription_url": schema.StringAttribute{
 				Optional:            true,
@@ -338,22 +340,28 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
-	subscriptionUrl := utils.GetValueOrDefault(data.SubscriptionUrl.ValueStringPointer(), "")
-	subscriptionProtocol := utils.GetValueOrDefault(data.SubscriptionProtocol.ValueStringPointer(), api.GraphQLSubscriptionProtocolWS)
-	websocketSubprotocol := utils.GetValueOrDefault(data.WebsocketSubprotocol.ValueStringPointer(), api.GraphQLWebsocketSubprotocolDefault)
+	subscriptionUrl := data.SubscriptionUrl.ValueStringPointer()
+	routingUrl := data.RoutingURL.ValueStringPointer()
 
-	routingUrl := data.RoutingURL.ValueString()
 	requestData := &platformv1.UpdateSubgraphRequest{
 		Name:                 data.Name.ValueString(),
-		RoutingUrl:           &routingUrl,
+		RoutingUrl:           routingUrl,
 		Namespace:            data.Namespace.ValueString(),
 		Labels:               labels,
 		UnsetLabels:          unsetLabels,
-		SubscriptionUrl:      &subscriptionUrl,
-		SubscriptionProtocol: api.ResolveSubscriptionProtocol(subscriptionProtocol),
-		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(websocketSubprotocol),
+		SubscriptionUrl:      subscriptionUrl,
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueStringPointer()),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueStringPointer()),
 		Readme:               &readme,
 		Headers:              []string{},
+	}
+
+	if data.IsEventDrivenGraph.ValueBool() {
+		// The following fields are not permitted for event driven subgraphs.
+		requestData.RoutingUrl = nil
+		requestData.SubscriptionUrl = nil
+		requestData.SubscriptionProtocol = nil
+		requestData.WebsocketSubprotocol = nil
 	}
 
 	// TBD: This is only used in the update subgraph method and not used atm
@@ -509,16 +517,24 @@ func (r *SubgraphResource) createAndPublishSubgraph(ctx context.Context, data Su
 		}
 	}
 
-	routingUrl := data.RoutingURL.ValueString()
+	if data.IsEventDrivenGraph.ValueBool() {
+		// The following fields are not permitted for event driven subgraphs.
+		data.RoutingURL = types.StringNull()
+		data.SubscriptionUrl = types.StringNull()
+		data.SubscriptionProtocol = types.StringNull()
+		data.WebsocketSubprotocol = types.StringNull()
+	}
+
+	routingUrl := data.RoutingURL.ValueStringPointer()
 	requestData := &platformv1.CreateFederatedSubgraphRequest{
 		Name:                 data.Name.ValueString(),
 		Namespace:            data.Namespace.ValueString(),
-		RoutingUrl:           &routingUrl,
+		RoutingUrl:           routingUrl,
 		Labels:               labels,
 		SubscriptionUrl:      data.SubscriptionUrl.ValueStringPointer(),
 		Readme:               data.Readme.ValueStringPointer(),
-		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueString()),
-		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueString()),
+		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueStringPointer()),
+		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueStringPointer()),
 		IsEventDrivenGraph:   data.IsEventDrivenGraph.ValueBoolPointer(),
 	}
 

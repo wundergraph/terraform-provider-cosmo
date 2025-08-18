@@ -10,8 +10,12 @@ const (
 	GraphQLWebsocketSubprotocolGraphQLTransportWS = "graphql-transport-ws"
 )
 
-func ResolveWebsocketSubprotocol(protocol string) *common.GraphQLWebsocketSubprotocol {
-	switch protocol {
+func ResolveWebsocketSubprotocol(protocol *string) *common.GraphQLWebsocketSubprotocol {
+	if protocol == nil {
+		return nil
+	}
+
+	switch *protocol {
 	case GraphQLWebsocketSubprotocolGraphQLWS:
 		return common.GraphQLWebsocketSubprotocol_GRAPHQL_WEBSOCKET_SUBPROTOCOL_WS.Enum()
 	case GraphQLWebsocketSubprotocolGraphQLTransportWS:
@@ -28,8 +32,12 @@ const (
 	GraphQLSubscriptionProtocolSSEPost = "sse_post"
 )
 
-func ResolveSubscriptionProtocol(protocol string) *common.GraphQLSubscriptionProtocol {
-	switch protocol {
+func ResolveSubscriptionProtocol(protocol *string) *common.GraphQLSubscriptionProtocol {
+	if protocol == nil {
+		return nil
+	}
+
+	switch *protocol {
 	case GraphQLSubscriptionProtocolSSE:
 		return common.GraphQLSubscriptionProtocol_GRAPHQL_SUBSCRIPTION_PROTOCOL_SSE.Enum()
 	case GraphQLSubscriptionProtocolSSEPost:
