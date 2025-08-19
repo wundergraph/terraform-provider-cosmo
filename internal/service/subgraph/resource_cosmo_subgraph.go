@@ -339,7 +339,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	readme := utils.GetValueOrDefault(data.Readme.ValueStringPointer(), "")
-	subscriptionUrl := data.SubscriptionUrl.ValueStringPointer()
+	subscriptionUrl := data.SubscriptionUrl.ValueString()
 	routingUrl := data.RoutingURL.ValueStringPointer()
 
 	requestData := &platformv1.UpdateSubgraphRequest{
@@ -348,7 +348,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		Namespace:            data.Namespace.ValueString(),
 		Labels:               labels,
 		UnsetLabels:          unsetLabels,
-		SubscriptionUrl:      subscriptionUrl,
+		SubscriptionUrl:      &subscriptionUrl,
 		SubscriptionProtocol: api.ResolveSubscriptionProtocol(data.SubscriptionProtocol.ValueStringPointer()),
 		WebsocketSubprotocol: api.ResolveWebsocketSubprotocol(data.WebsocketSubprotocol.ValueStringPointer()),
 		Readme:               &readme,
