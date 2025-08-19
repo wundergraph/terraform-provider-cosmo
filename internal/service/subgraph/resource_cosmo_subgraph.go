@@ -99,10 +99,9 @@ For more information on subgraphs, please refer to the [Cosmo Documentation](htt
 				},
 			},
 			"routing_url": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				MarkdownDescription: `The routing URL of the subgraph. 
-				Routing URL is required for normal subgraphs but not for event driven subgraphs.`,
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "The routing URL of the subgraph. Routing URL is required for normal subgraphs but not for event driven subgraphs.",
 			},
 			"subscription_url": schema.StringAttribute{
 				Optional:            true,
