@@ -31,7 +31,6 @@ resource "cosmo_subgraph" "test" {
 ### Required
 
 - `name` (String) The name of the subgraph.
-- `routing_url` (String) The routing URL of the subgraph.
 
 ### Optional
 
@@ -39,6 +38,7 @@ resource "cosmo_subgraph" "test" {
 - `labels` (Map of String) Labels for the subgraph.
 - `namespace` (String) The namespace in which the subgraph is located.
 - `readme` (String) The readme for the subgraph.
+- `routing_url` (String) The routing URL of the subgraph. Routing URL is required for normal subgraphs but not for event driven subgraphs.
 - `schema` (String) The schema for the subgraph.
 - `subscription_protocol` (String) The subscription protocol for the subgraph.
 - `subscription_url` (String) The subscription URL for the subgraph.
