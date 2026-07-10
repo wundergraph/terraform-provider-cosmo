@@ -123,9 +123,7 @@ func operationID(contents string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-// buildOperations converts the label -> contents map into persisted operations
-// keyed by the SHA-256 hash of their contents. It errors when two labels hold
-// identical contents, since both would map to the same operation id.
+// buildOperations keys each operation by the SHA-256 hash of its contents, erroring on duplicates.
 func buildOperations(operations map[string]string) ([]*platformv1.PersistedOperation, error) {
 	labelsById := make(map[string]string, len(operations))
 	result := make([]*platformv1.PersistedOperation, 0, len(operations))
@@ -208,8 +206,7 @@ func (r *PersistedOperationsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	// An empty remote set is drift, not deletion: the client record is the
-	// remote object this resource tracks, and its absence is handled above.
+	// An empty remote set is drift. A missing client is handled above.
 	remoteById := make(map[string]*platformv1.GetPersistedOperationsResponse_Operation, len(remoteOperations))
 	for _, operation := range remoteOperations {
 		remoteById[operation.Id] = operation
@@ -224,9 +221,7 @@ func (r *PersistedOperationsResource) Read(ctx context.Context, req resource.Rea
 		}
 	}
 
-	// Keep state entries whose contents still exist remotely (matched by id, so
-	// server-side normalization of contents does not cause spurious diffs) and
-	// surface out-of-band operations under their id so the plan shows their removal.
+	// Keep state entries that still exist remotely and surface out-of-band operations under their id.
 	operations := make(map[string]string, len(remoteById))
 	for label, contents := range stateOperations {
 		id := operationID(contents)
@@ -280,8 +275,7 @@ func (r *PersistedOperationsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	// Publishing is idempotent for unchanged operations, so all planned
-	// operations are pushed in one call rather than only the additions.
+	// Publishing is idempotent, so the full planned set is pushed in one call.
 	if apiError := r.client.PublishPersistedOperations(ctx, data.FederatedGraphName.ValueString(), data.Namespace.ValueString(), data.ClientName.ValueString(), operations); apiError != nil {
 		utils.AddDiagnosticError(resp, ErrUpdatingPersistedOperations, apiError.Error())
 		return
@@ -293,8 +287,6 @@ func (r *PersistedOperationsResource) Update(ctx context.Context, req resource.U
 	}
 
 	for _, contents := range stateOperations {
-		// Identical contents produce identical operation ids, so diffing on
-		// contents avoids re-hashing the unchanged operations.
 		if planContents[contents] {
 			continue
 		}
