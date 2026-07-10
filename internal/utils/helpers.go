@@ -28,3 +28,13 @@ func GetValueOrDefault[T any](value *T, defaultValue T) T {
 	}
 	return *value
 }
+
+// NamespaceOrDefault resolves an optional namespace attribute to the "default"
+// namespace. Data source schemas cannot declare defaults, so data sources
+// resolve the namespace at read time with this helper.
+func NamespaceOrDefault(namespace types.String) types.String {
+	if namespace.IsNull() || namespace.ValueString() == "" {
+		return types.StringValue("default")
+	}
+	return namespace
+}
