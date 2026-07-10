@@ -7,9 +7,18 @@ import (
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
 )
 
+func unsetenv(t *testing.T, key string) {
+	t.Helper()
+	// t.Setenv registers the original value to be restored on cleanup.
+	t.Setenv(key, "")
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("Failed to unset %s: %v", key, err)
+	}
+}
+
 func TestNewClientFromPassedVariables(t *testing.T) {
-	os.Unsetenv("COSMO_API_KEY")
-	os.Unsetenv("COSMO_API_URL")
+	unsetenv(t, "COSMO_API_KEY")
+	unsetenv(t, "COSMO_API_URL")
 
 	client, err := api.NewClient("passed_api_key", "https://passed-url.com")
 	if err != nil {
@@ -22,8 +31,8 @@ func TestNewClientFromPassedVariables(t *testing.T) {
 }
 
 func TestNewClientFromEnvironment(t *testing.T) {
-	os.Setenv("COSMO_API_KEY", "env_api_key")
-	os.Setenv("COSMO_API_URL", "https://env-url.com")
+	t.Setenv("COSMO_API_KEY", "env_api_key")
+	t.Setenv("COSMO_API_URL", "https://env-url.com")
 
 	client, err := api.NewClient("", "")
 	if err != nil {
@@ -33,13 +42,11 @@ func TestNewClientFromEnvironment(t *testing.T) {
 	if client.Client == nil {
 		t.Errorf("Expected client to be created but got nil")
 	}
-
-	os.Unsetenv("COSMO_API_KEY")
-	os.Unsetenv("COSMO_API_URL")
 }
 
 func TestNewClientFromEnvironmentWithoutApiKey(t *testing.T) {
-	os.Setenv("COSMO_API_URL", "https://env-url.com")
+	unsetenv(t, "COSMO_API_KEY")
+	t.Setenv("COSMO_API_URL", "https://env-url.com")
 
 	client, err := api.NewClient("", "")
 	if err == nil {
@@ -49,13 +56,11 @@ func TestNewClientFromEnvironmentWithoutApiKey(t *testing.T) {
 	if client != nil {
 		t.Errorf("Expected client not to be created")
 	}
-
-	os.Unsetenv("COSMO_API_URL")
 }
 
 func TestNewClientFromEnvironmentWithoutApiUrlAndApiKey(t *testing.T) {
-	os.Unsetenv("COSMO_API_KEY")
-	os.Unsetenv("COSMO_API_URL")
+	unsetenv(t, "COSMO_API_KEY")
+	unsetenv(t, "COSMO_API_URL")
 
 	client, err := api.NewClient("", "")
 	if err == nil {
@@ -68,8 +73,8 @@ func TestNewClientFromEnvironmentWithoutApiUrlAndApiKey(t *testing.T) {
 }
 
 func TestNewClientFromEnvironmentWithApiKey(t *testing.T) {
-	os.Unsetenv("COSMO_API_KEY")
-	os.Unsetenv("COSMO_API_URL")
+	unsetenv(t, "COSMO_API_KEY")
+	unsetenv(t, "COSMO_API_URL")
 
 	client, err := api.NewClient("cosmo_api_key", "")
 	if err != nil {
