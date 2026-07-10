@@ -20,13 +20,14 @@ const (
 	testAccDragonsOperation  = "query Dragons { dragons { id } }"
 )
 
+var testAccOneOperation = fmt.Sprintf(`{ capsules = %q }`, testAccCapsulesOperation)
+
 func TestAccPersistedOperationsResource(t *testing.T) {
 	namespace := acctest.RandomWithPrefix("test-namespace")
 	graphName := acctest.RandomWithPrefix("test-graph")
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
 	clientName := acctest.RandomWithPrefix("test-client")
 
-	oneOperation := fmt.Sprintf(`{ capsules = %q }`, testAccCapsulesOperation)
 	twoOperations := fmt.Sprintf(`{ capsules = %q, dragons = %q }`, testAccCapsulesOperation, testAccDragonsOperation)
 	otherOperation := fmt.Sprintf(`{ dragons = %q }`, testAccDragonsOperation)
 
@@ -56,7 +57,7 @@ func TestAccPersistedOperationsResource(t *testing.T) {
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, oneOperation),
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, testAccOneOperation),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_persisted_operations.test", "federated_graph_name", graphName),
 					resource.TestCheckResourceAttr("cosmo_persisted_operations.test", "namespace", namespace),
@@ -66,7 +67,7 @@ func TestAccPersistedOperationsResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, oneOperation),
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, testAccOneOperation),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_persisted_operations.test", "operations.%", "1"),
 				),
@@ -106,20 +107,18 @@ func TestAccPersistedOperationsResourceClientNameRecreates(t *testing.T) {
 	clientName := acctest.RandomWithPrefix("test-client")
 	newClientName := acctest.RandomWithPrefix("test-client-new")
 
-	oneOperation := fmt.Sprintf(`{ capsules = %q }`, testAccCapsulesOperation)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, oneOperation),
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, testAccOneOperation),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("cosmo_persisted_operations.test", "client_name", clientName),
 				),
 			},
 			{
-				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, newClientName, oneOperation),
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, newClientName, testAccOneOperation),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("cosmo_persisted_operations.test", plancheck.ResourceActionDestroyBeforeCreate),

@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Manages the full set of persisted operations (safelisted GraphQL operations) registered for a client of a federated graph.
   This resource owns every persisted operation of the given client: operations pushed outside of Terraform (e.g. via wgc operations push) to the same client will show up as drift and be removed on the next apply. Destroying the resource deletes the operations it manages but leaves the client record itself in place.
-  Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of wgc operations push.
+  Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of wgc operations push. Publishing is not transactional: if an operation conflicts with an existing one (same id, different contents), the create or update fails but the non-conflicting operations remain registered; re-applying after fixing the conflict converges, since publishing is idempotent.
   Existing operations can be imported with the id format federated_graph_name:namespace:client_name.
   For more information on persisted operations, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/router/persisted-queries/persisted-operations.
 ---
@@ -16,7 +16,7 @@ Manages the full set of persisted operations (safelisted GraphQL operations) reg
 
 This resource owns every persisted operation of the given client: operations pushed outside of Terraform (e.g. via `wgc operations push`) to the same client will show up as drift and be removed on the next apply. Destroying the resource deletes the operations it manages but leaves the client record itself in place.
 
-Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of `wgc operations push`.
+Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of `wgc operations push`. Publishing is not transactional: if an operation conflicts with an existing one (same id, different contents), the create or update fails but the non-conflicting operations remain registered; re-applying after fixing the conflict converges, since publishing is idempotent.
 
 Existing operations can be imported with the id format `federated_graph_name:namespace:client_name`.
 

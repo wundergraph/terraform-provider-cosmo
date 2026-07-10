@@ -17,14 +17,12 @@ func TestAccPersistedOperationsImport(t *testing.T) {
 	subgraphName := acctest.RandomWithPrefix("test-subgraph")
 	clientName := acctest.RandomWithPrefix("test-client")
 
-	oneOperation := fmt.Sprintf(`{ capsules = %q }`, testAccCapsulesOperation)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, oneOperation),
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, testAccOneOperation),
 			},
 			{
 				ResourceName:      "cosmo_persisted_operations.test",

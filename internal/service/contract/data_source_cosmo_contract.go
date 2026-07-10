@@ -124,10 +124,7 @@ func (d *contractDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	namespace := data.Namespace.ValueString()
-	if namespace == "" {
-		namespace = "default"
-	}
+	namespace := utils.NamespaceOrDefault(data.Namespace).ValueString()
 
 	apiResponse, apiError := d.client.GetContract(ctx, data.Name.ValueString(), namespace)
 	if apiError != nil {

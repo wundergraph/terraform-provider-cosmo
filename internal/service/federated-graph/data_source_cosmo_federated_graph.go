@@ -110,10 +110,7 @@ func (d *FederatedGraphDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	namespace := data.Namespace.ValueString()
-	if namespace == "" {
-		namespace = "default"
-	}
+	namespace := utils.NamespaceOrDefault(data.Namespace).ValueString()
 
 	apiResponse, err := d.client.GetFederatedGraph(ctx, data.Name.ValueString(), namespace)
 	if err != nil {
