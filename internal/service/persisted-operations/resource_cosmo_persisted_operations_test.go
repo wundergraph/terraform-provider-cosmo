@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -94,6 +96,54 @@ func TestAccPersistedOperationsResource(t *testing.T) {
 				Config: testAccNoPersistedOperationsResourceConfig(namespace, graphName, subgraphName),
 				Check: resource.ComposeTestCheckFunc(
 					checkRemoteOperationCount(0),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPersistedOperationsResourceRejectsJSON(t *testing.T) {
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	graphName := acctest.RandomWithPrefix("test-graph")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	clientName := acctest.RandomWithPrefix("test-client")
+
+	manifest := `{\"format\": \"apollo-persisted-query-manifest\", \"operations\": []}`
+	jsonOperation := fmt.Sprintf(`{ manifest = "%s" }`, manifest)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, jsonOperation),
+				ExpectError: regexp.MustCompile("invalid persisted operation contents"),
+			},
+		},
+	})
+}
+
+func TestAccPersistedOperationsResourceFromFile(t *testing.T) {
+	namespace := acctest.RandomWithPrefix("test-namespace")
+	graphName := acctest.RandomWithPrefix("test-graph")
+	subgraphName := acctest.RandomWithPrefix("test-subgraph")
+	clientName := acctest.RandomWithPrefix("test-client")
+
+	operationPath, err := filepath.Abs("testdata/capsules.graphql")
+	if err != nil {
+		t.Fatalf("Error resolving testdata path: %s", err)
+	}
+	fileOperation := fmt.Sprintf(`{ capsules = file(%q) }`, operationPath)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acceptance.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acceptance.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPersistedOperationsResourceConfig(namespace, graphName, subgraphName, clientName, fileOperation),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("cosmo_persisted_operations.test", "operations.%", "1"),
+					resource.TestCheckResourceAttrSet("cosmo_persisted_operations.test", "id"),
 				),
 			},
 		},

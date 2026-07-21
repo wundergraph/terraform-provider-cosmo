@@ -52,6 +52,8 @@ Manages the full set of persisted operations (safelisted GraphQL operations) reg
 
 This resource owns every persisted operation of the given client: operations pushed outside of Terraform (e.g. via ` + "`wgc operations push`" + `) to the same client will show up as drift and be removed on the next apply. Destroying the resource deletes the operations it manages but leaves the client record itself in place.
 
+Each operation value must be the raw contents of a plain GraphQL document. The JSON manifest formats accepted by ` + "`wgc operations push`" + ` (Apollo persisted query manifests, Relay query maps) are not supported yet and are rejected at plan time.
+
 Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of ` + "`wgc operations push`" + `. Publishing is not transactional: if an operation conflicts with an existing one (same id, different contents), the create or update fails but the non-conflicting operations remain registered; re-applying after fixing the conflict converges, since publishing is idempotent.
 
 Existing operations can be imported with the id format ` + "`federated_graph_name:namespace:client_name`" + `.
@@ -95,9 +97,10 @@ For more information on persisted operations, please refer to the [Cosmo Documen
 			"operations": schema.MapAttribute{
 				ElementType:         types.StringType,
 				Required:            true,
-				MarkdownDescription: "The persisted operations as a map of an arbitrary label to the GraphQL operation contents.",
+				MarkdownDescription: "The persisted operations as a map of an arbitrary label to the contents of a plain GraphQL document. JSON manifests are not supported yet.",
 				Validators: []validator.Map{
 					mapvalidator.SizeAtLeast(1),
+					mapvalidator.ValueStringsAre(notJSONValidator{}),
 				},
 			},
 		},

@@ -1,0 +1,5 @@
+query Capsules {
+  capsules {
+    id
+  }
+}

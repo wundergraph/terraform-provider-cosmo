@@ -5,6 +5,7 @@ subcategory: ""
 description: |-
   Manages the full set of persisted operations (safelisted GraphQL operations) registered for a client of a federated graph.
   This resource owns every persisted operation of the given client: operations pushed outside of Terraform (e.g. via wgc operations push) to the same client will show up as drift and be removed on the next apply. Destroying the resource deletes the operations it manages but leaves the client record itself in place.
+  Each operation value must be the raw contents of a plain GraphQL document. The JSON manifest formats accepted by wgc operations push (Apollo persisted query manifests, Relay query maps) are not supported yet and are rejected at plan time.
   Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of wgc operations push. Publishing is not transactional: if an operation conflicts with an existing one (same id, different contents), the create or update fails but the non-conflicting operations remain registered; re-applying after fixing the conflict converges, since publishing is idempotent.
   Existing operations can be imported with the id format federated_graph_name:namespace:client_name.
   For more information on persisted operations, please refer to the Cosmo Documentation https://cosmo-docs.wundergraph.com/router/persisted-queries/persisted-operations.
@@ -15,6 +16,8 @@ description: |-
 Manages the full set of persisted operations (safelisted GraphQL operations) registered for a client of a federated graph.
 
 This resource owns every persisted operation of the given client: operations pushed outside of Terraform (e.g. via `wgc operations push`) to the same client will show up as drift and be removed on the next apply. Destroying the resource deletes the operations it manages but leaves the client record itself in place.
+
+Each operation value must be the raw contents of a plain GraphQL document. The JSON manifest formats accepted by `wgc operations push` (Apollo persisted query manifests, Relay query maps) are not supported yet and are rejected at plan time.
 
 Operations are content-addressed: their identifier is the hex-encoded SHA-256 hash of their contents, matching the behavior of `wgc operations push`. Publishing is not transactional: if an operation conflicts with an existing one (same id, different contents), the create or update fails but the non-conflicting operations remain registered; re-applying after fixing the conflict converges, since publishing is idempotent.
 
@@ -44,7 +47,7 @@ resource "cosmo_persisted_operations" "test" {
 
 - `client_name` (String) The name of the client the operations belong to (e.g. `web`, `ios`). The client is created on first publish.
 - `federated_graph_name` (String) The name of the federated graph to register the operations on.
-- `operations` (Map of String) The persisted operations as a map of an arbitrary label to the GraphQL operation contents.
+- `operations` (Map of String) The persisted operations as a map of an arbitrary label to the contents of a plain GraphQL document. JSON manifests are not supported yet.
 
 ### Optional
 
