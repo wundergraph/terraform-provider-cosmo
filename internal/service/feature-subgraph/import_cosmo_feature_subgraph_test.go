@@ -45,9 +45,10 @@ func TestAccImportFeatureSubgraph(t *testing.T) {
 			},
 			{
 				// Import the resource by ID
-				ResourceName:      "cosmo_feature_subgraph.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "cosmo_feature_subgraph.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"schema"},
 			},
 			{
 				// Attempt to import non feature subgraph to feature subgraph resource

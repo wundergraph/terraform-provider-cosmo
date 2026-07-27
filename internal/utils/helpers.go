@@ -1,8 +1,20 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func ReconcileSchema(configured types.String, serverSchema string) types.String {
+	if serverSchema == "" {
+		return configured
+	}
+	if strings.TrimSpace(configured.ValueString()) == strings.TrimSpace(serverSchema) {
+		return configured
+	}
+	return types.StringValue(serverSchema)
+}
 
 func StringValueOrNil(s types.String) *string {
 	if s.IsNull() {

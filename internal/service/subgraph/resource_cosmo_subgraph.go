@@ -210,9 +210,7 @@ func (r *SubgraphResource) Create(ctx context.Context, req resource.CreateReques
 		data.Readme = types.StringValue(subgraph.GetReadme())
 	}
 
-	if len(subgraphSchema) > 0 {
-		data.Schema = types.StringValue(subgraphSchema)
-	}
+	data.Schema = utils.ReconcileSchema(data.Schema, subgraphSchema)
 
 	utils.LogAction(ctx, "created subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -306,9 +304,7 @@ func (r *SubgraphResource) Read(ctx context.Context, req resource.ReadRequest, r
 		data.Readme = types.StringValue(subgraph.GetReadme())
 	}
 
-	if len(subgraphSchema) > 0 {
-		data.Schema = types.StringValue(subgraphSchema)
-	}
+	data.Schema = utils.ReconcileSchema(data.Schema, subgraphSchema)
 
 	utils.LogAction(ctx, "read subgraph", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
@@ -459,9 +455,7 @@ func (r *SubgraphResource) Update(ctx context.Context, req resource.UpdateReques
 		data.Readme = types.StringValue(subgraph.GetReadme())
 	}
 
-	if len(subgraphSchema) > 0 {
-		data.Schema = types.StringValue(subgraphSchema)
-	}
+	data.Schema = utils.ReconcileSchema(data.Schema, subgraphSchema)
 
 	utils.LogAction(ctx, "updated", data.Id.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 
