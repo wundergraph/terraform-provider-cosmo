@@ -33,7 +33,7 @@ func TestAccFeatureSubgraphDataSource(t *testing.T) {
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "subscription_protocol", "ws"),
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "websocket_subprotocol", "auto"),
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "readme", "Initial readme content"),
-						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "schema", acceptance.TestAccValidSubgraphSchema),
+						acceptance.TestCheckSchemaMatches("data.cosmo_feature_subgraph.test", "schema", acceptance.TestAccValidSubgraphSchema),
 					),
 				},
 				{
@@ -68,7 +68,7 @@ func TestAccFeatureSubgraphDataSource(t *testing.T) {
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "subscription_protocol", "ws"),
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "websocket_subprotocol", "auto"),
 						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "readme", "Initial readme content"),
-						resource.TestCheckResourceAttr("data.cosmo_feature_subgraph.test", "schema", acceptance.TestAccValidSubgraphSchema),
+						acceptance.TestCheckSchemaMatches("data.cosmo_feature_subgraph.test", "schema", acceptance.TestAccValidSubgraphSchema),
 					),
 				},
 				{

@@ -121,10 +121,7 @@ func (d *FeatureFlagDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	namespace := data.Namespace.ValueString()
-	if namespace == "" {
-		namespace = "default"
-	}
+	namespace := utils.NamespaceOrDefault(data.Namespace).ValueString()
 
 	ff, apiError := d.client.GetFeatureFlag(ctx, data.Name.ValueString(), namespace)
 	if apiError != nil {

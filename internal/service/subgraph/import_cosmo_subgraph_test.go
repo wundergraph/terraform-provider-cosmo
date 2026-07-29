@@ -29,9 +29,10 @@ func TestAccImportCosmoSubgraphBasic(t *testing.T) {
 				Config: testAccSubgraphResourceConfig(namespace, federatedGraphName, federatedGraphRoutingURL, subgraphName, routingURL, subgraphSchema, readme),
 			},
 			{
-				ResourceName:      "cosmo_subgraph.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "cosmo_subgraph.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"schema"},
 			},
 		},
 	})

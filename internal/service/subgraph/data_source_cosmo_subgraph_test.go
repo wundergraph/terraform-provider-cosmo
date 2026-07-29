@@ -34,7 +34,7 @@ func TestAccSubgraphDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "subscription_protocol", "ws"),
 					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "websocket_subprotocol", "auto"),
 					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "is_event_driven_graph", "false"),
-					resource.TestCheckResourceAttr("data.cosmo_subgraph.test", "schema", subgraphSchema),
+					acceptance.TestCheckSchemaMatches("data.cosmo_subgraph.test", "schema", subgraphSchema),
 				),
 			},
 			{

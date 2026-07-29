@@ -1,0 +1,6 @@
+query ListCapsules {
+  capsules {
+    id
+    status
+  }
+}

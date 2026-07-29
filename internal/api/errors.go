@@ -55,13 +55,16 @@ func NewApiErrorWithErr(statusCode common.EnumStatusCode, reason string, err err
 }
 
 func handleErrorCodes(statusCode common.EnumStatusCode, reason string) *ApiError {
+	// Check OK first: the reason can contain user-provided content that includes the sentinel below.
+	if statusCode == common.EnumStatusCode_OK {
+		return nil
+	}
+
 	if strings.Contains(reason, ContractCompositionFailedReason) {
 		return &ApiError{Err: ErrContractCompositionFailed, Reason: reason, Status: statusCode}
 	}
 
 	switch statusCode {
-	case common.EnumStatusCode_OK:
-		return nil
 	case common.EnumStatusCode_ERR_SUBGRAPH_COMPOSITION_FAILED:
 		return &ApiError{Err: ErrSubgraphCompositionFailed, Reason: reason, Status: statusCode}
 	case common.EnumStatusCode_ERR_NOT_FOUND:

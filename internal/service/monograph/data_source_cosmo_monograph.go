@@ -129,10 +129,7 @@ func (d *MonographDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	namespace := data.Namespace.ValueString()
-	if namespace == "" {
-		namespace = "default"
-	}
+	namespace := utils.NamespaceOrDefault(data.Namespace).ValueString()
 
 	monograph, apiError := d.client.GetMonograph(ctx, data.Name.ValueString(), namespace)
 	if apiError != nil {

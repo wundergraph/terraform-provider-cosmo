@@ -120,10 +120,7 @@ func (d *FeatureSubgraphDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	namespace := data.Namespace.ValueString()
-	if namespace == "" {
-		namespace = "default"
-	}
+	namespace := utils.NamespaceOrDefault(data.Namespace).ValueString()
 
 	subgraph, apiErr := d.client.GetSubgraph(ctx, data.Name.ValueString(), namespace)
 	if apiErr != nil {
@@ -165,9 +162,7 @@ func (d *FeatureSubgraphDataSource) Read(ctx context.Context, req datasource.Rea
 		data.Readme = types.StringValue(subgraph.GetReadme())
 	}
 
-	if len(subgraphSchema) > 0 {
-		data.Schema = types.StringValue(subgraphSchema)
-	}
+	data.Schema = utils.ReconcileSchema(data.Schema, subgraphSchema)
 
 	utils.LogAction(ctx, "read subgraph", data.ID.ValueString(), data.Name.ValueString(), data.Namespace.ValueString())
 

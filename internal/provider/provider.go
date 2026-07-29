@@ -12,12 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/api"
+	clients "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/clients"
 	contract "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/contract"
 	feature_flag "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/feature-flag"
 	feature_subgraph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/feature-subgraph"
 	federated_graph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/federated-graph"
 	monograph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/monograph"
 	namespace "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/namespace"
+	persisted_operations "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/persisted-operations"
 	router_token "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/router-token"
 	subgraph "github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/service/subgraph"
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/utils"
@@ -103,6 +105,7 @@ func (p *CosmoProvider) Resources(ctx context.Context) []func() resource.Resourc
 		monograph.NewMonographResource,
 		router_token.NewTokenResource,
 		contract.NewContractResource,
+		persisted_operations.NewPersistedOperationsResource,
 	}
 }
 
@@ -115,6 +118,8 @@ func (p *CosmoProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		namespace.NewNamespaceDataSource,
 		monograph.NewMonographDataSource,
 		contract.NewContractDataSource,
+		persisted_operations.NewPersistedOperationsDataSource,
+		clients.NewClientsDataSource,
 	}
 }
 

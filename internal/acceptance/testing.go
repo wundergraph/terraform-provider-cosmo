@@ -1,13 +1,28 @@
 package acceptance
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
 	"github.com/wundergraph/cosmo/terraform-provider-cosmo/internal/provider"
 )
+
+// TestCheckSchemaMatches asserts a schema attribute equals expected, ignoring surrounding
+// whitespace. The control plane strips surrounding whitespace, so read-only paths (data
+// sources, import) return a normalised value that a configured schema would not.
+func TestCheckSchemaMatches(name, attr, expected string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, attr, func(value string) error {
+		if strings.TrimSpace(value) != strings.TrimSpace(expected) {
+			return fmt.Errorf("schema mismatch ignoring surrounding whitespace:\nexpected: %q\ngot:      %q", expected, value)
+		}
+		return nil
+	})
+}
 
 // TestAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform

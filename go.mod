@@ -1,9 +1,9 @@
 module github.com/wundergraph/cosmo/terraform-provider-cosmo
 
-go 1.22.0
+go 1.25
 
 require (
-	connectrpc.com/connect v1.16.2
+	connectrpc.com/connect v1.17.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-framework v1.11.0
@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
-	github.com/wundergraph/cosmo/connect-go v0.0.0-20241203152720-979e5a780c8e
+	github.com/wundergraph/cosmo/connect-go v0.0.0-20260710093643-935b7925b88a
 )
 
 require (
@@ -26,7 +26,7 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.34.0 // indirect
+	google.golang.org/protobuf v1.36.0 // indirect
 )
 
 require (
