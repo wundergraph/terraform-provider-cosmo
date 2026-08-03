@@ -1,6 +1,6 @@
 # Cosmo Terraform Provider
 
-This repository is for the [Cosmo](https://registry.terraform.io/providers/wundergraph/cosmo/latest) Terraform provider, designed to manage Cosmo resources within Terraform. It includes a resource and a data source, examples, and generated documentation.
+This repository is for the [Cosmo](https://registry.terraform.io/providers/wundergraph/cosmo/latest) Terraform provider, designed to manage Cosmo resources within Terraform. It includes resources and data sources, examples, and generated documentation.
 
 ## Requirements
 
@@ -17,7 +17,11 @@ The Cosmo Terraform provider includes the following resources and data sources:
 - [cosmo_monograph](docs/resources/monograph.md): Manages monographs in Cosmo.
 - [cosmo_federated_graph](docs/resources/federated_graph.md): Manages federated graphs in Cosmo.
 - [cosmo_subgraph](docs/resources/subgraph.md): Manages subgraphs in Cosmo.
-- [cosmo_router_token](docs/resources/cosmo_router_token.md): Retrieves information about subgraphs in Cosmo.
+- [cosmo_feature_subgraph](docs/resources/feature_subgraph.md): Manages feature subgraphs in Cosmo.
+- [cosmo_feature_flag](docs/resources/feature_flag.md): Manages feature flags in Cosmo.
+- [cosmo_contract](docs/resources/contract.md): Manages schema contracts in Cosmo.
+- [cosmo_router_token](docs/resources/router_token.md): Manages router tokens for federated graphs in Cosmo.
+- [cosmo_persisted_operations](docs/resources/persisted_operations.md): Manages the persisted operations registered for a client of a federated graph.
 
 ### Data Sources
 
@@ -25,6 +29,11 @@ The Cosmo Terraform provider includes the following resources and data sources:
 - [cosmo_monograph](docs/data-sources/monograph.md): Retrieves information about monographs in Cosmo.
 - [cosmo_federated_graph](docs/data-sources/federated_graph.md): Retrieves information about federated graphs in Cosmo.
 - [cosmo_subgraph](docs/data-sources/subgraph.md): Retrieves information about subgraphs in Cosmo.
+- [cosmo_feature_subgraph](docs/data-sources/feature_subgraph.md): Retrieves information about feature subgraphs in Cosmo.
+- [cosmo_feature_flag](docs/data-sources/feature_flag.md): Retrieves information about feature flags in Cosmo.
+- [cosmo_contract](docs/data-sources/contract.md): Retrieves information about contracts in Cosmo.
+- [cosmo_clients](docs/data-sources/clients.md): Lists the clients registered on a federated graph.
+- [cosmo_persisted_operations](docs/data-sources/persisted_operations.md): Reads the persisted operations registered for a client of a federated graph.
 
 Each resource and data source allows you to define and manage specific aspects of your Cosmo infrastructure seamlessly within Terraform.
 
@@ -124,8 +133,11 @@ Resources can be imported into Terraform using the `terraform import` command. T
 - `cosmo_namespace`
 - `cosmo_federated_graph`
 - `cosmo_subgraph`
+- `cosmo_feature_subgraph`
+- `cosmo_feature_flag`
 - `cosmo_contract`
 - `cosmo_monograph`
+- `cosmo_persisted_operations`
 
 For detailed instructions on how to import each resource, refer to the corresponding resource documentation in the corresponding [docs](docs/resources).
 
