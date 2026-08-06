@@ -4,14 +4,14 @@ page_title: "cosmo Provider"
 subcategory: ""
 description: |-
   The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources.
-  It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts.
+  It supports creating and reading namespaces, federated graphs, subgraphs, feature subgraphs, feature flags, monographs, contracts, router tokens, and persisted operations.
   Refer to the official Cosmo Documentation https://cosmo-docs.wundergraph.com/ for more details.
 ---
 
 # cosmo Provider
 
-The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources. 
-It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts. 
+The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources.
+It supports creating and reading namespaces, federated graphs, subgraphs, feature subgraphs, feature flags, monographs, contracts, router tokens, and persisted operations.
 
 Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/) for more details.
 

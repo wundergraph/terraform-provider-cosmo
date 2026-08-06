@@ -55,8 +55,8 @@ func (p *CosmoProvider) Metadata(ctx context.Context, req provider.MetadataReque
 func (p *CosmoProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
-The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources. 
-It supports creating and reading namespaces, federated graphs, subgraphs, router tokens, monographs, and contracts. 
+The Cosmo provider allows you to interact with WunderGraph's Cosmo API, managing key resources.
+It supports creating and reading namespaces, federated graphs, subgraphs, feature subgraphs, feature flags, monographs, contracts, router tokens, and persisted operations.
 
 Refer to the official [Cosmo Documentation](https://cosmo-docs.wundergraph.com/) for more details.
 		`,
